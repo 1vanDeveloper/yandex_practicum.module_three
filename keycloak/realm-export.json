@@ -1,7 +1,7 @@
 {
-  "id": "marketplace",
-  "realm": "marketplace",
-  "displayName": "Marketplace Realm",
+  "id": "bank",
+  "realm": "bank",
+  "displayName": "Bank Realm",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
@@ -17,61 +17,26 @@
       }
     ],
     "client": {
-      "market-client": [],
-      "payment-resource": [
+      "accounts-client": [
         {
-          "name": "payment:read",
-          "description": "Read access to payment resources"
+          "name": "accounts:read",
+          "description": "Read access to account resources"
         },
         {
-          "name": "payment:write",
-          "description": "Write access to payment resources"
+          "name": "accounts:write",
+          "description": "Write access to account resources"
         }
       ]
     }
   },
   "clients": [
     {
-      "clientId": "market-client",
-      "name": "Market Application Client",
-      "description": "OAuth2 client for the Market application (authorization code flow)",
+      "clientId": "accounts-client",
+      "name": "Accounts Service Client",
+      "description": "OAuth2 client for Accounts service (client credentials flow)",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "market-secret",
-      "redirectUris": [
-        "http://localhost:8080/*",
-        "http://localhost:8080/login/oauth2/code/keycloak"
-      ],
-      "webOrigins": [
-        "http://localhost:8080"
-      ],
-      "publicClient": false,
-      "protocol": "openid-connect",
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
-      "authorizationServicesEnabled": false,
-      "defaultClientScopes": [
-        "web-origins",
-        "openid",
-        "profile",
-        "email",
-        "roles"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access"
-      ]
-    },
-    {
-      "clientId": "payment-resource",
-      "name": "Payment Resource Server",
-      "description": "OAuth2 client for Payment service (client credentials flow)",
-      "enabled": true,
-      "clientAuthenticatorType": "client-secret",
-      "secret": "payment-secret",
+      "secret": "accounts-secret",
       "publicClient": false,
       "protocol": "openid-connect",
       "standardFlowEnabled": false,
@@ -89,8 +54,8 @@
         "offline_access"
       ],
       "defaultRoles": [
-        "payment:read",
-        "payment:write"
+        "accounts:read",
+        "accounts:write"
       ]
     }
   ],
@@ -99,7 +64,7 @@
       "username": "user",
       "enabled": true,
       "emailVerified": true,
-      "email": "user@marketplace.com",
+      "email": "user@bank.com",
       "firstName": "Test",
       "lastName": "User",
       "credentials": [
@@ -120,7 +85,7 @@
       "username": "admin",
       "enabled": true,
       "emailVerified": true,
-      "email": "admin@marketplace.com",
+      "email": "admin@bank.com",
       "firstName": "Admin",
       "lastName": "User",
       "credentials": [

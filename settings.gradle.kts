@@ -10,3 +10,4 @@ pluginManagement {
 }
 
 include("frontend")
+include("accounts")
