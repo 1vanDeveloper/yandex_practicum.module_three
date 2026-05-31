@@ -34,6 +34,30 @@ services:
       - ./scripts/schema.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
       - ./scripts/data.sql:/docker-entrypoint-initdb.d/2-data.sql:ro
 
+  consul:
+    container_name: consul
+    image: hashicorp/consul:1.17
+    hostname: consul
+    command: agent -server -ui -bootstrap-expect=1 -client=0.0.0.0
+    ports:
+      - "8500:8500"   # HTTP API
+      - "8600:8600"   # DNS
+    volumes:
+      - consul-data:/consul/data
+      - consul-config:/consul/config
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
   cache:
+    driver: local
+  consul-data:
+    driver: local
+  consul-config:
     driver: local
