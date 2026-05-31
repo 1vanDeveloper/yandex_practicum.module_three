@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.maven
-
 rootProject.name = "bank"
 
 pluginManagement {
@@ -9,5 +7,5 @@ pluginManagement {
     }
 }
 
-include("frontend")
-include("accounts")
+include(":frontend")
+include(":accounts")

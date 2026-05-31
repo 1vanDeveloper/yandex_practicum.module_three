@@ -6,9 +6,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 import ru.yandex.practicum.accounts.dto.AccountIdResponse;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
@@ -16,11 +22,15 @@ import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.service.AccountService;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class AccountControllerTest {
@@ -37,7 +47,22 @@ class AccountControllerTest {
     void setUp() {
         webTestClient = WebTestClient
                 .bindToController(accountController)
+                .controllerAdvice(new TestExceptionHandler())
                 .build();
+    }
+
+    @RestControllerAdvice
+    static class TestExceptionHandler {
+
+        @ExceptionHandler(AccountService.AccountNotFoundException.class)
+        @ResponseStatus(HttpStatus.NOT_FOUND)
+        void handleNotFound(AccountService.AccountNotFoundException ex) {
+        }
+
+        @ExceptionHandler(AccountService.AccountAlreadyExistsException.class)
+        @ResponseStatus(HttpStatus.CONFLICT)
+        void handleAlreadyExists(AccountService.AccountAlreadyExistsException ex) {
+        }
     }
 
     @Test
@@ -103,6 +128,8 @@ class AccountControllerTest {
 
     @Test
     void updateAccount_shouldReturnUpdatedAccount() {
+        // Note: This test verifies the service call is made correctly.
+        // The JWT authentication is tested at the integration level.
         UpdateAccountRequest request = UpdateAccountRequest.builder()
                 .firstName("Updated")
                 .lastName("Name")
@@ -119,12 +146,29 @@ class AccountControllerTest {
                 .amount(BigDecimal.valueOf(2000.00))
                 .build();
 
-        // Test the service directly since the controller requires JWT authentication
         when(accountService.updateAccount(eq("test_user"), any(UpdateAccountRequest.class)))
                 .thenReturn(Mono.just(response));
 
-        // Verify service layer works correctly
-        Mono<AccountResponse> result = accountService.updateAccount("test_user", request);
-        result.block();
+        // Create a mock JWT with the required claim
+        Jwt mockJwt = new Jwt(
+                "token",
+                Instant.now(),
+                Instant.now().plusSeconds(3600),
+                Collections.singletonMap("alg", "none"),
+                Collections.singletonMap("preferred_username", "test_user")
+        );
+
+        // Verify the service method is called correctly (JWT authentication is tested at integration level)
+        Mono<AccountResponse> result = accountController.updateAccount(mockJwt, request);
+
+        StepVerifier.create(result)
+                .assertNext(accountResponse -> {
+                    assertThat(accountResponse.getId()).isEqualTo(1L);
+                    assertThat(accountResponse.getLogin()).isEqualTo("test_user");
+                    assertThat(accountResponse.getFirstName()).isEqualTo("Updated");
+                })
+                .verifyComplete();
+
+        verify(accountService).updateAccount(eq("test_user"), any(UpdateAccountRequest.class));
     }
 }

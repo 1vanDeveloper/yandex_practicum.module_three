@@ -7,10 +7,6 @@ plugins {
 group = "ru.yandex.practicum"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
@@ -27,6 +23,8 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
+
+tasks.register("prepareKotlinBuildScriptModel") {}
 
 tasks.test {
     useJUnitPlatform()

@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import ru.yandex.practicum.accounts.config.TestSecurityConfig;
+
 @SpringBootTest
 @AutoConfigureMessageVerifier
 @ActiveProfiles("test")
