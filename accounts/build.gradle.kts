@@ -4,6 +4,8 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.springframework.cloud.contract") version "5.0.0"
     id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
+
+    groovy
 }
 
 group = "ru.yandex.practicum"
@@ -25,7 +27,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.2")
     
     // Spring Cloud
     implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
@@ -42,23 +44,31 @@ dependencies {
     // Spring Cloud Contract
     testImplementation("org.springframework.cloud:spring-cloud-starter-contract-verifier")
     testImplementation("org.springframework.cloud:spring-cloud-starter-contract-stub-runner")
-    testImplementation("io.rest-assured:rest-assured:5.5.0")
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.springframework.boot:spring-boot-test-autoconfigure:4.0.6")
+    testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Contract Test dependencies
+    contractTestImplementation("org.springframework.cloud:spring-cloud-starter-contract-verifier")
+    contractTestImplementation("org.springframework.boot:spring-boot-starter-test")
+    contractTestImplementation("org.springframework.boot:spring-boot-test")
+    contractTestImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
+    contractTestImplementation("org.springframework.security:spring-security-test")
+    
+    // Фикс: принудительно используем Groovy 4.x для совместимости с REST Assured
+    contractTestImplementation("org.apache.groovy:groovy:4.0.28")
+    contractTestImplementation("org.apache.groovy:groovy-json:4.0.28")
+    contractTestImplementation("org.apache.groovy:groovy-xml:4.0.28")
+    contractTestImplementation("org.apache.groovy:groovy-nio:4.0.28")
+    contractTestImplementation("io.rest-assured:rest-assured:5.5.0")
 }
 
 tasks.test {
     useJUnitPlatform()
-}
-
-// Contract tests configuration - we use manual WebTestClient-based tests for WebFlux
-contracts {
-    packageWithBaseClasses = "ru.yandex.practicum.accounts"
 }
 
 tasks.named("generateOpenApiDocs") {
@@ -92,18 +102,29 @@ openApi {
     waitTimeInSeconds.set(30)
 }
 
-// Use only manual contract tests from src/contractTest/java
+contracts {
+    testMode.set(org.springframework.cloud.contract.verifier.config.TestMode.EXPLICIT)
+    contractsDslDir.set(file("src/contractTest/resources/contracts"))
+    basePackageForTests.set("ru.yandex.practicum.accounts")
+    baseClassForTests.set("ru.yandex.practicum.accounts.ContractVerifierBase")
+}
+
+// Настраиваем sourceSets, чтобы добавить Groovy-файлы в область видимости контрактных тестов
 sourceSets.named("contractTest") {
     java {
         srcDir("src/contractTest/java")
-        // Exclude auto-generated tests (they use MockMvc which doesn't work with WebFlux)
-        exclude("**/build/generated-test-sources/**")
+
+        // ДОБАВЛЯЕМ (не заменяя) путь к сгенерированным плагином тестам
+        srcDir("build/generated-test-sources/contractTest/java")
     }
 }
 
-// Clean generated contract tests before compiling
-tasks.named("generateContractTests") {
-    doLast {
-        delete(fileTree("build/generated-test-sources/contractTest/java"))
+tasks.named<Test>("contractTest") {
+    // 1. Указываем Gradle использовать движок JUnit 5 для запуска сгенерированных тестов
+    useJUnitPlatform()
+
+    // 2. (Опционально) Показывает лог запуска каждого теста прямо в консоли
+    testLogging {
+        events("passed", "skipped", "failed")
     }
 }

@@ -1,4 +1,4 @@
-package ru.yandex.payments.config;
+package ru.yandex.practicum.accounts.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,6 +1,8 @@
 package contracts
 
-org.springframework.cloud.contract.spec.Contract.make {
+import org.springframework.cloud.contract.spec.Contract
+
+Contract.make {
     description "should get account by login"
     request {
         method 'GET'
@@ -11,15 +13,13 @@ org.springframework.cloud.contract.spec.Contract.make {
         headers {
             contentType(applicationJson())
         }
-        body('''
-            {
-                "id": 1,
-                "login": "test_user",
-                "firstName": "Test",
-                "lastName": "User",
-                "birthDate": "1990-05-15",
-                "amount": 1000.00
-            }
-        ''')
+        body([
+            id: 1,
+            login: "test_user",
+            firstName: "Test",
+            lastName: "User",
+            birthDate: "1990-05-15",
+            amount: 1000.00
+        ])
     }
 }
