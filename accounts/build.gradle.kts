@@ -42,7 +42,6 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.46")
     
     // Spring Cloud Contract
-    testImplementation("org.springframework.cloud:spring-cloud-starter-contract-verifier")
     testImplementation("org.springframework.cloud:spring-cloud-starter-contract-stub-runner")
 
     // Testing
