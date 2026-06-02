@@ -14,13 +14,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import reactor.core.publisher.Mono;
 import ru.yandex.practicum.accounts.dto.AccountIdResponse;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.service.AccountService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.concurrent.CompletableFuture;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -59,7 +59,7 @@ public abstract class ContractVerifierBase {
             AccountService mock = Mockito.mock(AccountService.class);
 
             Mockito.when(mock.getAccountByLogin(Mockito.anyString()))
-                    .thenReturn(Mono.just(
+                    .thenReturn(CompletableFuture.completedFuture(
                             new AccountResponse(
                                     1L,
                                     "test_user",
@@ -69,11 +69,11 @@ public abstract class ContractVerifierBase {
                                     BigDecimal.valueOf(1000.00))));
 
             Mockito.when(mock.createAccount(Mockito.any()))
-                    .thenReturn(Mono.just(
+                    .thenReturn(CompletableFuture.completedFuture(
                             new AccountIdResponse(1L)));
 
             Mockito.when(mock.updateAccount(Mockito.anyString(), Mockito.any()))
-                    .thenReturn(Mono.just(
+                    .thenReturn(CompletableFuture.completedFuture(
                             new AccountResponse(
                                     1L,
                                     "test_user",

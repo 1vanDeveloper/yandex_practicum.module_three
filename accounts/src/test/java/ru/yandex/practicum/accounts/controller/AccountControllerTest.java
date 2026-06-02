@@ -1,5 +1,6 @@
 package ru.yandex.practicum.accounts.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +10,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
-import reactor.test.StepVerifier;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.practicum.accounts.config.TestSecurityConfig;
 import ru.yandex.practicum.accounts.config.TestExceptionHandlerConfig;
 import ru.yandex.practicum.accounts.dto.AccountIdResponse;
@@ -19,15 +20,30 @@ import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
 import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.entity.Account;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
+import ru.yandex.practicum.accounts.service.TestOutboxConfig;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+        "spring.cloud.discovery.client.health-indicator.enabled=false",
+        "spring.cloud.discovery.enabled=false",
+        "spring.cloud.consul.discovery.enabled=false",
+        "spring.task.scheduling.enabled=false",
+        "outbox.scheduler.enabled=false"
+    }
+)
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class})
+@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class})
 class AccountControllerTest {
 
     @Autowired
@@ -36,23 +52,21 @@ class AccountControllerTest {
     @LocalServerPort
     private Integer port;
 
-    private WebTestClient webTestClient;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private MockMvc mockMvc;
 
     @BeforeEach
-    void setUp() {
-        webTestClient = WebTestClient.bindToServer()
-                .baseUrl("http://localhost:" + port)
-                .build();
+    void setUp(WebApplicationContext webApplicationContext) {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
-        // Очистка таблицы перед каждым тестом
-        accountRepository.deleteAll()
-                .thenMany(Flux.empty())
-                .as(StepVerifier::create)
-                .verifyComplete();
+        // Очистка таблицы аккаунтов перед каждым тестом
+        accountRepository.deleteAll();
     }
 
     @Test
-    void createAccount_shouldCreateAccountInDatabase() {
+    void createAccount_shouldCreateAccountInDatabase() throws Exception {
         CreateAccountRequest request = CreateAccountRequest.builder()
                 .login("integration_test_user")
                 .password("hashed_password")
@@ -62,31 +76,28 @@ class AccountControllerTest {
                 .amount(BigDecimal.valueOf(1000.00))
                 .build();
 
-        webTestClient.post()
-                .uri("/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
-                .exchange()
-                .expectStatus().isCreated()
-                .expectBody(AccountIdResponse.class)
-                .value(response -> {
-                    assertThat(response.getId()).isNotNull();
+        String responseContent = mockMvc.perform(post("/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-                    // Проверяем, что запись действительно создана в БД
-                    accountRepository.findById(response.getId())
-                            .as(StepVerifier::create)
-                            .assertNext(account -> {
-                                assertThat(account.getLogin()).isEqualTo("integration_test_user");
-                                assertThat(account.getFirstName()).isEqualTo("Integration");
-                                assertThat(account.getLastName()).isEqualTo("Test");
-                                assertThat(account.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(1000.00));
-                            })
-                            .verifyComplete();
-                });
+        AccountIdResponse response = objectMapper.readValue(responseContent, AccountIdResponse.class);
+        Long accountId = response.getId();
+
+        // Проверяем, что запись действительно создана в БД
+        Account savedAccount = accountRepository.findById(accountId).orElseThrow();
+        assertThat(savedAccount.getLogin()).isEqualTo("integration_test_user");
+        assertThat(savedAccount.getFirstName()).isEqualTo("Integration");
+        assertThat(savedAccount.getLastName()).isEqualTo("Test");
+        assertThat(savedAccount.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(1000.00));
     }
 
     @Test
-    void getAccount_shouldReturnAccountFromDatabase() {
+    void getAccount_shouldReturnAccountFromDatabase() throws Exception {
         // Создаём тестовую запись в БД
         Account account = Account.builder()
                 .login("get_test_user")
@@ -97,34 +108,26 @@ class AccountControllerTest {
                 .amount(BigDecimal.valueOf(2500.50))
                 .build();
 
-        accountRepository.save(account)
-                .as(StepVerifier::create)
-                .assertNext(saved -> assertThat(saved.getId()).isNotNull())
-                .verifyComplete();
+        accountRepository.save(account);
 
         // Получаем запись через API
-        webTestClient.get()
-                .uri("/accounts/get_test_user")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.id").isNotEmpty()
-                .jsonPath("$.login").isEqualTo("get_test_user")
-                .jsonPath("$.firstName").isEqualTo("Get")
-                .jsonPath("$.lastName").isEqualTo("Test")
-                .jsonPath("$.amount").isEqualTo(2500.5);
+        mockMvc.perform(get("/accounts/get_test_user"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.login").value("get_test_user"))
+                .andExpect(jsonPath("$.firstName").value("Get"))
+                .andExpect(jsonPath("$.lastName").value("Test"))
+                .andExpect(jsonPath("$.amount").value(2500.5));
     }
 
     @Test
-    void getAccount_whenNotFound_shouldReturnNotFound() {
-        webTestClient.get()
-                .uri("/accounts/nonexistent_user")
-                .exchange()
-                .expectStatus().isNotFound();
+    void getAccount_whenNotFound_shouldReturnNotFound() throws Exception {
+        mockMvc.perform(get("/accounts/nonexistent_user"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void createAccount_whenLoginExists_shouldReturnConflict() {
+    void createAccount_whenLoginExists_shouldReturnConflict() throws Exception {
         // Создаём первую запись
         Account account = Account.builder()
                 .login("duplicate_user")
@@ -135,10 +138,7 @@ class AccountControllerTest {
                 .amount(BigDecimal.valueOf(100))
                 .build();
 
-        accountRepository.save(account)
-                .then()
-                .as(StepVerifier::create)
-                .verifyComplete();
+        accountRepository.save(account);
 
         // Пытаемся создать запись с тем же логином
         CreateAccountRequest request = CreateAccountRequest.builder()
@@ -150,19 +150,17 @@ class AccountControllerTest {
                 .amount(BigDecimal.valueOf(200))
                 .build();
 
-        webTestClient.post()
-                .uri("/accounts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.CONFLICT);
+        mockMvc.perform(post("/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
     }
 
     @Test
-    void updateAccount_shouldUpdateAccountInDatabase() {
-        // Создаём тестовую запись с логином, который совпадает с mock JWT
-        Account account = Account.builder()
-                .login("test_user")
+    void updateAccount_shouldUpdateAccountInDatabase() throws Exception {
+        // Сначала создаём аккаунт через API
+        CreateAccountRequest createRequest = CreateAccountRequest.builder()
+                .login("update_test_user")
                 .password("hashed_password")
                 .firstName("Original")
                 .lastName("Name")
@@ -170,10 +168,16 @@ class AccountControllerTest {
                 .amount(BigDecimal.valueOf(1000))
                 .build();
 
-        accountRepository.save(account)
-                .then()
-                .as(StepVerifier::create)
-                .verifyComplete();
+        String createResponse = mockMvc.perform(post("/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        AccountIdResponse createResponseObj = objectMapper.readValue(createResponse, AccountIdResponse.class);
+        assertThat(createResponseObj.getId()).isNotNull();
 
         UpdateAccountRequest request = UpdateAccountRequest.builder()
                 .firstName("Updated")
@@ -182,31 +186,19 @@ class AccountControllerTest {
                 .amount(BigDecimal.valueOf(5000.75))
                 .build();
 
-        // Обновляем запись напрямую через сервис (тестирование БД)
-        accountRepository.findByLogin("test_user")
-                .flatMap(existingAccount -> {
-                    existingAccount.setFirstName("Updated");
-                    existingAccount.setLastName("LastName");
-                    existingAccount.setBirthDate(LocalDate.of(2000, 12, 31));
-                    existingAccount.setAmount(BigDecimal.valueOf(5000.75));
-                    return accountRepository.save(existingAccount);
-                })
-                .as(StepVerifier::create)
-                .assertNext(updated -> {
-                    assertThat(updated.getFirstName()).isEqualTo("Updated");
-                    assertThat(updated.getLastName()).isEqualTo("LastName");
-                    assertThat(updated.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(5000.75));
-                })
-                .verifyComplete();
+        // Обновляем запись через API
+        mockMvc.perform(patch("/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("Updated"))
+                .andExpect(jsonPath("$.lastName").value("LastName"))
+                .andExpect(jsonPath("$.amount").value(5000.75));
 
-        // Проверяем через API, что данные обновились
-        webTestClient.get()
-                .uri("/accounts/test_user")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.firstName").isEqualTo("Updated")
-                .jsonPath("$.lastName").isEqualTo("LastName")
-                .jsonPath("$.amount").isEqualTo(5000.75);
+        // Проверяем, что данные обновились в БД
+        Account updatedAccount = accountRepository.findByLogin("update_test_user").orElseThrow();
+        assertThat(updatedAccount.getFirstName()).isEqualTo("Updated");
+        assertThat(updatedAccount.getLastName()).isEqualTo("LastName");
+        assertThat(updatedAccount.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(5000.75));
     }
 }

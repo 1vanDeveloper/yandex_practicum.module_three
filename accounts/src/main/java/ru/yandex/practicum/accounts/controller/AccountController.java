@@ -13,12 +13,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 import ru.yandex.practicum.accounts.dto.AccountIdResponse;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
 import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.service.AccountService;
+
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/accounts")
@@ -29,17 +30,17 @@ public class AccountController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<AccountIdResponse> createAccount(@Valid @RequestBody CreateAccountRequest request) {
+    public CompletableFuture<AccountIdResponse> createAccount(@Valid @RequestBody CreateAccountRequest request) {
         return accountService.createAccount(request);
     }
 
     @GetMapping("/{login}")
-    public Mono<AccountResponse> getAccount(@PathVariable String login) {
+    public CompletableFuture<AccountResponse> getAccount(@PathVariable String login) {
         return accountService.getAccountByLogin(login);
     }
 
     @PatchMapping
-    public Mono<AccountResponse> updateAccount(
+    public CompletableFuture<AccountResponse> updateAccount(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UpdateAccountRequest request) {
         String login = jwt.getClaimAsString("preferred_username");

@@ -1,14 +1,15 @@
 package ru.yandex.practicum.accounts.repository;
 
-import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Mono;
 import ru.yandex.practicum.accounts.entity.Account;
 
+import java.util.Optional;
+
 @Repository
-public interface AccountRepository extends R2dbcRepository<Account, Long> {
+public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    Mono<Account> findByLogin(String login);
+    Optional<Account> findByLogin(String login);
 
-    Mono<Boolean> existsByLogin(String login);
+    boolean existsByLogin(String login);
 }
