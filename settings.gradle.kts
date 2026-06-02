@@ -9,3 +9,4 @@ pluginManagement {
 
 include(":frontend")
 include(":accounts")
+include(":notifications")

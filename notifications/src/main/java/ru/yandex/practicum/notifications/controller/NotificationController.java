@@ -1,0 +1,29 @@
+package ru.yandex.practicum.notifications.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+import ru.yandex.practicum.notifications.dto.NotificationRequest;
+import ru.yandex.practicum.notifications.service.NotificationService;
+
+@RestController
+@RequestMapping("/notifications")
+@RequiredArgsConstructor
+public class NotificationController {
+
+    private final NotificationService notificationService;
+
+    @PostMapping("/notificate")
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<ResponseEntity<Void>> notificate(@Valid @RequestBody NotificationRequest request) {
+        return notificationService.logNotification(request)
+                .thenReturn(ResponseEntity.ok().build());
+    }
+}

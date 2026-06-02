@@ -33,3 +33,17 @@ CREATE TRIGGER update_accounts_updated_at
     BEFORE UPDATE ON accounts.accounts
     FOR EACH ROW
     EXECUTE FUNCTION accounts.update_updated_at_column();
+
+-- Schema for notifications microservice
+CREATE SCHEMA IF NOT EXISTS notifications;
+
+-- Table for storing notifications
+CREATE TABLE IF NOT EXISTS notifications.notifications (
+    id BIGSERIAL PRIMARY KEY,
+    login VARCHAR(255) NOT NULL,
+    message VARCHAR(1000) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index for faster lookups by login
+CREATE INDEX IF NOT EXISTS idx_notifications_login ON notifications.notifications(login);

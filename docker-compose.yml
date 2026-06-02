@@ -117,6 +117,40 @@ services:
       retries: 10
       start_period: 60s
 
+  notifications:
+    container_name: notifications
+    build:
+      context: .
+      dockerfile: Dockerfile.notifications
+    ports:
+      - "8083:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_R2DBC_URL=r2dbc:postgresql://postgres:5432/bank
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/bank
+      - SPRING_R2DBC_USERNAME=user
+      - SPRING_R2DBC_PASSWORD=password
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_CLOUD_CONSUL_HOST=consul
+      - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
+      - KEYCLOAK_CLIENT_SECRET=notifications-secret
+    depends_on:
+      postgres:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
 volumes:
   cache:
     driver: local
