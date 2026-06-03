@@ -9,9 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 import ru.yandex.practicum.notifications.dto.NotificationRequest;
 import ru.yandex.practicum.notifications.service.NotificationService;
+
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/notifications")
@@ -22,8 +23,8 @@ public class NotificationController {
 
     @PostMapping("/notificate")
     @ResponseStatus(HttpStatus.OK)
-    public Mono<ResponseEntity<Void>> notificate(@Valid @RequestBody NotificationRequest request) {
+    public CompletableFuture<ResponseEntity<Void>> notificate(@Valid @RequestBody NotificationRequest request) {
         return notificationService.logNotification(request)
-                .thenReturn(ResponseEntity.ok().build());
+                .thenApply(v -> ResponseEntity.ok().build());
     }
 }

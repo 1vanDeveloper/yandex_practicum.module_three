@@ -1,21 +1,24 @@
 package ru.yandex.practicum.notifications;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
 
 @TestConfiguration
+@Profile("test")
+@ConditionalOnProperty(name = "spring.security.enabled", havingValue = "false")
 public class TestSecurityConfig {
 
     @Bean
-    @Profile("test")
-    public SecurityWebFilterChain testSecurityWebFilterChain(ServerHttpSecurity http) throws Exception {
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-            .csrf(ServerHttpSecurity.CsrfSpec::disable)
-            .authorizeExchange(exchanges -> exchanges
-                .anyExchange().permitAll()
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(exchanges -> exchanges
+                .anyRequest().permitAll()
             )
             .build();
     }

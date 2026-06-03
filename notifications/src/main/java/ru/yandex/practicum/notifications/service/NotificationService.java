@@ -4,11 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Mono;
 import ru.yandex.practicum.notifications.dto.NotificationRequest;
 import ru.yandex.practicum.notifications.entity.Notification;
 import ru.yandex.practicum.notifications.mapper.NotificationMapper;
 import ru.yandex.practicum.notifications.repository.NotificationRepository;
+
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -19,12 +20,14 @@ public class NotificationService {
     private final NotificationMapper notificationMapper;
 
     @Transactional
-    public Mono<Void> logNotification(NotificationRequest request) {
-        Notification notification = notificationMapper.toEntity(request);
-        
-        log.info("Notification logged for user {}: {}", request.getLogin(), request.getMessage());
-        
-        return notificationRepository.save(notification)
-                .then();
+    public CompletableFuture<Void> logNotification(NotificationRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            Notification notification = notificationMapper.toEntity(request);
+
+            log.info("Notification logged for user {}: {}", request.getLogin(), request.getMessage());
+
+            notificationRepository.save(notification);
+            return null;
+        });
     }
 }

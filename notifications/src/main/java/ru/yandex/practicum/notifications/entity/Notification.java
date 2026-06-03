@@ -1,12 +1,15 @@
 package ru.yandex.practicum.notifications.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDateTime;
 
@@ -14,18 +17,20 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 @Table(schema = "notifications", name = "notifications")
 public class Notification {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column("login")
+    @Column(name = "login", nullable = false)
     private String login;
 
-    @Column("message")
+    @Column(name = "message", nullable = false)
     private String message;
 
-    @Column("created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }

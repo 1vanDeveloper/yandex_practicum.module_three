@@ -13,9 +13,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import reactor.core.publisher.Mono;
 import ru.yandex.practicum.notifications.config.TestSecurityConfig;
 import ru.yandex.practicum.notifications.service.NotificationService;
+
+import java.util.concurrent.CompletableFuture;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -48,7 +49,7 @@ public abstract class ContractVerifierBase {
         public NotificationService notificationService() {
             NotificationService mock = Mockito.mock(NotificationService.class);
             Mockito.when(mock.logNotification(Mockito.any()))
-                    .thenReturn(Mono.empty());
+                    .thenReturn(CompletableFuture.completedFuture(null));
             return mock;
         }
     }
