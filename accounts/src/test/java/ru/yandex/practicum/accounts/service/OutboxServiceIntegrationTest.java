@@ -19,8 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.cloud.discovery.client.health-indicator.enabled=false",
         "spring.cloud.discovery.enabled=false",
         "spring.cloud.consul.discovery.enabled=false",
+        "spring.cloud.consul.config.enabled=false",
         "spring.task.scheduling.enabled=false",
-        "outbox.scheduler.enabled=false"
+        "outbox.scheduler.enabled=false",
+        "spring.security.enabled=false"
     }
 )
 @ActiveProfiles("test")
@@ -39,13 +41,13 @@ class OutboxServiceIntegrationTest {
     }
 
     @Test
-    void saveMessage_shouldSaveMessageToDatabase() throws Exception {
+    void saveMessage_shouldSaveMessageToDatabase() {
         String login = "test_user";
         String message = "Test notification message";
 
         // Save message and verify it returns correct data
         OutboxMessage savedMessage = outboxService.saveMessage(login, message).join();
-        
+
         assertThat(savedMessage.getId()).isNotNull();
         assertThat(savedMessage.getLogin()).isEqualTo(login);
         assertThat(savedMessage.getMessage()).isEqualTo(message);
@@ -56,21 +58,21 @@ class OutboxServiceIntegrationTest {
     }
 
     @Test
-    void saveMessage_shouldSetCorrectTimestamps() throws Exception {
+    void saveMessage_shouldSetCorrectTimestamps() {
         OutboxMessage savedMessage = outboxService.saveMessage("user", "message").join();
-        
+
         assertThat(savedMessage.getCreatedAt()).isNotNull();
         assertThat(savedMessage.getUpdatedAt()).isNotNull();
     }
 
     @Test
-    void findPendingMessages_shouldReturnOnlyPendingMessages() throws Exception {
+    void findPendingMessages_shouldReturnOnlyPendingMessages() {
         // Save two messages and verify findPendingMessages returns them correctly
         outboxService.saveMessage("user1", "message1").join();
         outboxService.saveMessage("user2", "message2").join();
-        
+
         var messages = outboxRepository.findPendingMessages(10);
-        
+
         assertThat(messages).hasSize(2);
         assertThat(messages).extracting("login")
                 .containsExactlyInAnyOrder("user1", "user2");

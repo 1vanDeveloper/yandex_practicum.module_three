@@ -27,15 +27,4 @@ public class WebConfiguration {
                                 .name("Yandex Practicum")
                                 .email("support@yandex.ru")));
     }
-
-    @Bean(name = "AccountsThreadPoolTaskExecutor")
-    public Executor threadPoolTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4);
-        executor.setMaxPoolSize(8);
-        executor.setQueueCapacity(24);
-        executor.setThreadNamePrefix("AccountsPool-");
-        executor.initialize();
-        return executor;
-    }
 }

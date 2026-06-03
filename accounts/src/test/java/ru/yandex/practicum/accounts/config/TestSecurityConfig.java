@@ -4,14 +4,12 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
-import org.springframework.security.web.server.SecurityWebFilterChain;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.web.SecurityFilterChain;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -20,17 +18,18 @@ import java.util.Collections;
 public class TestSecurityConfig {
 
     @Bean
+    @Primary
     @Profile("test")
-    public SecurityWebFilterChain testSecurityWebFilterChain(ServerHttpSecurity http, ReactiveJwtAuthenticationConverter converter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(ServerHttpSecurity.CsrfSpec::disable)
-            .authorizeExchange(exchanges -> exchanges
-                .anyExchange().permitAll()
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
-                    .jwtDecoder(testJwtDecoder())
-                    .jwtAuthenticationConverter(converter)
+                    .decoder(jwtDecoder())
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
                 )
             );
 
@@ -40,17 +39,17 @@ public class TestSecurityConfig {
     @Bean
     @Primary
     @Profile("test")
-    public ReactiveJwtDecoder testJwtDecoder() {
-        return token -> Mono.just(createTestJwt("test_user"));
+    public JwtDecoder jwtDecoder() {
+        return token -> createTestJwt("test_user");
     }
 
     @Bean
     @Primary
     @Profile("test")
-    public ReactiveJwtAuthenticationConverter testJwtAuthenticationConverter() {
-        var converter = new ReactiveJwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwt -> 
-            Flux.just(new SimpleGrantedAuthority("ROLE_USER"))
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        var converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt ->
+            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
         return converter;
     }

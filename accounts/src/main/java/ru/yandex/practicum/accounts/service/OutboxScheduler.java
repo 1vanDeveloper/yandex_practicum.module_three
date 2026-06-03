@@ -17,6 +17,11 @@ public class OutboxScheduler {
     @Scheduled(fixedRate = 10000)
     public void processOutboxMessages() {
         log.debug("Starting scheduled outbox message processing");
-        outboxProcessor.processPendingMessages();
+        try {
+            outboxProcessor.processPendingMessages().join();
+            log.debug("Outbox processing completed successfully");
+        } catch (Exception e) {
+            log.error("Outbox processing failed", e);
+        }
     }
 }

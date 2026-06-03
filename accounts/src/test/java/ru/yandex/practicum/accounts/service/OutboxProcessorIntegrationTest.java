@@ -13,7 +13,18 @@ import ru.yandex.practicum.accounts.repository.OutboxNotificationRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+        "spring.cloud.discovery.client.health-indicator.enabled=false",
+        "spring.cloud.discovery.enabled=false",
+        "spring.cloud.consul.discovery.enabled=false",
+        "spring.cloud.consul.config.enabled=false",
+        "spring.task.scheduling.enabled=false",
+        "outbox.scheduler.enabled=false",
+        "spring.security.enabled=false"
+    }
+)
 @ActiveProfiles("test")
 @Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class})
 class OutboxProcessorIntegrationTest {
@@ -33,49 +44,49 @@ class OutboxProcessorIntegrationTest {
     }
 
     @Test
-    void processPendingMessages_shouldProcessPendingMessages() throws Exception {
+    void processPendingMessages_shouldProcessPendingMessages() {
         // Save message
         outboxService.saveMessage("test_user", "Test message").join();
-        
+
         // Process pending messages
         outboxProcessor.processPendingMessages().join();
-        
+
         // Verify no pending messages remain
         var messages = outboxRepository.findPendingMessages(10);
         assertThat(messages).isEmpty();
     }
 
     @Test
-    void processPendingMessages_shouldUpdateMessageStatusToSent() throws Exception {
+    void processPendingMessages_shouldUpdateMessageStatusToSent() {
         // Save message
         OutboxMessage saved = outboxService.saveMessage("test_user", "Test message").join();
-        
+
         // Verify initial status is PENDING
         assertThat(saved.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());
-        
+
         // Process and verify status changed to SENT
         outboxProcessor.processPendingMessages().join();
-        
+
         OutboxMessage updated = outboxRepository.findById(saved.getId()).orElseThrow();
         assertThat(updated).isNotNull();
         assertThat(updated.getStatus()).isEqualTo(OutboxMessage.Status.SENT.getValue());
     }
 
     @Test
-    void processPendingMessages_shouldNotProcessAlreadySentMessages() throws Exception {
+    void processPendingMessages_shouldNotProcessAlreadySentMessages() {
         // Save message
         OutboxMessage saved = outboxService.saveMessage("test_user", "Test message").join();
-        
+
         // First processing
         outboxProcessor.processPendingMessages().join();
-        
+
         // Verify first processing changed status to SENT
         OutboxMessage first = outboxRepository.findById(saved.getId()).orElseThrow();
         assertThat(first.getStatus()).isEqualTo(OutboxMessage.Status.SENT.getValue());
-        
+
         // Second processing should not change anything
         outboxProcessor.processPendingMessages().join();
-        
+
         OutboxMessage second = outboxRepository.findById(first.getId()).orElseThrow();
         assertThat(second.getStatus()).isEqualTo(OutboxMessage.Status.SENT.getValue());
     }
