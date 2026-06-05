@@ -68,7 +68,7 @@ public class MockDiscoveryClientConfig {
     }
 
     @Bean
-    public RestClient.Builder restClientBuilder() {
-        return RestClient.builder();
+    public RestClient restClient() {
+        return RestClient.create();
     }
 }

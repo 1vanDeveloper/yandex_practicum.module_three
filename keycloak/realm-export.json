@@ -14,6 +14,10 @@
       {
         "name": "admin",
         "description": "Administrator role"
+      },
+      {
+        "name": "notifications:send",
+        "description": "Permission to send notifications"
       }
     ],
     "client": {
@@ -25,8 +29,13 @@
         {
           "name": "accounts:write",
           "description": "Write access to account resources"
+        },
+        {
+          "name": "notifications:send",
+          "description": "Permission to send notifications"
         }
-      ]
+      ],
+      "notifications-service": []
     }
   },
   "clients": [
@@ -55,7 +64,31 @@
       ],
       "defaultRoles": [
         "accounts:read",
-        "accounts:write"
+        "accounts:write",
+        "notifications:send"
+      ]
+    },
+    {
+      "clientId": "notifications-service",
+      "name": "Notifications Service",
+      "description": "OAuth2 client for Notifications service (resource server)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "notifications-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
       ]
     }
   ],
@@ -110,9 +143,23 @@
       "roles": [
         "offline_access"
       ]
+    },
+    {
+      "client": "notifications-service",
+      "roles": [
+        "notifications:send"
+      ]
     }
   ],
   "clientScopeMappings": {
+    "notifications-service": [
+      {
+        "client": "accounts-client",
+        "roles": [
+          "notifications:send"
+        ]
+      }
+    ],
     "market-client": [
       {
         "client": "market-client",

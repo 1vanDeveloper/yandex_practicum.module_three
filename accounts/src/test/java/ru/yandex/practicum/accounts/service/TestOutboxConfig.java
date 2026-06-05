@@ -73,18 +73,13 @@ public class TestOutboxConfig {
 
     @Bean
     @Primary
-    public NotificationsClient testNotificationsClient(RestClient.Builder restClientBuilder) {
-        return new NotificationsClient(restClientBuilder) {
+    public NotificationsClient testNotificationsClient() {
+        return new NotificationsClient(RestClient.create()) {
             @Override
             public CompletableFuture<Void> sendNotification(String notificationsUrl, NotificationRequest request) {
                 // Mock successful notification send
                 return CompletableFuture.completedFuture(null);
             }
         };
-    }
-
-    @Bean
-    public RestClient.Builder restClientBuilder() {
-        return RestClient.builder();
     }
 }

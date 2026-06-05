@@ -12,12 +12,11 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class NotificationsClient {
 
-    private final RestClient.Builder restClientBuilder;
+    private final RestClient restClient;
 
     public CompletableFuture<Void> sendNotification(String notificationsUrl, NotificationRequest request) {
         return CompletableFuture.runAsync(() -> {
-            restClientBuilder.build()
-                    .post()
+            restClient.post()
                     .uri(notificationsUrl + "/notifications/notificate")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
