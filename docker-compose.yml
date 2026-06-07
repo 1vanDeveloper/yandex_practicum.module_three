@@ -186,6 +186,43 @@ services:
       retries: 10
       start_period: 60s
 
+  transfer:
+    container_name: transfer
+    build:
+      context: .
+      dockerfile: Dockerfile.transfer
+    ports:
+      - "8085:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/bank?currentSchema=transfer
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_MODE=validate
+      - SPRING_CLOUD_CONSUL_HOST=consul
+      - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
+      - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/token
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER-SERVICE_CLIENT_ID=transfer-client
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER-SERVICE_CLIENT_SECRET=transfer-secret
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER-SERVICE_AUTHORIZATION_GRANT_TYPE=client_credentials
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER-SERVICE_PROVIDER=keycloak
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER-SERVICE_SCOPE=accounts:modify,notifications:send
+    depends_on:
+      postgres:
+        condition: service_started
+      consul:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
 volumes:
   cache:
     driver: local
