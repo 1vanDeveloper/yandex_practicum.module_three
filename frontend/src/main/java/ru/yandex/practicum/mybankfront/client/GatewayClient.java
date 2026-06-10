@@ -1,10 +1,11 @@
 package ru.yandex.practicum.mybankfront.client;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestTemplate;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
+import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -12,14 +13,20 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class GatewayClient {
 
-    private final WebClient webClient;
+    private final RestTemplate restTemplate;
+
+    public CompletableFuture<Void> register(String gatewayUrl, RegisterRequest request) {
+        return CompletableFuture.runAsync(() -> {
+            restTemplate.postForEntity(gatewayUrl + "/gateway/register", request, Void.class);
+        });
+    }
 
     public CompletableFuture<AccountResponse> getAccount(String gatewayUrl, String login) {
-        return webClient.get()
-                .uri(gatewayUrl + "/gateway/account")
-                .retrieve()
-                .bodyToMono(AccountResponse.class)
-                .toFuture();
+        return CompletableFuture.supplyAsync(() -> {
+            ResponseEntity<AccountResponse> response = restTemplate.getForEntity(
+                    gatewayUrl + "/gateway/account", AccountResponse.class);
+            return response.getBody();
+        });
     }
 
     public CompletableFuture<AccountResponse> updateAccount(
@@ -27,44 +34,33 @@ public class GatewayClient {
             String firstName,
             String lastName,
             String birthDate) {
-        return webClient.post()
-                .uri(gatewayUrl + "/gateway/account")
-                .bodyValue(new UpdateAccountRequest(firstName, lastName, birthDate))
-                .retrieve()
-                .bodyToMono(AccountResponse.class)
-                .toFuture();
+        return CompletableFuture.supplyAsync(() -> {
+            ResponseEntity<AccountResponse> response = restTemplate.postForEntity(
+                    gatewayUrl + "/gateway/account",
+                    new UpdateAccountRequest(firstName, lastName, birthDate),
+                    AccountResponse.class);
+            return response.getBody();
+        });
     }
 
     public CompletableFuture<Void> processCash(
             String gatewayUrl,
             Integer value,
             String action) {
-        return webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(gatewayUrl + "/gateway/cash")
-                        .queryParam("value", value)
-                        .queryParam("action", action)
-                        .build())
-                .retrieve()
-                .toBodilessEntity()
-                .then()
-                .toFuture();
+        return CompletableFuture.runAsync(() -> {
+            String url = gatewayUrl + "/gateway/cash?value=" + value + "&action=" + action;
+            restTemplate.postForEntity(url, null, Void.class);
+        });
     }
 
     public CompletableFuture<Void> processTransfer(
             String gatewayUrl,
             Integer value,
             String login) {
-        return webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path(gatewayUrl + "/gateway/transfer")
-                        .queryParam("value", value)
-                        .queryParam("login", login)
-                        .build())
-                .retrieve()
-                .toBodilessEntity()
-                .then()
-                .toFuture();
+        return CompletableFuture.runAsync(() -> {
+            String url = gatewayUrl + "/gateway/transfer?value=" + value + "&login=" + login;
+            restTemplate.postForEntity(url, null, Void.class);
+        });
     }
 
     private record UpdateAccountRequest(String firstName, String lastName, String birthDate) {}

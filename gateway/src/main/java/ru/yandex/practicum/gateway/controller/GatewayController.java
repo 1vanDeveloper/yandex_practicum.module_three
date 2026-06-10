@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.gateway.dto.AccountResponse;
 import ru.yandex.practicum.gateway.dto.CashAction;
+import ru.yandex.practicum.gateway.dto.RegisterRequest;
 import ru.yandex.practicum.gateway.dto.UpdateAccountRequest;
 import ru.yandex.practicum.gateway.service.GatewayService;
 
@@ -25,6 +26,16 @@ import java.util.concurrent.CompletableFuture;
 public class GatewayController {
 
     private final GatewayService gatewayService;
+
+    /**
+     * POST /gateway/register.
+     * Регистрация нового пользователя.
+     */
+    @PostMapping("/register")
+    public CompletableFuture<Void> register(@Valid @RequestBody RegisterRequest request) {
+        log.info("POST /gateway/register received for login: {}", request.getLogin());
+        return gatewayService.register(request);
+    }
 
     /**
      * GET /gateway/account.

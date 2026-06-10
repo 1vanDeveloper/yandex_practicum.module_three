@@ -10,6 +10,7 @@ import ru.yandex.practicum.gateway.client.TransferClient;
 import ru.yandex.practicum.gateway.dto.AccountResponse;
 import ru.yandex.practicum.gateway.dto.CashAction;
 import ru.yandex.practicum.gateway.dto.CashRequest;
+import ru.yandex.practicum.gateway.dto.RegisterRequest;
 import ru.yandex.practicum.gateway.dto.TransferRequest;
 import ru.yandex.practicum.gateway.dto.UpdateAccountRequest;
 
@@ -36,6 +37,11 @@ public class GatewayService {
     public CompletableFuture<AccountResponse> getAccount(String login) {
         log.info("Gateway: getting account for login: {}", login);
         return accountsClient.getAccount(accountsUrl, login);
+    }
+
+    public CompletableFuture<Void> register(RegisterRequest request) {
+        log.info("Gateway: registering new account for login: {}", request.getLogin());
+        return accountsClient.register(accountsUrl, request);
     }
 
     public CompletableFuture<AccountResponse> updateAccount(String login, UpdateAccountRequest request) {

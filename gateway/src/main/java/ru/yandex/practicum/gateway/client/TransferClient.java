@@ -2,7 +2,7 @@ package ru.yandex.practicum.gateway.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
 import ru.yandex.practicum.gateway.dto.TransferRequest;
 
 import java.util.concurrent.CompletableFuture;
@@ -11,15 +11,11 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class TransferClient {
 
-    private final WebClient webClient;
+    private final RestTemplate restTemplate;
 
     public CompletableFuture<Void> createTransfer(String transferUrl, TransferRequest request) {
-        return webClient.post()
-                .uri(transferUrl + "/transfer")
-                .bodyValue(request)
-                .retrieve()
-                .toBodilessEntity()
-                .then()
-                .toFuture();
+        return CompletableFuture.runAsync(() -> {
+            restTemplate.postForEntity(transferUrl + "/transfer", request, Void.class);
+        });
     }
 }

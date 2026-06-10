@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.mybankfront.client.GatewayClient;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
+import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -18,6 +19,11 @@ public class GatewayService {
 
     @Value("${gateway.service.url:http://localhost:8086}")
     private String gatewayUrl;
+
+    public CompletableFuture<Void> register(RegisterRequest request) {
+        log.info("Frontend: registering new account for login: {}", request.getLogin());
+        return gatewayClient.register(gatewayUrl, request);
+    }
 
     public CompletableFuture<AccountResponse> getAccount(String login) {
         log.info("Frontend: getting account for login: {}", login);

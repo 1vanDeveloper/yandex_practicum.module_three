@@ -18,6 +18,10 @@
       {
         "name": "notifications:send",
         "description": "Permission to send notifications"
+      },
+      {
+        "name": "gateway:access",
+        "description": "Access to gateway service"
       }
     ],
     "client": {
@@ -69,6 +73,65 @@
       ]
     },
     {
+      "clientId": "frontend-client",
+      "name": "Frontend Client",
+      "description": "OAuth2 client for Frontend (authorization code flow for login)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "frontend-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:8081/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:8081"
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ]
+    },
+    {
+      "clientId": "frontend-service",
+      "name": "Frontend Service",
+      "description": "OAuth2 client for Frontend to call Gateway (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "frontend-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "gateway:access"
+      ]
+    },
+    {
       "clientId": "notifications-service",
       "name": "Notifications Service",
       "description": "OAuth2 client for Notifications service (resource server)",
@@ -109,10 +172,7 @@
       ],
       "realmRoles": [
         "user"
-      ],
-      "clientRoles": {
-        "market-client": []
-      }
+      ]
     },
     {
       "username": "admin",
@@ -131,10 +191,7 @@
       "realmRoles": [
         "admin",
         "user"
-      ],
-      "clientRoles": {
-        "market-client": []
-      }
+      ]
     }
   ],
   "scopeMappings": [
@@ -157,14 +214,6 @@
         "client": "accounts-client",
         "roles": [
           "notifications:send"
-        ]
-      }
-    ],
-    "market-client": [
-      {
-        "client": "market-client",
-        "roles": [
-          "user"
         ]
       }
     ]
