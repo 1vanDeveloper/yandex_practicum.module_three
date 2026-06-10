@@ -5,11 +5,10 @@ import org.springframework.cloud.contract.spec.Contract
 Contract.make {
     description "should update account"
     request {
-        method 'PATCH'
-        url '/accounts'
+        method 'PUT'
+        url '/accounts/test_user'
         headers {
             contentType(applicationJson())
-            header 'Authorization', 'Bearer test-token'
         }
         body([
             firstName: "Updated",
