@@ -39,7 +39,41 @@
           "description": "Permission to send notifications"
         }
       ],
-      "notifications-service": []
+      "notifications-service": [],
+      "gateway-client": [
+        {
+          "name": "accounts:modify",
+          "description": "Permission to modify accounts"
+        },
+        {
+          "name": "cash:modify",
+          "description": "Permission to modify cash operations"
+        },
+        {
+          "name": "transfer:modify",
+          "description": "Permission to modify transfers"
+        }
+      ],
+      "cash-client": [
+        {
+          "name": "accounts:modify",
+          "description": "Permission to modify accounts"
+        },
+        {
+          "name": "notifications:send",
+          "description": "Permission to send notifications"
+        }
+      ],
+      "transfer-client": [
+        {
+          "name": "accounts:modify",
+          "description": "Permission to modify accounts"
+        },
+        {
+          "name": "notifications:send",
+          "description": "Permission to send notifications"
+        }
+      ]
     }
   },
   "clients": [
@@ -152,6 +186,91 @@
       ],
       "optionalClientScopes": [
         "offline_access"
+      ]
+    },
+    {
+      "clientId": "gateway-client",
+      "name": "Gateway Service Client",
+      "description": "OAuth2 client for Gateway service (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "gateway-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "accounts:modify",
+        "cash:modify",
+        "transfer:modify"
+      ]
+    },
+    {
+      "clientId": "cash-client",
+      "name": "Cash Service Client",
+      "description": "OAuth2 client for Cash service (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "cash-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "accounts:modify",
+        "notifications:send"
+      ]
+    },
+    {
+      "clientId": "transfer-client",
+      "name": "Transfer Service Client",
+      "description": "OAuth2 client for Transfer service (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "transfer-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "accounts:modify",
+        "notifications:send"
       ]
     }
   ],
