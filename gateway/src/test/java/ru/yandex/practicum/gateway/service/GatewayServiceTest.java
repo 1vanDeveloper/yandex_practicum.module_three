@@ -11,9 +11,10 @@ import ru.yandex.practicum.gateway.client.CashClient;
 import ru.yandex.practicum.gateway.client.TransferClient;
 import ru.yandex.practicum.gateway.dto.AccountResponse;
 import ru.yandex.practicum.gateway.dto.CashAction;
+import ru.yandex.practicum.gateway.dto.CashRequest;
+import ru.yandex.practicum.gateway.dto.TransferRequest;
 import ru.yandex.practicum.gateway.dto.UpdateAccountRequest;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.concurrent.CompletableFuture;
@@ -40,7 +41,7 @@ class GatewayServiceTest {
     private AccountResponse testAccount;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         testAccount = AccountResponse.builder()
                 .id(1L)
                 .login("testuser")
@@ -49,23 +50,12 @@ class GatewayServiceTest {
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .amount(BigDecimal.valueOf(1000.00))
                 .build();
-
-        // Set URL fields via reflection since @Value is not processed in unit tests
-        setField(gatewayService, "accountsUrl", "http://localhost:8082");
-        setField(gatewayService, "cashUrl", "http://localhost:8084");
-        setField(gatewayService, "transferUrl", "http://localhost:8085");
-    }
-
-    private void setField(Object target, String fieldName, String value) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
     }
 
     @Test
     void getAccount_shouldReturnAccountResponse() {
         // Arrange
-        when(accountsClient.getAccount(anyString(), eq("testuser")))
+        when(accountsClient.getAccount(eq("testuser")))
                 .thenReturn(CompletableFuture.completedFuture(testAccount));
 
         // Act
@@ -74,7 +64,7 @@ class GatewayServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(testAccount, result.join());
-        verify(accountsClient).getAccount(anyString(), eq("testuser"));
+        verify(accountsClient).getAccount(eq("testuser"));
     }
 
     @Test
@@ -86,7 +76,7 @@ class GatewayServiceTest {
                 .birthDate(LocalDate.of(1995, 5, 5))
                 .build();
 
-        when(accountsClient.updateAccount(anyString(), eq(request)))
+        when(accountsClient.updateAccount(eq(request)))
                 .thenReturn(CompletableFuture.completedFuture(testAccount));
 
         // Act
@@ -95,13 +85,13 @@ class GatewayServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(testAccount, result.join());
-        verify(accountsClient).updateAccount(anyString(), eq(request));
+        verify(accountsClient).updateAccount(eq(request));
     }
 
     @Test
     void processCash_withPutAction_shouldCallDeposit() {
         // Arrange
-        when(cashClient.deposit(anyString(), any()))
+        when(cashClient.deposit(any(CashRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
@@ -109,14 +99,14 @@ class GatewayServiceTest {
 
         // Assert
         assertNotNull(result);
-        verify(cashClient).deposit(anyString(), any());
+        verify(cashClient).deposit(any(CashRequest.class));
         verifyNoInteractions(transferClient);
     }
 
     @Test
     void processCash_withGetAction_shouldCallWithdraw() {
         // Arrange
-        when(cashClient.withdraw(anyString(), any()))
+        when(cashClient.withdraw(any(CashRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
@@ -124,14 +114,14 @@ class GatewayServiceTest {
 
         // Assert
         assertNotNull(result);
-        verify(cashClient).withdraw(anyString(), any());
+        verify(cashClient).withdraw(any(CashRequest.class));
         verifyNoInteractions(transferClient);
     }
 
     @Test
     void processTransfer_shouldCallCreateTransfer() {
         // Arrange
-        when(transferClient.createTransfer(anyString(), any()))
+        when(transferClient.createTransfer(any(TransferRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
@@ -139,7 +129,7 @@ class GatewayServiceTest {
 
         // Assert
         assertNotNull(result);
-        verify(transferClient).createTransfer(anyString(), any());
+        verify(transferClient).createTransfer(any(TransferRequest.class));
         verifyNoInteractions(cashClient);
     }
 }

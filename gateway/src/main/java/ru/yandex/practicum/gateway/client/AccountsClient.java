@@ -16,24 +16,26 @@ public class AccountsClient {
 
     private final RestTemplate restTemplate;
 
-    public CompletableFuture<AccountResponse> getAccount(String accountsUrl, String login) {
+    private static final String SERVICE_NAME = "accounts-service";
+
+    public CompletableFuture<AccountResponse> getAccount(String login) {
         return CompletableFuture.supplyAsync(() -> {
             ResponseEntity<AccountResponse> response = restTemplate.getForEntity(
-                    accountsUrl + "/accounts/{login}", AccountResponse.class, login);
+                    "http://" + SERVICE_NAME + "/accounts/{login}", AccountResponse.class, login);
             return response.getBody();
         });
     }
 
-    public CompletableFuture<Void> register(String accountsUrl, RegisterRequest request) {
+    public CompletableFuture<Void> register(RegisterRequest request) {
         return CompletableFuture.runAsync(() -> {
-            restTemplate.postForEntity(accountsUrl + "/accounts", request, Void.class);
+            restTemplate.postForEntity("http://" + SERVICE_NAME + "/accounts", request, Void.class);
         });
     }
 
-    public CompletableFuture<AccountResponse> updateAccount(String accountsUrl, UpdateAccountRequest request) {
+    public CompletableFuture<AccountResponse> updateAccount(UpdateAccountRequest request) {
         return CompletableFuture.supplyAsync(() -> {
             ResponseEntity<AccountResponse> response = restTemplate.postForEntity(
-                    accountsUrl + "/accounts", request, AccountResponse.class);
+                    "http://" + SERVICE_NAME + "/accounts", request, AccountResponse.class);
             return response.getBody();
         });
     }

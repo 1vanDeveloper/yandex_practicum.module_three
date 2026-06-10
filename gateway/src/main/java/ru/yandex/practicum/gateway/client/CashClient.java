@@ -13,15 +13,17 @@ public class CashClient {
 
     private final RestTemplate restTemplate;
 
-    public CompletableFuture<Void> deposit(String cashUrl, CashRequest request) {
+    private static final String SERVICE_NAME = "cash-service";
+
+    public CompletableFuture<Void> deposit(CashRequest request) {
         return CompletableFuture.runAsync(() -> {
-            restTemplate.postForEntity(cashUrl + "/cash/deposit", request, Void.class);
+            restTemplate.postForEntity("http://" + SERVICE_NAME + "/cash/deposit", request, Void.class);
         });
     }
 
-    public CompletableFuture<Void> withdraw(String cashUrl, CashRequest request) {
+    public CompletableFuture<Void> withdraw(CashRequest request) {
         return CompletableFuture.runAsync(() -> {
-            restTemplate.postForEntity(cashUrl + "/cash/withdraw", request, Void.class);
+            restTemplate.postForEntity("http://" + SERVICE_NAME + "/cash/withdraw", request, Void.class);
         });
     }
 }

@@ -69,6 +69,7 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_MODE=validate
       - SPRING_CLOUD_CONSUL_HOST=consul
       - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/token
@@ -145,6 +146,7 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_MODE=validate
       - SPRING_CLOUD_CONSUL_HOST=consul
       - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
     depends_on:
@@ -176,6 +178,7 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_MODE=validate
       - SPRING_CLOUD_CONSUL_HOST=consul
       - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/token
@@ -212,6 +215,7 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_MODE=validate
       - SPRING_CLOUD_CONSUL_HOST=consul
       - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/token
@@ -253,6 +257,12 @@ services:
       - SERVICES_ACCOUNTS_URL=http://accounts-service
       - SERVICES_CASH_URL=http://cash-service
       - SERVICES_TRANSFER_URL=http://transfer-service
+      - KEYCLOAK.ADMIN_SERVER_URL=http://keycloak:8080
+      - KEYCLOAK.ADMIN_REALM=master
+      - KEYCLOAK.ADMIN_CLIENT_ID=admin-cli
+      - KEYCLOAK.ADMIN_USERNAME=admin
+      - KEYCLOAK.ADMIN_PASSWORD=admin
+      - KEYCLOAK.TARGET_REALM=bank
       - SPRING_CLOUD_CONSUL_HOST=consul
       - SPRING_CLOUD_CONSUL_PORT=8500
     depends_on:

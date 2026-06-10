@@ -24,29 +24,29 @@ public class GatewayService {
     private final AccountsClient accountsClient;
     private final CashClient cashClient;
     private final TransferClient transferClient;
-
-    @Value("${services.accounts.url:http://localhost:8082}")
-    private String accountsUrl;
-
-    @Value("${services.cash.url:http://localhost:8084}")
-    private String cashUrl;
-
-    @Value("${services.transfer.url:http://localhost:8085}")
-    private String transferUrl;
+    private final KeycloakService keycloakService;
 
     public CompletableFuture<AccountResponse> getAccount(String login) {
         log.info("Gateway: getting account for login: {}", login);
-        return accountsClient.getAccount(accountsUrl, login);
+        return accountsClient.getAccount(login);
     }
 
     public CompletableFuture<Void> register(RegisterRequest request) {
         log.info("Gateway: registering new account for login: {}", request.getLogin());
-        return accountsClient.register(accountsUrl, request);
+
+        // Сначала создаем пользователя в accounts-service
+        return accountsClient.register(request)
+                .thenRun(() -> {
+                    // После успешной регистрации создаем пользователя в Keycloak
+                    log.info("Account created successfully, now creating user in Keycloak: {}", request.getLogin());
+                    keycloakService.createUserInKeycloak(request);
+                    log.info("User successfully registered in both accounts-service and Keycloak: {}", request.getLogin());
+                });
     }
 
     public CompletableFuture<AccountResponse> updateAccount(String login, UpdateAccountRequest request) {
         log.info("Gateway: updating account for login: {}", login);
-        return accountsClient.updateAccount(accountsUrl, request);
+        return accountsClient.updateAccount(request);
     }
 
     public CompletableFuture<Void> processCash(String login, Integer amount, CashAction action) {
@@ -57,9 +57,9 @@ public class GatewayService {
                 .build();
 
         if (action == CashAction.PUT) {
-            return cashClient.deposit(cashUrl, request);
+            return cashClient.deposit(request);
         } else {
-            return cashClient.withdraw(cashUrl, request);
+            return cashClient.withdraw(request);
         }
     }
 
@@ -70,6 +70,6 @@ public class GatewayService {
                 .toLogin(toLogin)
                 .amount(amount)
                 .build();
-        return transferClient.createTransfer(transferUrl, request);
+        return transferClient.createTransfer(request);
     }
 }

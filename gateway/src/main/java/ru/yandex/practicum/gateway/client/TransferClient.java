@@ -13,9 +13,11 @@ public class TransferClient {
 
     private final RestTemplate restTemplate;
 
-    public CompletableFuture<Void> createTransfer(String transferUrl, TransferRequest request) {
+    private static final String SERVICE_NAME = "transfer-service";
+
+    public CompletableFuture<Void> createTransfer(TransferRequest request) {
         return CompletableFuture.runAsync(() -> {
-            restTemplate.postForEntity(transferUrl + "/transfer", request, Void.class);
+            restTemplate.postForEntity("http://" + SERVICE_NAME + "/transfer", request, Void.class);
         });
     }
 }
