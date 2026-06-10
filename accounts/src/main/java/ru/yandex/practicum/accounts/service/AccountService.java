@@ -11,6 +11,7 @@ import ru.yandex.practicum.accounts.entity.Account;
 import ru.yandex.practicum.accounts.mapper.AccountMapper;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
 
+import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -60,6 +61,58 @@ public class AccountService {
         );
     }
 
+    @Transactional
+    public CompletableFuture<Void> deposit(String login, BigDecimal amount) {
+        return CompletableFuture.runAsync(() -> {
+            Account account = accountRepository.findByLogin(login)
+                .orElseThrow(() -> new AccountNotFoundException(
+                        "Account with login '" + login + "' not found"));
+            account.setAmount(account.getAmount().add(amount));
+            accountRepository.save(account);
+        });
+    }
+
+    @Transactional
+    public CompletableFuture<Void> withdraw(String login, BigDecimal amount) {
+        return CompletableFuture.runAsync(() -> {
+            Account account = accountRepository.findByLogin(login)
+                .orElseThrow(() -> new AccountNotFoundException(
+                        "Account with login '" + login + "' not found"));
+            if (account.getAmount().compareTo(amount) < 0) {
+                throw new InsufficientFundsException(
+                        "Insufficient funds for account '" + login + "'. Required: " + amount + ", Available: " + account.getAmount());
+            }
+            account.setAmount(account.getAmount().subtract(amount));
+            accountRepository.save(account);
+        });
+    }
+
+    @Transactional
+    public CompletableFuture<Void> debit(String login, BigDecimal amount) {
+        return CompletableFuture.runAsync(() -> {
+            Account account = accountRepository.findByLogin(login)
+                .orElseThrow(() -> new AccountNotFoundException(
+                        "Account with login '" + login + "' not found"));
+            if (account.getAmount().compareTo(amount) < 0) {
+                throw new InsufficientFundsException(
+                        "Insufficient funds for account '" + login + "'. Required: " + amount + ", Available: " + account.getAmount());
+            }
+            account.setAmount(account.getAmount().subtract(amount));
+            accountRepository.save(account);
+        });
+    }
+
+    @Transactional
+    public CompletableFuture<Void> credit(String login, BigDecimal amount) {
+        return CompletableFuture.runAsync(() -> {
+            Account account = accountRepository.findByLogin(login)
+                .orElseThrow(() -> new AccountNotFoundException(
+                        "Account with login '" + login + "' not found"));
+            account.setAmount(account.getAmount().add(amount));
+            accountRepository.save(account);
+        });
+    }
+
     public static class AccountNotFoundException extends RuntimeException {
         public AccountNotFoundException(String message) {
             super(message);
@@ -68,6 +121,12 @@ public class AccountService {
 
     public static class AccountAlreadyExistsException extends RuntimeException {
         public AccountAlreadyExistsException(String message) {
+            super(message);
+        }
+    }
+
+    public static class InsufficientFundsException extends RuntimeException {
+        public InsufficientFundsException(String message) {
             super(message);
         }
     }
