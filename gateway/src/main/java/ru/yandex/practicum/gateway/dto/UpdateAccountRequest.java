@@ -1,5 +1,6 @@
 package ru.yandex.practicum.gateway.dto;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -8,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -26,4 +28,8 @@ public class UpdateAccountRequest {
 
     @NotNull(message = "Birth date is required")
     private LocalDate birthDate;
+
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Amount cannot be negative")
+    private BigDecimal amount;
 }

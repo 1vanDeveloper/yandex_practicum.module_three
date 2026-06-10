@@ -22,7 +22,8 @@ import java.util.Map;
 @Slf4j
 public class KeycloakService {
 
-    private final RestTemplate restTemplate;
+    private final RestTemplate loadBalancedRestTemplate;
+    private final RestTemplate keycloakRestTemplate = new RestTemplate();
 
     @Value("${keycloak.admin-server-url:http://localhost:8180}")
     private String keycloakServerUrl;
@@ -77,7 +78,7 @@ public class KeycloakService {
         String tokenUrl = String.format("%s/realms/%s/protocol/openid-connect/token",
                 keycloakServerUrl, adminRealm);
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+        ResponseEntity<Map> response = keycloakRestTemplate.postForEntity(tokenUrl, request, Map.class);
 
         if (response.getBody() == null || !response.getBody().containsKey("access_token")) {
             throw new RuntimeException("Failed to obtain admin token from Keycloak");
@@ -109,7 +110,7 @@ public class KeycloakService {
         headers.setBearerAuth(adminToken);
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(userRepresentation, headers);
 
-        ResponseEntity<Void> response = restTemplate.postForEntity(createUserUrl, entity, Void.class);
+        ResponseEntity<Void> response = keycloakRestTemplate.postForEntity(createUserUrl, entity, Void.class);
 
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new RuntimeException("Failed to create user in Keycloak: " + response.getStatusCode());

@@ -46,7 +46,7 @@ public class GatewayService {
 
     public CompletableFuture<AccountResponse> updateAccount(String login, UpdateAccountRequest request) {
         log.info("Gateway: updating account for login: {}", login);
-        return accountsClient.updateAccount(request);
+        return accountsClient.updateAccount(login, request);
     }
 
     public CompletableFuture<Void> processCash(String login, Integer amount, CashAction action) {

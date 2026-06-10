@@ -76,7 +76,7 @@ class GatewayServiceTest {
                 .birthDate(LocalDate.of(1995, 5, 5))
                 .build();
 
-        when(accountsClient.updateAccount(eq(request)))
+        when(accountsClient.updateAccount(eq("testuser"), eq(request)))
                 .thenReturn(CompletableFuture.completedFuture(testAccount));
 
         // Act
@@ -85,7 +85,7 @@ class GatewayServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(testAccount, result.join());
-        verify(accountsClient).updateAccount(eq(request));
+        verify(accountsClient).updateAccount(eq("testuser"), eq(request));
     }
 
     @Test

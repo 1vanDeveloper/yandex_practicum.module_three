@@ -1,6 +1,8 @@
 package ru.yandex.practicum.gateway.client;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -32,11 +34,11 @@ public class AccountsClient {
         });
     }
 
-    public CompletableFuture<AccountResponse> updateAccount(UpdateAccountRequest request) {
+    public CompletableFuture<AccountResponse> updateAccount(String login, UpdateAccountRequest request) {
         return CompletableFuture.supplyAsync(() -> {
-            ResponseEntity<AccountResponse> response = restTemplate.postForEntity(
-                    "http://" + SERVICE_NAME + "/accounts", request, AccountResponse.class);
-            return response.getBody();
+            restTemplate.put("http://" + SERVICE_NAME + "/accounts/{login}", request, login);
+            return restTemplate.getForEntity(
+                    "http://" + SERVICE_NAME + "/accounts/{login}", AccountResponse.class, login).getBody();
         });
     }
 }
