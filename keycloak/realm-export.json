@@ -16,10 +16,6 @@
         "description": "Administrator role"
       },
       {
-        "name": "notifications:send",
-        "description": "Permission to send notifications"
-      },
-      {
         "name": "gateway:access",
         "description": "Access to gateway service"
       }
@@ -33,13 +29,14 @@
         {
           "name": "accounts:write",
           "description": "Write access to account resources"
-        },
+        }
+      ],
+      "notifications-service": [
         {
           "name": "notifications:send",
           "description": "Permission to send notifications"
         }
       ],
-      "notifications-service": [],
       "gateway-client": [
         {
           "name": "accounts:modify",
@@ -58,20 +55,12 @@
         {
           "name": "accounts:modify",
           "description": "Permission to modify accounts"
-        },
-        {
-          "name": "notifications:send",
-          "description": "Permission to send notifications"
         }
       ],
       "transfer-client": [
         {
           "name": "accounts:modify",
           "description": "Permission to modify accounts"
-        },
-        {
-          "name": "notifications:send",
-          "description": "Permission to send notifications"
         }
       ]
     }
@@ -319,18 +308,24 @@
       "roles": [
         "offline_access"
       ]
-    },
-    {
-      "client": "notifications-service",
-      "roles": [
-        "notifications:send"
-      ]
     }
   ],
   "clientScopeMappings": {
     "notifications-service": [
       {
         "client": "accounts-client",
+        "roles": [
+          "notifications:send"
+        ]
+      },
+      {
+        "client": "cash-client",
+        "roles": [
+          "notifications:send"
+        ]
+      },
+      {
+        "client": "transfer-client",
         "roles": [
           "notifications:send"
         ]
