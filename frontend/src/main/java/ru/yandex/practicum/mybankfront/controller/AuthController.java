@@ -1,5 +1,6 @@
 package ru.yandex.practicum.mybankfront.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -49,7 +50,7 @@ public class AuthController {
      */
     @PostMapping("/register")
     public String register(
-            @ModelAttribute("registerRequest") RegisterRequest request,
+            @Valid @ModelAttribute("registerRequest") RegisterRequest request,
             BindingResult bindingResult,
             Model model) {
 

@@ -17,9 +17,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
+                        // Public endpoints
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
-                        .requestMatchers("/cash/deposit", "/cash/withdraw").permitAll()
+                        // All cash endpoints require authentication (called by gateway with OAuth2)
+                        .requestMatchers("/cash/**").authenticated()
+                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
