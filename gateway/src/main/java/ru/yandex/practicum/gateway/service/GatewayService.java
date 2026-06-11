@@ -14,6 +14,7 @@ import ru.yandex.practicum.gateway.dto.RegisterRequest;
 import ru.yandex.practicum.gateway.dto.TransferRequest;
 import ru.yandex.practicum.gateway.dto.UpdateAccountRequest;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -24,7 +25,6 @@ public class GatewayService {
     private final AccountsClient accountsClient;
     private final CashClient cashClient;
     private final TransferClient transferClient;
-    private final KeycloakService keycloakService;
 
     public CompletableFuture<AccountResponse> getAccount(String login) {
         log.info("Gateway: getting account for login: {}", login);
@@ -34,14 +34,16 @@ public class GatewayService {
     public CompletableFuture<Void> register(RegisterRequest request) {
         log.info("Gateway: registering new account for login: {}", request.getLogin());
 
-        // Сначала создаем пользователя в accounts-service
+        // Создаем пользователя в accounts-service
         return accountsClient.register(request)
                 .thenRun(() -> {
-                    // После успешной регистрации создаем пользователя в Keycloak
-                    log.info("Account created successfully, now creating user in Keycloak: {}", request.getLogin());
-                    keycloakService.createUserInKeycloak(request);
-                    log.info("User successfully registered in both accounts-service and Keycloak: {}", request.getLogin());
+                    log.info("User successfully registered in accounts-service: {}", request.getLogin());
                 });
+    }
+
+    public CompletableFuture<Map<String, Object>> login(String login, String password) {
+        log.info("Gateway: authenticating user with login: {}", login);
+        return accountsClient.login(login, password);
     }
 
     public CompletableFuture<AccountResponse> updateAccount(String login, UpdateAccountRequest request) {

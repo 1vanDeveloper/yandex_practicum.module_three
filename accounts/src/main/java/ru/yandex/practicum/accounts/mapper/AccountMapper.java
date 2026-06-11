@@ -13,6 +13,7 @@ public class AccountMapper {
         return Account.builder()
                 .login(request.getLogin())
                 .password(request.getPassword())
+                .email(request.getEmail())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .birthDate(request.getBirthDate())
@@ -26,6 +27,7 @@ public class AccountMapper {
                 .login(account.getLogin())
                 .firstName(account.getFirstName())
                 .lastName(account.getLastName())
+                .email(account.getEmail())
                 .birthDate(account.getBirthDate())
                 .amount(account.getAmount())
                 .build();
@@ -37,6 +39,9 @@ public class AccountMapper {
         }
         if (request.getLastName() != null) {
             account.setLastName(request.getLastName());
+        }
+        if (request.getEmail() != null) {
+            account.setEmail(request.getEmail());
         }
         if (request.getBirthDate() != null) {
             account.setBirthDate(request.getBirthDate());

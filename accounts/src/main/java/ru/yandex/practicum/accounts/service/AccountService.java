@@ -1,6 +1,7 @@
 package ru.yandex.practicum.accounts.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.accounts.dto.AccountIdResponse;
@@ -21,6 +22,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final OutboxService outboxService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public CompletableFuture<AccountIdResponse> createAccount(CreateAccountRequest request) {
@@ -29,9 +31,14 @@ public class AccountService {
                 throw new AccountAlreadyExistsException(
                         "Account with login '" + request.getLogin() + "' already exists");
             }
+            if (accountRepository.existsByEmail(request.getEmail())) {
+                throw new AccountAlreadyExistsException(
+                        "Account with email '" + request.getEmail() + "' already exists");
+            }
             Account account = accountMapper.toEntity(request);
+            account.setPassword(passwordEncoder.encode(account.getPassword()));
             return accountRepository.save(account);
-        }).thenCompose(savedAccount -> 
+        }).thenCompose(savedAccount ->
             outboxService.saveMessage(savedAccount.getLogin(), "Account created: " + savedAccount.getLogin())
                 .thenApply(v -> new AccountIdResponse(savedAccount.getId()))
         );

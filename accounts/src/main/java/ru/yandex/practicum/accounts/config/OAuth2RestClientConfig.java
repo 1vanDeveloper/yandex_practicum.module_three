@@ -41,7 +41,7 @@ public class OAuth2RestClientConfig {
         List<ClientHttpRequestInterceptor> interceptors = restTemplate.getInterceptors();
         interceptors.add(new OAuth2ClientCredentialsInterceptor(authorizedClientManager, "accounts-service"));
         restTemplate.setInterceptors(interceptors);
-        
+
         return RestClient.builder()
                 .requestFactory(restTemplate.getRequestFactory())
                 .build();

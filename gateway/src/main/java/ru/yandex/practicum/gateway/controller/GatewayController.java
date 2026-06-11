@@ -17,6 +17,7 @@ import ru.yandex.practicum.gateway.dto.RegisterRequest;
 import ru.yandex.practicum.gateway.dto.UpdateAccountRequest;
 import ru.yandex.practicum.gateway.service.GatewayService;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -35,6 +36,16 @@ public class GatewayController {
     public CompletableFuture<Void> register(@Valid @RequestBody RegisterRequest request) {
         log.info("POST /gateway/register received for login: {}", request.getLogin());
         return gatewayService.register(request);
+    }
+
+    /**
+     * POST /gateway/login.
+     * Аутентификация пользователя и получение JWT токена.
+     */
+    @PostMapping("/login")
+    public CompletableFuture<Map<String, Object>> login(@Valid @RequestBody Map<String, String> credentials) {
+        log.info("POST /gateway/login received for login: {}", credentials.get("login"));
+        return gatewayService.login(credentials.get("login"), credentials.get("password"));
     }
 
     /**

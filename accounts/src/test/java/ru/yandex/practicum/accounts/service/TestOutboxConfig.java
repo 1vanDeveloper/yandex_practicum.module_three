@@ -19,6 +19,11 @@ import java.util.concurrent.CompletableFuture;
 public class TestOutboxConfig {
 
     @Bean
+    public RestClient restClient() {
+        return RestClient.create();
+    }
+
+    @Bean
     public DiscoveryClient testDiscoveryClient() {
         return new DiscoveryClient() {
             @Override

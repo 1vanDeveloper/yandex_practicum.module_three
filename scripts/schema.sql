@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS accounts.accounts (
     id BIGSERIAL PRIMARY KEY,
     login VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
     birth_date DATE NOT NULL,
@@ -19,6 +20,9 @@ CREATE TABLE IF NOT EXISTS accounts.accounts (
 
 -- Index for faster lookups by login
 CREATE INDEX IF NOT EXISTS idx_accounts_login ON accounts.accounts(login);
+
+-- Index for faster lookups by email
+CREATE INDEX IF NOT EXISTS idx_accounts_email ON accounts.accounts(email);
 
 -- Trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION accounts.update_updated_at_column()

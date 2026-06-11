@@ -1,45 +1,39 @@
 package ru.yandex.practicum.accounts.dto;
 
-import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateAccountRequest {
+public class RegisterRequest {
 
     @NotBlank(message = "Login is required")
-    @Size(min = 3, max = 255, message = "Login must be between 3 and 255 characters")
+    @Size(min = 3, max = 50, message = "Login must be between 3 and 50 characters")
     private String login;
 
     @NotBlank(message = "Password is required")
+    @Size(min = 6, max = 100, message = "Password must be between 6 and 100 characters")
     private String password;
 
     @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
     private String email;
 
     @NotBlank(message = "First name is required")
-    @Size(max = 255, message = "First name must not exceed 255 characters")
+    @Size(min = 1, max = 100, message = "First name must be between 1 and 100 characters")
     private String firstName;
 
     @NotBlank(message = "Last name is required")
-    @Size(max = 255, message = "Last name must not exceed 255 characters")
+    @Size(min = 1, max = 100, message = "Last name must be between 1 and 100 characters")
     private String lastName;
 
-    @NotNull(message = "Birth date is required")
-    private LocalDate birthDate;
-
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.00", inclusive = true, message = "Amount cannot be negative")
-    private BigDecimal amount;
+    @NotBlank(message = "Birth date is required")
+    private String birthDate;
 }

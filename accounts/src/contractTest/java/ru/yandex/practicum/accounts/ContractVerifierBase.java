@@ -65,6 +65,7 @@ public abstract class ContractVerifierBase {
                                     "test_user",
                                     "Test",
                                     "User",
+                                    "test@example.com",
                                     LocalDate.of(1990, 5, 15),
                                     BigDecimal.valueOf(1000.00))));
 
@@ -79,6 +80,7 @@ public abstract class ContractVerifierBase {
                                     "test_user",
                                     "Updated",
                                     "Name",
+                                    "updated@example.com",
                                     LocalDate.of(1995, 10, 20),
                                     BigDecimal.valueOf(2000.00))));
 

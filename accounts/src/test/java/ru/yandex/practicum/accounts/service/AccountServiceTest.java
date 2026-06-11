@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.yandex.practicum.accounts.dto.AccountIdResponse;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
@@ -36,6 +37,9 @@ class AccountServiceTest {
     @Mock
     private OutboxService outboxService;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private AccountService accountService;
 
@@ -49,6 +53,7 @@ class AccountServiceTest {
                 .id(1L)
                 .login("test_user")
                 .password("hashed_password")
+                .email("test@example.com")
                 .firstName("Test")
                 .lastName("User")
                 .birthDate(LocalDate.of(1990, 5, 15))
@@ -58,6 +63,7 @@ class AccountServiceTest {
         createRequest = CreateAccountRequest.builder()
                 .login("test_user")
                 .password("plain_password")
+                .email("test@example.com")
                 .firstName("Test")
                 .lastName("User")
                 .birthDate(LocalDate.of(1990, 5, 15))
@@ -67,6 +73,7 @@ class AccountServiceTest {
         updateRequest = UpdateAccountRequest.builder()
                 .firstName("Updated")
                 .lastName("Name")
+                .email("updated@example.com")
                 .birthDate(LocalDate.of(1995, 10, 20))
                 .amount(BigDecimal.valueOf(2000.00))
                 .build();
@@ -76,7 +83,8 @@ class AccountServiceTest {
     void createAccount_whenAccountDoesNotExist_shouldCreateAccount() throws Exception {
         Account mappedAccount = Account.builder()
                 .login("test_user")
-                .password("hashed_password")
+                .password("plain_password")
+                .email("test@example.com")
                 .firstName("Test")
                 .lastName("User")
                 .birthDate(LocalDate.of(1990, 5, 15))
@@ -84,7 +92,9 @@ class AccountServiceTest {
                 .build();
 
         when(accountRepository.existsByLogin("test_user")).thenReturn(false);
+        when(accountRepository.existsByEmail("test@example.com")).thenReturn(false);
         when(accountMapper.toEntity(createRequest)).thenReturn(mappedAccount);
+        when(passwordEncoder.encode("plain_password")).thenReturn("hashed_password");
         when(accountRepository.save(any(Account.class))).thenReturn(testAccount);
         when(outboxService.saveMessage(any(String.class), any(String.class)))
                 .thenReturn(CompletableFuture.completedFuture(
@@ -123,6 +133,7 @@ class AccountServiceTest {
         AccountResponse response = AccountResponse.builder()
                 .id(1L)
                 .login("test_user")
+                .email("test@example.com")
                 .firstName("Test")
                 .lastName("User")
                 .birthDate(LocalDate.of(1990, 5, 15))
@@ -155,6 +166,7 @@ class AccountServiceTest {
         Account updatedAccount = Account.builder()
                 .id(1L)
                 .login("test_user")
+                .email("test@example.com")
                 .firstName("Updated")
                 .lastName("Name")
                 .birthDate(LocalDate.of(1995, 10, 20))
@@ -164,6 +176,7 @@ class AccountServiceTest {
         AccountResponse response = AccountResponse.builder()
                 .id(1L)
                 .login("test_user")
+                .email("test@example.com")
                 .firstName("Updated")
                 .lastName("Name")
                 .birthDate(LocalDate.of(1995, 10, 20))

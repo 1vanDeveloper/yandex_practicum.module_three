@@ -18,6 +18,7 @@ public class AccountResponse {
     private String login;
     private String firstName;
     private String lastName;
+    private String email;
     private LocalDate birthDate;
     private BigDecimal amount;
 }

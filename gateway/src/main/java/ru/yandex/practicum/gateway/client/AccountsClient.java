@@ -1,8 +1,6 @@
 package ru.yandex.practicum.gateway.client;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -10,6 +8,7 @@ import ru.yandex.practicum.gateway.dto.AccountResponse;
 import ru.yandex.practicum.gateway.dto.RegisterRequest;
 import ru.yandex.practicum.gateway.dto.UpdateAccountRequest;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -31,6 +30,15 @@ public class AccountsClient {
     public CompletableFuture<Void> register(RegisterRequest request) {
         return CompletableFuture.runAsync(() -> {
             restTemplate.postForEntity("http://" + SERVICE_NAME + "/accounts", request, Void.class);
+        });
+    }
+
+    public CompletableFuture<Map<String, Object>> login(String login, String password) {
+        return CompletableFuture.supplyAsync(() -> {
+            Map<String, String> credentials = Map.of("login", login, "password", password);
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                    "http://" + SERVICE_NAME + "/auth/login", credentials, Map.class);
+            return response.getBody();
         });
     }
 

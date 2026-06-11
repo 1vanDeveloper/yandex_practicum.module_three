@@ -23,6 +23,8 @@ public class UpdateAccountRequest {
     @Size(max = 255, message = "Last name must not exceed 255 characters")
     private String lastName;
 
+    private String email;
+
     private LocalDate birthDate;
 
     @NotNull(message = "Amount is required")

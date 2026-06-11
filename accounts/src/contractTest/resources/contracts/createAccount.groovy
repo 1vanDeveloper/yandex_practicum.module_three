@@ -13,6 +13,7 @@ Contract.make {
         body([
             login: "test_user",
             password: "\$2a\$10\$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lqkkO9QS3TzCjH3rS",
+            email: "test@example.com",
             firstName: "Test",
             lastName: "User",
             birthDate: "1990-05-15",
