@@ -1,6 +1,7 @@
 package ru.yandex.practicum.mybankfront.client;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -11,13 +12,16 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class GatewayClient {
 
     private final RestTemplate restTemplate;
+    private final RestTemplate publicRestTemplate;
 
     public CompletableFuture<Void> register(String gatewayUrl, RegisterRequest request) {
         return CompletableFuture.runAsync(() -> {
-            restTemplate.postForEntity(gatewayUrl + "/gateway/register", request, Void.class);
+            log.info("GatewayClient: sending register request for login: {}, email: {}", request.getLogin(), request.getEmail());
+            publicRestTemplate.postForEntity(gatewayUrl + "/gateway/register", request, Void.class);
         });
     }
 

@@ -53,6 +53,8 @@ public class AuthController {
             @Valid @ModelAttribute("registerRequest") RegisterRequest request,
             BindingResult bindingResult,
             Model model) {
+        
+        log.info("AuthController: received registration request for login: {}, email: {}", request.getLogin(), request.getEmail());
 
         if (bindingResult.hasErrors()) {
             List<String> errors = new ArrayList<>();

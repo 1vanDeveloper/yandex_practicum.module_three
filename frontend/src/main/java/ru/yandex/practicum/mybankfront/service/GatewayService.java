@@ -21,7 +21,7 @@ public class GatewayService {
     private String gatewayUrl;
 
     public CompletableFuture<Void> register(RegisterRequest request) {
-        log.info("Frontend: registering new account for login: {}", request.getLogin());
+        log.info("Frontend: registering new account for login: {}, email: {}", request.getLogin(), request.getEmail());
         return gatewayClient.register(gatewayUrl, request);
     }
 
@@ -47,9 +47,5 @@ public class GatewayService {
     public CompletableFuture<Void> processTransfer(String fromLogin, Integer value, String toLogin) {
         log.info("Frontend: processing transfer from {} to {} value: {}", fromLogin, toLogin, value);
         return gatewayClient.processTransfer(gatewayUrl, value, toLogin);
-    }
-
-    public String getGatewayUrl() {
-        return gatewayUrl;
     }
 }

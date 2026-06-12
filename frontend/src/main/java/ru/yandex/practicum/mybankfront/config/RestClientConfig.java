@@ -23,6 +23,11 @@ public class RestClientConfig {
         return restTemplate;
     }
 
+    @Bean
+    public RestTemplate publicRestTemplate() {
+        return new RestTemplate();
+    }
+
     private static class OAuth2ClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
         private final OAuth2AuthorizedClientService authorizedClientService;
 
@@ -33,22 +38,22 @@ public class RestClientConfig {
         @Override
         public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
             // Get current authentication from SecurityContext
-            OAuth2AuthenticationToken authentication = 
+            OAuth2AuthenticationToken authentication =
                 (OAuth2AuthenticationToken) org.springframework.security.core.context.SecurityContextHolder
                     .getContext().getAuthentication();
-            
+
             if (authentication != null) {
                 // Load authorized client
                 OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
                     "frontend-service", authentication.getName());
-                
+
                 if (client != null && client.getAccessToken() != null) {
                     // Add bearer token to request
-                    request.getHeaders().set("Authorization", 
+                    request.getHeaders().set("Authorization",
                         "Bearer " + client.getAccessToken().getTokenValue());
                 }
             }
-            
+
             return execution.execute(request, body);
         }
     }

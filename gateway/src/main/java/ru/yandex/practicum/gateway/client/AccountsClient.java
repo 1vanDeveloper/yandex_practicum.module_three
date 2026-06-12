@@ -29,7 +29,7 @@ public class AccountsClient {
 
     public CompletableFuture<Void> register(RegisterRequest request) {
         return CompletableFuture.runAsync(() -> {
-            restTemplate.postForEntity("http://" + SERVICE_NAME + "/accounts", request, Void.class);
+            restTemplate.postForEntity("http://" + SERVICE_NAME + "/accounts/register", request, Void.class);
         });
     }
 

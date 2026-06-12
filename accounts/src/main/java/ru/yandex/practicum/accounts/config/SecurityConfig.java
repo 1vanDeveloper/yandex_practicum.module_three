@@ -8,6 +8,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -33,6 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 // Registration endpoint - public (called during user registration)
                 .requestMatchers(HttpMethod.POST, "/accounts").permitAll()
+                .requestMatchers(HttpMethod.POST, "/accounts/register").permitAll()
                 // Internal endpoints - require authentication (called by other services)
                 .requestMatchers("/accounts/internal/**").authenticated()
                 // Account access by login - require authentication (must come after /accounts/internal/**)
@@ -59,5 +62,10 @@ public class SecurityConfig {
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
