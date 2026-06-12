@@ -11,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import ru.yandex.practicum.mybankfront.dto.LoginRequest;
 import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 import ru.yandex.practicum.mybankfront.service.GatewayService;
 
@@ -32,8 +33,44 @@ public class AuthController {
      * GET /login - страница входа.
      */
     @GetMapping("/login")
-    public String loginPage() {
+    public String loginPage(Model model) {
+        model.addAttribute("loginRequest", new LoginRequest());
         return "login";
+    }
+
+    /**
+     * POST /login - обработка формы входа.
+     */
+    @PostMapping("/login")
+    public String login(
+            @Valid @ModelAttribute("loginRequest") LoginRequest request,
+            BindingResult bindingResult,
+            Model model) {
+
+        log.info("AuthController: received login request for username: {}", request.getUsername());
+
+        if (bindingResult.hasErrors()) {
+            List<String> errors = new ArrayList<>();
+            bindingResult.getFieldErrors().forEach(error ->
+                errors.add(error.getField() + ": " + error.getDefaultMessage()));
+            model.addAttribute("errors", errors);
+            return "login";
+        }
+
+        try {
+            CompletableFuture<String> future = gatewayService.login(request);
+            String token = future.join();
+
+            model.addAttribute("success", "Вход успешен!");
+            return "redirect:/account";
+        } catch (Exception e) {
+            log.error("Error during login for username: {}", request.getUsername(), e);
+            List<String> errors = new ArrayList<>();
+            errors.add("Ошибка входа: " + e.getCause().getMessage());
+            model.addAttribute("errors", errors);
+            model.addAttribute("loginRequest", request);
+            return "login";
+        }
     }
 
     /**

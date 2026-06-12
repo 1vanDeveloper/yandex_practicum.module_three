@@ -30,6 +30,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
+    testImplementation("org.postgresql:postgresql:42.7.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

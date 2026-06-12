@@ -2,7 +2,6 @@ package ru.yandex.practicum.gateway.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.gateway.client.AccountsClient;
 import ru.yandex.practicum.gateway.client.CashClient;
@@ -14,6 +13,7 @@ import ru.yandex.practicum.gateway.dto.RegisterRequest;
 import ru.yandex.practicum.gateway.dto.TransferRequest;
 import ru.yandex.practicum.gateway.dto.UpdateAccountRequest;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -53,10 +53,7 @@ public class GatewayService {
 
     public CompletableFuture<Void> processCash(String login, Integer amount, CashAction action) {
         log.info("Gateway: processing cash action: {} for login: {}, amount: {}", action, login, amount);
-        CashRequest request = CashRequest.builder()
-                .login(login)
-                .amount(amount)
-                .build();
+        CashRequest request = new CashRequest(login, BigDecimal.valueOf(amount));
 
         if (action == CashAction.PUT) {
             return cashClient.deposit(request);

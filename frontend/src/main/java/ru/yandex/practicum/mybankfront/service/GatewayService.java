@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.mybankfront.client.GatewayClient;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
+import ru.yandex.practicum.mybankfront.dto.LoginRequest;
 import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
 import java.util.concurrent.CompletableFuture;
@@ -23,6 +24,11 @@ public class GatewayService {
     public CompletableFuture<Void> register(RegisterRequest request) {
         log.info("Frontend: registering new account for login: {}, email: {}", request.getLogin(), request.getEmail());
         return gatewayClient.register(gatewayUrl, request);
+    }
+
+    public CompletableFuture<String> login(LoginRequest request) {
+        log.info("Frontend: logging in user: {}", request.getUsername());
+        return gatewayClient.login(gatewayUrl, request);
     }
 
     public CompletableFuture<AccountResponse> getAccount(String login) {

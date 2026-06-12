@@ -16,24 +16,21 @@
                         <h4 class="mb-0 text-center">Вход в Банк</h4>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-danger" role="alert" th:if="${param.error}">
-                            Неверный логин или пароль
-                        </div>
                         <div class="alert alert-success" role="alert" th:if="${success}">
                             <span th:text="${success}"/>
                         </div>
                         <div class="alert alert-danger" role="alert" th:if="${errors!=null}" th:each="error : ${errors}">
                             <span th:text="${error}"/>
                         </div>
-                        
-                        <form th:action="@{/oauth2/authorization/keycloak}" method="get">
+
+                        <form th:action="@{/login}" method="post" th:object="${loginRequest}">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Логин</label>
-                                <input type="text" class="form-control" id="username" name="username" placeholder="Введите логин" required autofocus>
+                                <input type="text" class="form-control" id="username" th:field="*{username}" placeholder="Введите логин" required autofocus>
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Пароль</label>
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Введите пароль" required>
+                                <input type="password" class="form-control" id="password" th:field="*{password}" placeholder="Введите пароль" required>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Войти</button>
                         </form>

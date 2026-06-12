@@ -6,8 +6,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
+import ru.yandex.practicum.mybankfront.dto.LoginRequest;
 import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -22,6 +24,16 @@ public class GatewayClient {
         return CompletableFuture.runAsync(() -> {
             log.info("GatewayClient: sending register request for login: {}, email: {}", request.getLogin(), request.getEmail());
             publicRestTemplate.postForEntity(gatewayUrl + "/gateway/register", request, Void.class);
+        });
+    }
+
+    public CompletableFuture<String> login(String gatewayUrl, LoginRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            log.info("GatewayClient: sending login request for username: {}", request.getUsername());
+            Map<String, String> credentials = Map.of("login", request.getUsername(), "password", request.getPassword());
+            ResponseEntity<Map> response = publicRestTemplate.postForEntity(
+                    gatewayUrl + "/gateway/login", credentials, Map.class);
+            return (String) response.getBody().get("access_token");
         });
     }
 

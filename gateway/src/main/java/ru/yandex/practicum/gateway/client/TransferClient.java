@@ -1,6 +1,7 @@
 package ru.yandex.practicum.gateway.client;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import ru.yandex.practicum.gateway.dto.TransferRequest;
@@ -13,11 +14,12 @@ public class TransferClient {
 
     private final RestTemplate restTemplate;
 
-    private static final String SERVICE_NAME = "transfer-service";
+    @Value("${services.transfer.url:http://transfer-service:8080}")
+    private String transferServiceUrl;
 
     public CompletableFuture<Void> createTransfer(TransferRequest request) {
         return CompletableFuture.runAsync(() -> {
-            restTemplate.postForEntity("http://" + SERVICE_NAME + "/transfer", request, Void.class);
+            restTemplate.postForEntity(transferServiceUrl + "/transfer", request, Void.class);
         });
     }
 }
