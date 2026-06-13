@@ -79,10 +79,10 @@ services:
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
       # OAuth2 Client Credentials Flow для межсервисных запросов в Notifications
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/token
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTS-SERVICE_CLIENT_ID=accounts-client
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTS-SERVICE_CLIENT_SECRET=accounts-secret
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTS-SERVICE_AUTHORIZATION_GRANT_TYPE=client_credentials
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTS-SERVICE_PROVIDER=keycloak
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTSSERVICE_CLIENT_ID=accounts-client
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTSSERVICE_CLIENT_SECRET=accounts-secret
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTSSERVICE_AUTHORIZATION_GRANT_TYPE=client_credentials
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTSSERVICE_PROVIDER=keycloak
     depends_on:
       postgres:
         condition: service_started
@@ -116,7 +116,7 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND-CLIENT_CLIENT_ID=frontend-client
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND-CLIENT_CLIENT_SECRET=frontend-secret
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND-CLIENT_AUTHORIZATION_GRANT_TYPE=authorization_code
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND-CLIENT_REDIRECT_URI=http://localhost:8081/login/oauth2/code/keycloak
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND-CLIENT_REDIRECT_URI=http://localhost:8081/login/oauth2/code/frontend-client
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND-CLIENT_SCOPE=openid,profile,email
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND-CLIENT_PROVIDER=keycloak
       # OAuth2 Resource Server для валидации JWT
@@ -261,9 +261,8 @@ services:
       - "8086:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      # OAuth2 Resource Server - валидация JWT от Keycloak
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
+      # JWT secret для валидации токенов от Accounts сервиса
+      - JWT_SECRET=mySecretKeyForJWTTokenGenerationMustBeLongEnough
       # Consul service discovery
       - SPRING_CLOUD_CONSUL_HOST=consul
       - SPRING_CLOUD_CONSUL_PORT=8500

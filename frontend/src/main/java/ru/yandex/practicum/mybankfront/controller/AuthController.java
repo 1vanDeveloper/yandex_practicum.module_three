@@ -2,27 +2,33 @@ package ru.yandex.practicum.mybankfront.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.view.RedirectView;
+import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
+import ru.yandex.practicum.mybankfront.dto.LoginRequest;
+import ru.yandex.practicum.mybankfront.service.GatewayService;
 
-import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Контроллер для страниц авторизации и главной страницы.
- * OAuth2 Login обрабатывается автоматически Spring Security.
+ * Аутентификация через форму с получением JWT от Accounts сервиса.
  */
 @Controller
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
 
+    private final GatewayService gatewayService;
+
     /**
-     * GET /login - страница входа с кнопкой OAuth2 авторизации.
+     * GET /login - страница входа с формой.
      */
     @GetMapping("/login")
     public String loginPage(Model model) {
@@ -31,8 +37,31 @@ public class AuthController {
     }
 
     /**
+     * POST /api/auth/login - обработка формы входа.
+     */
+    @PostMapping("/api/auth/login")
+    public RedirectView login(
+            @RequestParam String login,
+            @RequestParam String password,
+            Model model) {
+
+        log.debug("Login form submitted for user: {}", login);
+
+        LoginRequest request = new LoginRequest(login, password);
+
+        try {
+            JwtTokenResponse tokenResponse = gatewayService.login(request).join();
+            // Сохраняем токен в сессии
+            log.debug("User {} authenticated successfully", login);
+            return new RedirectView("/account");
+        } catch (Exception ex) {
+            log.error("Login failed: {}", ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage());
+            return new RedirectView("/login?error");
+        }
+    }
+
+    /**
      * GET /register - страница регистрации (информационная).
-     * Регистрация пользователей осуществляется через Keycloak.
      */
     @GetMapping("/register")
     public String registerPage(Model model) {
@@ -44,63 +73,11 @@ public class AuthController {
      * GET / - главная страница с редиректом на аккаунт или логин.
      */
     @GetMapping("/")
-    public String index(@AuthenticationPrincipal Jwt jwt) {
-        if (jwt != null) {
+    public String index() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth.getPrincipal() instanceof String)) {
             return "redirect:/account";
         }
         return "redirect:/login";
-    }
-
-    /**
-     * GET /account - главная страница после авторизации.
-     */
-    @GetMapping("/account")
-    public String accountPage(
-            @AuthenticationPrincipal OidcUser oidcUser,
-            @AuthenticationPrincipal Jwt jwt,
-            Model model) {
-
-        if (oidcUser != null) {
-            log.info("User authenticated via OIDC: {}", oidcUser.getPreferredUsername());
-            model.addAttribute("username", oidcUser.getPreferredUsername());
-            model.addAttribute("email", oidcUser.getEmail());
-            model.addAttribute("fullName", oidcUser.getFullName());
-            model.addAttribute("attributes", oidcUser.getAttributes());
-        } else if (jwt != null) {
-            log.info("User authenticated via JWT: {}", jwt.getSubject());
-            model.addAttribute("username", jwt.getClaimAsString("preferred_username"));
-            model.addAttribute("email", jwt.getClaimAsString("email"));
-            model.addAttribute("fullName", jwt.getClaimAsString("name"));
-            model.addAttribute("attributes", jwt.getClaims());
-        }
-
-        return "main";
-    }
-
-    /**
-     * GET /user-info - информация о текущем пользователе для frontend.
-     */
-    @GetMapping("/user-info")
-    public Map<String, Object> userInfo(
-            @AuthenticationPrincipal OidcUser oidcUser,
-            @AuthenticationPrincipal Jwt jwt) {
-
-        if (oidcUser != null) {
-            return Map.of(
-                "username", oidcUser.getPreferredUsername(),
-                "email", oidcUser.getEmail(),
-                "fullName", oidcUser.getFullName(),
-                "attributes", oidcUser.getAttributes()
-            );
-        } else if (jwt != null) {
-            return Map.of(
-                "username", jwt.getClaimAsString("preferred_username"),
-                "email", jwt.getClaimAsString("email"),
-                "fullName", jwt.getClaimAsString("name"),
-                "attributes", jwt.getClaims()
-            );
-        }
-
-        return Map.of("authenticated", false);
     }
 }

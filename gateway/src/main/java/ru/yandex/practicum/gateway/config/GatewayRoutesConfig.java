@@ -22,6 +22,21 @@ public class GatewayRoutesConfig {
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
+            // Auth service routes (public)
+            .route("accounts-auth-login", r -> r
+                .path("/gateway/auth/login")
+                .and()
+                .method(org.springframework.http.HttpMethod.POST)
+                .filters(f -> f.rewritePath("/gateway/auth/login", "/auth/login"))
+                .uri("http://accounts:8080"))
+
+            .route("accounts-auth-register", r -> r
+                .path("/gateway/auth/register")
+                .and()
+                .method(org.springframework.http.HttpMethod.POST)
+                .filters(f -> f.rewritePath("/gateway/auth/register", "/auth/register"))
+                .uri("http://accounts:8080"))
+
             // Accounts service routes - доступ к аккаунту пользователя
             .route("accounts-account-get", r -> r
                 .path("/gateway/account")

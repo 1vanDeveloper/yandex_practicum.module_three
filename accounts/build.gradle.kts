@@ -27,16 +27,17 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 
-    // JWT для пользовательской аутентификации (login/register)
+    // JWT
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
-    // OAuth2 Client для service-to-service (исключаем oauth2-jose для конфликта с jjwt)
-    implementation("org.springframework.security:spring-security-oauth2-client") {
-        exclude(group = "org.springframework.security", module = "spring-security-oauth2-jose")
-    }
-    
+    // OAuth2 Resource Server (для валидации JWT от Keycloak)
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
+    // OAuth2 Client (для Client Credentials Flow)
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+
     // Spring Cloud
     implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
     implementation("org.springframework.cloud:spring-cloud-starter-consul-config")

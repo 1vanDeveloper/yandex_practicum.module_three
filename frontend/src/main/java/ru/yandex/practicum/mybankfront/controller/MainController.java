@@ -2,8 +2,8 @@ package ru.yandex.practicum.mybankfront.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,17 +62,17 @@ public class MainController {
      * 3. Текущего пользователя можно получить из контекста Security
      */
     @GetMapping("/account")
-    public CompletableFuture<String> getAccount(Model model, @AuthenticationPrincipal Jwt jwt) {
-        String login = jwt.getClaimAsString("preferred_username");
-        log.info("GET /account received for login: {}", login);
+    public CompletableFuture<String> getAccount(Model model) {
+        String login = getCurrentLogin();
+        log.info("GET /account received for user: {}", login);
 
-        return gatewayService.getAccount(login)
+        return gatewayService.getAccount()
                 .thenApply(account -> {
                     fillModel(model, account, null, null);
                     return "main";
                 })
                 .exceptionally(ex -> {
-                    log.error("Error getting account for login: {}", login, ex);
+                    log.error("Error getting account", ex);
                     List<String> errors = new ArrayList<>();
                     errors.add("Ошибка получения данных аккаунта: " + ex.getCause().getMessage());
                     fillModel(model, null, errors, null);
@@ -94,28 +94,27 @@ public class MainController {
     @PostMapping("/account")
     public CompletableFuture<String> editAccount(
             Model model,
-            @AuthenticationPrincipal Jwt jwt,
             @RequestParam("name") String name,
             @RequestParam("birthdate") LocalDate birthdate) {
 
-        String login = jwt.getClaimAsString("preferred_username");
-        log.info("POST /account received for login: {}, name: {}, birthdate: {}", login, name, birthdate);
+        String login = getCurrentLogin();
+        log.info("POST /account received for user: {}, name: {}, birthdate: {}", login, name, birthdate);
 
         // Parse name into firstName and lastName
         String[] nameParts = name.split(" ", 2);
         String firstName = nameParts.length > 0 ? nameParts[0] : "";
         String lastName = nameParts.length > 1 ? nameParts[1] : "";
 
-        return gatewayService.updateAccount(login, firstName, lastName, birthdate.format(DateTimeFormatter.ISO_DATE))
-                .thenCompose(updatedAccount -> 
-                    gatewayService.getAccount(login)
+        return gatewayService.updateAccount(firstName, lastName, birthdate.format(DateTimeFormatter.ISO_DATE))
+                .thenCompose(updatedAccount ->
+                    gatewayService.getAccount()
                         .thenApply(account -> {
                             fillModel(model, account, null, "Данные успешно обновлены");
                             return "main";
                         })
                 )
                 .exceptionally(ex -> {
-                    log.error("Error updating account for login: {}", login, ex);
+                    log.error("Error updating account for user: {}", login, ex);
                     List<String> errors = new ArrayList<>();
                     errors.add("Ошибка обновления данных: " + ex.getCause().getMessage());
                     fillModel(model, null, errors, null);
@@ -137,15 +136,14 @@ public class MainController {
     @PostMapping("/cash")
     public CompletableFuture<String> editCash(
             Model model,
-            @AuthenticationPrincipal Jwt jwt,
             @RequestParam("value") int value,
             @RequestParam("action") CashAction action) {
 
-        String login = jwt.getClaimAsString("preferred_username");
-        log.info("POST /cash received for login: {}, action: {}, value: {}", login, action, value);
+        String login = getCurrentLogin();
+        log.info("POST /cash received for user: {}, action: {}, value: {}", login, action, value);
 
-        return gatewayService.processCash(login, value, action.name())
-                .thenCompose(v -> gatewayService.getAccount(login))
+        return gatewayService.processCash(value, action.name())
+                .thenCompose(v -> gatewayService.getAccount())
                 .thenApply(account -> {
                     String info = action == CashAction.PUT
                             ? "Счёт успешно пополнен на " + value
@@ -154,7 +152,7 @@ public class MainController {
                     return "main";
                 })
                 .exceptionally(ex -> {
-                    log.error("Error processing cash for login: {}", login, ex);
+                    log.error("Error processing cash for user: {}", login, ex);
                     List<String> errors = new ArrayList<>();
                     errors.add("Ошибка операции со счётом: " + ex.getCause().getMessage());
                     fillModel(model, null, errors, null);
@@ -176,26 +174,36 @@ public class MainController {
     @PostMapping("/transfer")
     public CompletableFuture<String> transfer(
             Model model,
-            @AuthenticationPrincipal Jwt jwt,
             @RequestParam("value") int value,
             @RequestParam("login") String toLogin) {
 
-        String fromLogin = jwt.getClaimAsString("preferred_username");
+        String fromLogin = getCurrentLogin();
         log.info("POST /transfer received from: {} to: {}, value: {}", fromLogin, toLogin, value);
 
-        return gatewayService.processTransfer(fromLogin, value, toLogin)
-                .thenCompose(v -> gatewayService.getAccount(fromLogin))
+        return gatewayService.processTransfer(value, toLogin)
+                .thenCompose(v -> gatewayService.getAccount())
                 .thenApply(account -> {
                     fillModel(model, account, null, "Перевод успешно выполнен");
                     return "main";
                 })
                 .exceptionally(ex -> {
-                    log.error("Error processing transfer from: {} to: {}", fromLogin, toLogin, ex);
+                    log.error("Error processing transfer from: {} to: {}", fromLogin, ex);
                     List<String> errors = new ArrayList<>();
                     errors.add("Ошибка перевода: " + ex.getCause().getMessage());
                     fillModel(model, null, errors, null);
                     return "main";
                 });
+    }
+
+    /**
+     * Получает логин текущего пользователя из SecurityContext.
+     */
+    private String getCurrentLogin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof String login) {
+            return login;
+        }
+        return "unknown";
     }
 
     /**

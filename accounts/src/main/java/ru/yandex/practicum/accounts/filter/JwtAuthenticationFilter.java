@@ -11,19 +11,20 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ru.yandex.practicum.accounts.service.UserDetailsServiceImpl;
+import ru.yandex.practicum.accounts.util.JwtUtil;
 
 import java.io.IOException;
 
 /**
- * Фильтр для извлечения логина пользователя из JWT токена Keycloak
+ * Фильтр для извлечения и валидации JWT токена Accounts сервиса
  * и загрузки UserDetails из базы данных для последующей авторизации.
- *
- * OAuth2 Resource Server уже валидирует JWT токен, этот фильтр только
- * загружает информацию о пользователе из БД для доступа к аккаунту.
+ * Используется только для пользовательских JWT токенов (от Accounts сервиса).
+ * JWT токены от Keycloak (Client Credentials) обрабатываются OAuth2 Resource Server.
  */
 @Slf4j
 @Component
@@ -31,6 +32,8 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserDetailsServiceImpl userDetailsService;
+    private final JwtUtil jwtUtil;
+    private final JwtDecoder keycloakJwtDecoder;
 
     @Override
     protected void doFilterInternal(
@@ -40,31 +43,60 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         log.debug("JwtAuthenticationFilter: Processing request {}", request.getRequestURI());
 
-        // Проверяем, есть ли уже аутентификация от OAuth2 Resource Server
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            Jwt jwt = jwtAuth.getToken();
-            String login = jwt.getClaimAsString("preferred_username");
+        String token = resolveToken(request);
 
-            log.debug("JwtAuthenticationFilter: Extracted login from Keycloak JWT: {}", login);
+        if (token != null) {
+            try {
+                // Проверяем, является ли токен Keycloak токеном
+                boolean isKeycloakToken = isKeycloakToken(token);
 
-            if (login != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                try {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(login);
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.info("JwtAuthenticationFilter: Successfully loaded user details for: {}", login);
-                } catch (Exception e) {
-                    log.warn("JwtAuthenticationFilter: User not found in local database: {}", login);
-                    // Продолжаем с JWT аутентификацией, даже если пользователь не найден в локальной БД
+                if (isKeycloakToken) {
+                    // Keycloak токены обрабатываются OAuth2 Resource Server
+                    log.debug("JwtAuthenticationFilter: Keycloak token detected, skipping");
+                } else {
+                    // Локальный токен Accounts сервиса - валидируем и загружаем пользователя
+                    String login = jwtUtil.extractLogin(token);
+                    log.debug("JwtAuthenticationFilter: Extracted login from JWT: {}", login);
+
+                    if (login != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(login);
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                        log.info("JwtAuthenticationFilter: Successfully authenticated user: {}", login);
+                    }
                 }
+            } catch (Exception e) {
+                log.warn("JwtAuthenticationFilter: Invalid JWT token: {}", e.getMessage());
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Проверяет, является ли токен JWT от Keycloak.
+     * Keycloak токены имеют стандартные claims (iss, aud, realm_access).
+     */
+    private boolean isKeycloakToken(String token) {
+        try {
+            Jwt jwt = keycloakJwtDecoder.decode(token);
+            // Keycloak токены содержат claim "realm_access" или "resource_access"
+            return jwt.hasClaim("realm_access") || jwt.hasClaim("resource_access");
+        } catch (JwtException e) {
+            // Не является Keycloak токеном
+            return false;
+        }
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

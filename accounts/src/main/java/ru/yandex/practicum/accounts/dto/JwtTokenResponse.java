@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -15,4 +17,5 @@ public class JwtTokenResponse {
     private String tokenType;
     private Long expiresIn;
     private String login;
+    private List<String> privileges;
 }

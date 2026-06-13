@@ -5,14 +5,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.accounts.dto.JwtTokenResponse;
+import ru.yandex.practicum.accounts.dto.LoginRequest;
 import ru.yandex.practicum.accounts.dto.RegisterRequest;
 import ru.yandex.practicum.accounts.entity.Account;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
+import ru.yandex.practicum.accounts.util.JwtUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -21,6 +25,7 @@ public class AuthService {
 
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Transactional
     public Account register(RegisterRequest request) {
@@ -49,6 +54,30 @@ public class AuthService {
         Account saved = accountRepository.save(account);
         log.info("User registered successfully: {}", saved.getLogin());
         return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public JwtTokenResponse login(LoginRequest request) {
+        log.info("Authenticating user with login: {}", request.getLogin());
+
+        Account account = accountRepository.findByLogin(request.getLogin())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid login or password"));
+
+        if (!passwordEncoder.matches(request.getPassword(), account.getPassword())) {
+            throw new IllegalArgumentException("Invalid login or password");
+        }
+
+        List<String> privileges = jwtUtil.extractPrivilegesFromAccount(account);
+        String token = jwtUtil.generateToken(account.getLogin(), privileges);
+        log.info("User authenticated successfully: {} with privileges: {}", account.getLogin(), privileges);
+
+        return JwtTokenResponse.builder()
+                .token(token)
+                .tokenType("Bearer")
+                .expiresIn(jwtUtil.extractExpiration(token).getTime() - System.currentTimeMillis())
+                .login(account.getLogin())
+                .privileges(privileges)
+                .build();
     }
 
     @Transactional(readOnly = true)

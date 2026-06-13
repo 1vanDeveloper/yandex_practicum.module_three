@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.mybankfront.client.GatewayClient;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
+import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
+import ru.yandex.practicum.mybankfront.dto.LoginRequest;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -14,6 +16,11 @@ import java.util.concurrent.CompletableFuture;
 public class GatewayService {
 
     private final GatewayClient gatewayClient;
+
+    public CompletableFuture<JwtTokenResponse> login(LoginRequest request) {
+        log.info("Frontend: logging in user: {}", request.getLogin());
+        return gatewayClient.login(request);
+    }
 
     public CompletableFuture<AccountResponse> getAccount() {
         log.info("Frontend: getting account for authenticated user");

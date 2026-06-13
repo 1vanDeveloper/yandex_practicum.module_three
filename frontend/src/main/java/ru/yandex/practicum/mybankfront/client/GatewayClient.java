@@ -4,15 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
+import ru.yandex.practicum.mybankfront.dto.LoginRequest;
+import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Component
@@ -22,6 +23,16 @@ public class GatewayClient {
 
     private final WebClient webClient;
     private final DiscoveryClient discoveryClient;
+
+    private String getAccountsUrl() {
+        // Frontend вызывает Gateway, а не accounts напрямую
+        List<ServiceInstance> instances = discoveryClient.getInstances("gateway");
+        if (instances.isEmpty()) {
+            throw new IllegalStateException("No gateway instances found in Consul");
+        }
+        ServiceInstance instance = instances.get(0);
+        return instance.getUri().toString() + "/gateway";
+    }
 
     private String getGatewayUrl() {
         List<ServiceInstance> instances = discoveryClient.getInstances("gateway");
@@ -34,18 +45,31 @@ public class GatewayClient {
 
     private String getJwtToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getTokenValue();
+        if (authentication != null && authentication.getCredentials() instanceof String token) {
+            return token;
         }
         return null;
     }
 
     private String getUsernameFromToken() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getClaimAsString("preferred_username");
+        if (authentication != null && authentication.getPrincipal() instanceof String username) {
+            return username;
         }
         return null;
+    }
+
+    public CompletableFuture<JwtTokenResponse> login(LoginRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            String gatewayUrl = getGatewayUrl();
+            log.debug("GatewayClient: logging in user: {}", request.getLogin());
+            return webClient.post()
+                .uri(gatewayUrl + "/gateway/auth/login")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(JwtTokenResponse.class)
+                .block();
+        });
     }
 
     public CompletableFuture<AccountResponse> getAccount() {

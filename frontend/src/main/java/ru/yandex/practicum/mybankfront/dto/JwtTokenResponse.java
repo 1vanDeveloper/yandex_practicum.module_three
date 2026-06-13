@@ -1,6 +1,5 @@
 package ru.yandex.practicum.mybankfront.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginRequest {
+public class JwtTokenResponse {
 
-    @NotBlank(message = "Login is required")
+    private String token;
+    private String tokenType;
+    private Long expiresIn;
     private String login;
-
-    @NotBlank(message = "Password is required")
-    private String password;
 }
