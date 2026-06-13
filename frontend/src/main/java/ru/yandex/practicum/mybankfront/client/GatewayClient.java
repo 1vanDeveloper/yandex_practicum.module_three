@@ -2,13 +2,16 @@ package ru.yandex.practicum.mybankfront.client;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
-import ru.yandex.practicum.mybankfront.dto.LoginRequest;
-import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -17,65 +20,94 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class GatewayClient {
 
-    private final RestTemplate restTemplate;
-    private final RestTemplate publicRestTemplate;
+    private final WebClient webClient;
+    private final DiscoveryClient discoveryClient;
 
-    public CompletableFuture<Void> register(String gatewayUrl, RegisterRequest request) {
-        return CompletableFuture.runAsync(() -> {
-            log.info("GatewayClient: sending register request for login: {}, email: {}", request.getLogin(), request.getEmail());
-            publicRestTemplate.postForEntity(gatewayUrl + "/gateway/register", request, Void.class);
-        });
+    private String getGatewayUrl() {
+        List<ServiceInstance> instances = discoveryClient.getInstances("gateway");
+        if (instances.isEmpty()) {
+            throw new IllegalStateException("No gateway instances found in Consul");
+        }
+        ServiceInstance instance = instances.get(0);
+        return instance.getUri().toString();
     }
 
-    public CompletableFuture<String> login(String gatewayUrl, LoginRequest request) {
-        return CompletableFuture.supplyAsync(() -> {
-            log.info("GatewayClient: sending login request for username: {}", request.getUsername());
-            Map<String, String> credentials = Map.of("login", request.getUsername(), "password", request.getPassword());
-            ResponseEntity<Map> response = publicRestTemplate.postForEntity(
-                    gatewayUrl + "/gateway/login", credentials, Map.class);
-            return (String) response.getBody().get("access_token");
-        });
+    private String getJwtToken() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getTokenValue();
+        }
+        return null;
     }
 
-    public CompletableFuture<AccountResponse> getAccount(String gatewayUrl, String login) {
+    private String getUsernameFromToken() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getClaimAsString("preferred_username");
+        }
+        return null;
+    }
+
+    public CompletableFuture<AccountResponse> getAccount() {
         return CompletableFuture.supplyAsync(() -> {
-            ResponseEntity<AccountResponse> response = restTemplate.getForEntity(
-                    gatewayUrl + "/gateway/account", AccountResponse.class);
-            return response.getBody();
+            String gatewayUrl = getGatewayUrl();
+            String token = getJwtToken();
+            String username = getUsernameFromToken();
+            log.debug("GatewayClient: getting account for username: {}", username);
+            return webClient.get()
+                .uri(gatewayUrl + "/gateway/account")
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .bodyToMono(AccountResponse.class)
+                .block();
         });
     }
 
     public CompletableFuture<AccountResponse> updateAccount(
-            String gatewayUrl,
             String firstName,
             String lastName,
             String birthDate) {
         return CompletableFuture.supplyAsync(() -> {
-            ResponseEntity<AccountResponse> response = restTemplate.postForEntity(
-                    gatewayUrl + "/gateway/account",
-                    new UpdateAccountRequest(firstName, lastName, birthDate),
-                    AccountResponse.class);
-            return response.getBody();
+            String gatewayUrl = getGatewayUrl();
+            String token = getJwtToken();
+            log.debug("GatewayClient: updating account");
+            return webClient.put()
+                .uri(gatewayUrl + "/gateway/account")
+                .header("Authorization", "Bearer " + token)
+                .bodyValue(new UpdateAccountRequest(firstName, lastName, birthDate))
+                .retrieve()
+                .bodyToMono(AccountResponse.class)
+                .block();
         });
     }
 
-    public CompletableFuture<Void> processCash(
-            String gatewayUrl,
-            Integer value,
-            String action) {
+    public CompletableFuture<Void> processCash(Integer value, String action) {
         return CompletableFuture.runAsync(() -> {
+            String gatewayUrl = getGatewayUrl();
+            String token = getJwtToken();
             String url = gatewayUrl + "/gateway/cash?value=" + value + "&action=" + action;
-            restTemplate.postForEntity(url, null, Void.class);
+            log.debug("GatewayClient: processing cash action: {}", action);
+            webClient.post()
+                .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
         });
     }
 
-    public CompletableFuture<Void> processTransfer(
-            String gatewayUrl,
-            Integer value,
-            String login) {
+    public CompletableFuture<Void> processTransfer(Integer value, String toLogin) {
         return CompletableFuture.runAsync(() -> {
-            String url = gatewayUrl + "/gateway/transfer?value=" + value + "&login=" + login;
-            restTemplate.postForEntity(url, null, Void.class);
+            String gatewayUrl = getGatewayUrl();
+            String token = getJwtToken();
+            String url = gatewayUrl + "/gateway/transfer?value=" + value + "&login=" + toLogin;
+            log.debug("GatewayClient: processing transfer to: {}", toLogin);
+            webClient.post()
+                .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
         });
     }
 

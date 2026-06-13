@@ -9,11 +9,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -22,7 +20,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Instant;
 
 @TestConfiguration
 @ConditionalOnProperty(name = "spring.security.enabled", havingValue = "false")
@@ -46,34 +43,18 @@ public class TestSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    @Primary
-    public JwtDecoder testJwtDecoder() {
-        return token -> createTestJwt();
-    }
-
-    private Jwt createTestJwt() {
-        return Jwt.withTokenValue("test-token")
-            .header("alg", "none")
-            .header("typ", "JWT")
-            .claim("preferred_username", "test_user")
-            .claim("sub", "test_user")
-            .claim("iat", Instant.now().getEpochSecond())
-            .subject("test_user")
-            .issuedAt(Instant.now())
-            .expiresAt(Instant.now().plusSeconds(3600))
-            .build();
-    }
-
     static class JwtTestFilter extends OncePerRequestFilter {
         @Override
-        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                        FilterChain filterChain) throws ServletException, IOException {
-            Jwt jwt = createTestJwt();
-            JwtAuthenticationToken auth = new JwtAuthenticationToken(
-                jwt,
-                AuthorityUtils.createAuthorityList("ROLE_USER"),
-                "test_user"
+            var userDetails = User.withUsername("test_user")
+                .password("")
+                .authorities(AuthorityUtils.createAuthorityList("ROLE_USER"))
+                .build();
+            var auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.getAuthorities()
             );
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(auth);
@@ -83,19 +64,6 @@ public class TestSecurityConfig {
             } finally {
                 SecurityContextHolder.clearContext();
             }
-        }
-
-        private static Jwt createTestJwt() {
-            return Jwt.withTokenValue("test-token")
-                .header("alg", "none")
-                .header("typ", "JWT")
-                .claim("preferred_username", "test_user")
-                .claim("sub", "test_user")
-                .claim("iat", Instant.now().getEpochSecond())
-                .subject("test_user")
-                .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(3600))
-                .build();
         }
     }
 }

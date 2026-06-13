@@ -9,7 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import ru.yandex.practicum.mybankfront.client.GatewayClient;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
 
-import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +29,7 @@ class GatewayServiceTest {
     private AccountResponse testAccount;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         testAccount = AccountResponse.builder()
                 .id(1L)
                 .login("testuser")
@@ -39,17 +38,12 @@ class GatewayServiceTest {
                 .birthDate(LocalDate.of(1990, 1, 1))
                 .amount(BigDecimal.valueOf(1000.00))
                 .build();
-
-        // Set gatewayUrl field via reflection since @Value is not processed in unit tests
-        Field field = gatewayService.getClass().getDeclaredField("gatewayUrl");
-        field.setAccessible(true);
-        field.set(gatewayService, "http://localhost:8086");
     }
 
     @Test
     void getAccount_shouldReturnAccountResponse() {
         // Arrange
-        when(gatewayClient.getAccount(anyString(), eq("testuser")))
+        when(gatewayClient.getAccount(eq("testuser")))
                 .thenReturn(CompletableFuture.completedFuture(testAccount));
 
         // Act
@@ -58,13 +52,13 @@ class GatewayServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(testAccount, result.join());
-        verify(gatewayClient).getAccount(anyString(), eq("testuser"));
+        verify(gatewayClient).getAccount(eq("testuser"));
     }
 
     @Test
     void updateAccount_shouldReturnUpdatedAccountResponse() {
         // Arrange
-        when(gatewayClient.updateAccount(anyString(), eq("Test"), eq("User"), anyString()))
+        when(gatewayClient.updateAccount(eq("testuser"), eq("Test"), eq("User"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(testAccount));
 
         // Act
@@ -74,13 +68,13 @@ class GatewayServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(testAccount, result.join());
-        verify(gatewayClient).updateAccount(anyString(), eq("Test"), eq("User"), anyString());
+        verify(gatewayClient).updateAccount(eq("testuser"), eq("Test"), eq("User"), anyString());
     }
 
     @Test
     void processCash_shouldCallGatewayClient() {
         // Arrange
-        when(gatewayClient.processCash(anyString(), eq(100), eq("PUT")))
+        when(gatewayClient.processCash(eq("testuser"), eq(100), eq("PUT")))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
@@ -88,13 +82,13 @@ class GatewayServiceTest {
 
         // Assert
         assertNotNull(result);
-        verify(gatewayClient).processCash(anyString(), eq(100), eq("PUT"));
+        verify(gatewayClient).processCash(eq("testuser"), eq(100), eq("PUT"));
     }
 
     @Test
     void processTransfer_shouldCallGatewayClient() {
         // Arrange
-        when(gatewayClient.processTransfer(anyString(), eq(500), eq("recipient")))
+        when(gatewayClient.processTransfer(eq("testuser"), eq(500), eq("recipient")))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
@@ -102,6 +96,6 @@ class GatewayServiceTest {
 
         // Assert
         assertNotNull(result);
-        verify(gatewayClient).processTransfer(anyString(), eq(500), eq("recipient"));
+        verify(gatewayClient).processTransfer(eq("testuser"), eq(500), eq("recipient"));
     }
 }

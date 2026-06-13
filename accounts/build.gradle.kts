@@ -24,8 +24,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 
@@ -33,6 +31,11 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
+    // OAuth2 Client для service-to-service (исключаем oauth2-jose для конфликта с jjwt)
+    implementation("org.springframework.security:spring-security-oauth2-client") {
+        exclude(group = "org.springframework.security", module = "spring-security-oauth2-jose")
+    }
     
     // Spring Cloud
     implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")

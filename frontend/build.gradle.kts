@@ -16,6 +16,7 @@ dependencies {
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
 
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -23,6 +24,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
+    implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
     implementation("org.apache.commons:commons-lang3:3.14.0")
     compileOnly("org.projectlombok:lombok:1.18.46")

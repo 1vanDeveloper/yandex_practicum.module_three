@@ -16,37 +16,47 @@
                         <h4 class="mb-0 text-center">Вход в Банк</h4>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-success" role="alert" th:if="${success}">
-                            <span th:text="${success}"/>
+                        <!-- Сообщение об успешном logout -->
+                        <div class="alert alert-success" role="alert" th:if="${param.logout}">
+                            <span>Вы успешно вышли из системы</span>
                         </div>
-                        <div class="alert alert-danger" role="alert" th:if="${errors!=null}" th:each="error : ${errors}">
-                            <span th:text="${error}"/>
+                        
+                        <!-- Сообщение об ошибке авторизации -->
+                        <div class="alert alert-danger" role="alert" th:if="${param.error}">
+                            <span>Ошибка авторизации. Попробуйте еще раз.</span>
                         </div>
 
-                        <form th:action="@{/login}" method="post" th:object="${loginRequest}">
-                            <div class="mb-3">
-                                <label for="username" class="form-label">Логин</label>
-                                <input type="text" class="form-control" id="username" th:field="*{username}" placeholder="Введите логин" required autofocus>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Пароль</label>
-                                <input type="password" class="form-control" id="password" th:field="*{password}" placeholder="Введите пароль" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Войти</button>
-                        </form>
-                        
+                        <!-- Кнопка входа через Keycloak (OAuth2 Authorization Code Flow) -->
+                        <div class="text-center mb-4">
+                            <p class="mb-3">Войдите через учетную запись Keycloak</p>
+                            <a th:href="@{/oauth2/authorization/keycloak}" class="btn btn-primary w-100 btn-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-in-right" viewBox="0 0 16 16" style="margin-right: 8px;">
+                                    <path fill-rule="evenodd" d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0v-2z"/>
+                                    <path fill-rule="evenodd" d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                                </svg>
+                                Войти через Keycloak
+                            </a>
+                        </div>
+
                         <hr class="my-4">
-                        
+
                         <div class="text-center">
+                            <p class="mb-0 text-muted small">
+                                Для входа используйте учетную запись, зарегистрированную в Keycloak.<br>
+                                Тестовые пользователи: user/password, admin/admin
+                            </p>
+                        </div>
+
+                        <div class="text-center mt-3">
                             <p class="mb-0">Нет аккаунта?</p>
-                            <a th:href="@{/register}" class="btn btn-outline-secondary w-100 mt-2">Зарегистрироваться</a>
+                            <a th:href="@{/register}" class="btn btn-outline-secondary w-100 mt-2">Информация о регистрации</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprnPbN84VDd0OwFRde9bT3K3j8k4KqQi4tPejhQOjoK/Cl5yKQrDN0K9rwO1Kzx" crossorigin="anonymous"></script>
 </body>
 

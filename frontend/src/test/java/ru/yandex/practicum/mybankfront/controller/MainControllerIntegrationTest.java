@@ -42,7 +42,7 @@ class MainControllerIntegrationTest {
     @Test
     @DisplayName("Страница входа - GET /login")
     void loginPage() {
-        String view = authController.loginPage();
+        String view = authController.loginPage(new ConcurrentModel());
         assertEquals("login", view);
     }
 
