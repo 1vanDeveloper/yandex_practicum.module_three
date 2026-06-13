@@ -79,7 +79,7 @@ public class TestOutboxConfig {
     @Bean
     @Primary
     public NotificationsClient testNotificationsClient() {
-        return new NotificationsClient(RestClient.create()) {
+        return new NotificationsClient(RestClient.create(), null) {
             @Override
             public CompletableFuture<Void> sendNotification(String notificationsUrl, NotificationRequest request) {
                 // Mock successful notification send

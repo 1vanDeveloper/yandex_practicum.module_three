@@ -7,6 +7,7 @@ import ru.yandex.practicum.mybankfront.client.GatewayClient;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
 import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
 import ru.yandex.practicum.mybankfront.dto.LoginRequest;
+import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -22,26 +23,32 @@ public class GatewayService {
         return gatewayClient.login(request);
     }
 
-    public CompletableFuture<AccountResponse> getAccount() {
-        log.info("Frontend: getting account for authenticated user");
-        return gatewayClient.getAccount();
+    public CompletableFuture<Void> register(RegisterRequest request) {
+        log.info("Frontend: registering user: {}", request.getLogin());
+        return gatewayClient.register(request);
+    }
+
+    public CompletableFuture<AccountResponse> getAccount(String jwtToken) {
+        log.info("Frontend: getting account with provided token");
+        return gatewayClient.getAccount(jwtToken);
     }
 
     public CompletableFuture<AccountResponse> updateAccount(
             String firstName,
             String lastName,
-            String birthDate) {
-        log.info("Frontend: updating account for authenticated user");
-        return gatewayClient.updateAccount(firstName, lastName, birthDate);
+            String birthDate,
+            String jwtToken) {
+        log.info("Frontend: updating account with provided token");
+        return gatewayClient.updateAccount(firstName, lastName, birthDate, jwtToken);
     }
 
-    public CompletableFuture<Void> processCash(Integer value, String action) {
-        log.info("Frontend: processing cash action: {} for authenticated user, value: {}", action, value);
-        return gatewayClient.processCash(value, action);
+    public CompletableFuture<Void> processCash(Integer value, String action, String jwtToken) {
+        log.info("Frontend: processing cash action: {} with provided token", action);
+        return gatewayClient.processCash(value, action, jwtToken);
     }
 
-    public CompletableFuture<Void> processTransfer(Integer value, String toLogin) {
-        log.info("Frontend: processing transfer to {} value: {}", toLogin, value);
-        return gatewayClient.processTransfer(value, toLogin);
+    public CompletableFuture<Void> processTransfer(Integer value, String toLogin, String jwtToken) {
+        log.info("Frontend: processing transfer to {} with provided token", toLogin);
+        return gatewayClient.processTransfer(value, toLogin, jwtToken);
     }
 }

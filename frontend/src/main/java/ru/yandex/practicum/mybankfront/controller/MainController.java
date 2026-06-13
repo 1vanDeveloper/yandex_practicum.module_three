@@ -13,6 +13,8 @@ import ru.yandex.practicum.mybankfront.controller.dto.CashAction;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
 import ru.yandex.practicum.mybankfront.service.GatewayService;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -46,15 +48,6 @@ public class MainController {
     private final GatewayService gatewayService;
 
     /**
-     * GET /.
-     * Редирект на GET /account
-     */
-    @GetMapping
-    public String index() {
-        return "redirect:/account";
-    }
-
-    /**
      * GET /account.
      * Что нужно сделать:
      * 1. Сходить в сервис accounts через Gateway API для получения данных аккаунта по REST
@@ -62,11 +55,12 @@ public class MainController {
      * 3. Текущего пользователя можно получить из контекста Security
      */
     @GetMapping("/account")
-    public CompletableFuture<String> getAccount(Model model) {
+    public CompletableFuture<String> getAccount(Model model, HttpServletRequest request) {
         String login = getCurrentLogin();
+        String jwtToken = getJwtTokenFromSession(request);
         log.info("GET /account received for user: {}", login);
 
-        return gatewayService.getAccount()
+        return gatewayService.getAccount(jwtToken)
                 .thenApply(account -> {
                     fillModel(model, account, null, null);
                     return "main";
@@ -95,9 +89,11 @@ public class MainController {
     public CompletableFuture<String> editAccount(
             Model model,
             @RequestParam("name") String name,
-            @RequestParam("birthdate") LocalDate birthdate) {
+            @RequestParam("birthdate") LocalDate birthdate,
+            HttpServletRequest request) {
 
         String login = getCurrentLogin();
+        String jwtToken = getJwtTokenFromSession(request);
         log.info("POST /account received for user: {}, name: {}, birthdate: {}", login, name, birthdate);
 
         // Parse name into firstName and lastName
@@ -105,9 +101,9 @@ public class MainController {
         String firstName = nameParts.length > 0 ? nameParts[0] : "";
         String lastName = nameParts.length > 1 ? nameParts[1] : "";
 
-        return gatewayService.updateAccount(firstName, lastName, birthdate.format(DateTimeFormatter.ISO_DATE))
+        return gatewayService.updateAccount(firstName, lastName, birthdate.format(DateTimeFormatter.ISO_DATE), jwtToken)
                 .thenCompose(updatedAccount ->
-                    gatewayService.getAccount()
+                    gatewayService.getAccount(jwtToken)
                         .thenApply(account -> {
                             fillModel(model, account, null, "Данные успешно обновлены");
                             return "main";
@@ -137,13 +133,15 @@ public class MainController {
     public CompletableFuture<String> editCash(
             Model model,
             @RequestParam("value") int value,
-            @RequestParam("action") CashAction action) {
+            @RequestParam("action") CashAction action,
+            HttpServletRequest request) {
 
         String login = getCurrentLogin();
+        String jwtToken = getJwtTokenFromSession(request);
         log.info("POST /cash received for user: {}, action: {}, value: {}", login, action, value);
 
-        return gatewayService.processCash(value, action.name())
-                .thenCompose(v -> gatewayService.getAccount())
+        return gatewayService.processCash(value, action.name(), jwtToken)
+                .thenCompose(v -> gatewayService.getAccount(jwtToken))
                 .thenApply(account -> {
                     String info = action == CashAction.PUT
                             ? "Счёт успешно пополнен на " + value
@@ -175,13 +173,15 @@ public class MainController {
     public CompletableFuture<String> transfer(
             Model model,
             @RequestParam("value") int value,
-            @RequestParam("login") String toLogin) {
+            @RequestParam("login") String toLogin,
+            HttpServletRequest request) {
 
         String fromLogin = getCurrentLogin();
+        String jwtToken = getJwtTokenFromSession(request);
         log.info("POST /transfer received from: {} to: {}, value: {}", fromLogin, toLogin, value);
 
-        return gatewayService.processTransfer(value, toLogin)
-                .thenCompose(v -> gatewayService.getAccount())
+        return gatewayService.processTransfer(value, toLogin, jwtToken)
+                .thenCompose(v -> gatewayService.getAccount(jwtToken))
                 .thenApply(account -> {
                     fillModel(model, account, null, "Перевод успешно выполнен");
                     return "main";
@@ -204,6 +204,23 @@ public class MainController {
             return login;
         }
         return "unknown";
+    }
+
+    /**
+     * Получает JWT токен из сессии.
+     */
+    private String getJwtTokenFromSession(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            String token = (String) session.getAttribute("JWT_TOKEN");
+            log.debug("getJwtTokenFromSession: session id={}, token found={}", session.getId(), token != null);
+            if (token != null) {
+                return token;
+            }
+        } else {
+            log.debug("getJwtTokenFromSession: no session found");
+        }
+        return null;
     }
 
     /**

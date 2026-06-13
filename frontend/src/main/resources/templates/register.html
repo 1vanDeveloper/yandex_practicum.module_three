@@ -16,33 +16,55 @@
                         <h4 class="mb-0 text-center">Регистрация в Банке</h4>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-info" role="alert">
-                            <h5 class="alert-heading">Регистрация через Keycloak</h5>
-                            <p>
-                                Для создания нового аккаунта необходимо зарегистрироваться в системе Keycloak.
-                                Регистрация пользователей осуществляется администратором через консоль Keycloak.
-                            </p>
-                            <hr>
-                            <p class="mb-0">
-                                <strong>Тестовые учетные записи:</strong><br>
-                                • Логин: <code>user</code>, Пароль: <code>password</code><br>
-                                • Логин: <code>admin</code>, Пароль: <code>admin</code>
-                            </p>
+                        <!-- Сообщение об успешной регистрации -->
+                        <div class="alert alert-success" role="alert" th:if="${param.registered}">
+                            <span>Регистрация успешна! Теперь вы можете войти.</span>
                         </div>
 
-                        <div class="text-center mt-4">
-                            <a th:href="@{/login}" class="btn btn-primary w-100 mb-2">Вернуться ко входу</a>
-                            <a href="http://localhost:8180" target="_blank" class="btn btn-outline-secondary w-100">
-                                Открыть Keycloak Admin Console
-                            </a>
+                        <!-- Сообщение об ошибке регистрации -->
+                        <div class="alert alert-danger" role="alert" th:if="${param.error}">
+                            <span>Ошибка регистрации. Попробуйте еще раз.</span>
                         </div>
+
+                        <!-- Форма регистрации -->
+                        <form th:action="@{/api/auth/register}" method="post">
+                            <div class="mb-3">
+                                <label for="login" class="form-label">Логин</label>
+                                <input type="text" class="form-control" id="login" name="login" required autofocus minlength="3">
+                                <div class="form-text">Минимум 3 символа</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Пароль</label>
+                                <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                                <div class="form-text">Минимум 6 символов</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="firstName" class="form-label">Имя</label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="lastName" class="form-label">Фамилия</label>
+                                    <input type="text" class="form-control" id="lastName" name="lastName" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="birthDate" class="form-label">Дата рождения</label>
+                                <input type="date" class="form-control" id="birthDate" name="birthDate" required>
+                                <div class="form-text">Должно быть старше 18 лет</div>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
+                        </form>
 
                         <hr class="my-4">
 
-                        <div class="text-center">
-                            <p class="mb-0 text-muted small">
-                                После регистрации в Keycloak вы сможете войти в систему через кнопку "Войти через Keycloak"
-                            </p>
+                        <div class="text-center mt-3">
+                            <p class="mb-0">Уже есть аккаунт?</p>
+                            <a th:href="@{/login}" class="btn btn-outline-primary w-100 mt-2">Войти</a>
                         </div>
                     </div>
                 </div>

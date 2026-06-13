@@ -25,6 +25,9 @@ public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri:http://localhost:8180/realms/bank/protocol/openid-connect/certs}")
     private String jwkSetUri;
 
+    @Value("${jwt.secret:mySecretKeyForJWTTokenGenerationMustBeLongEnough}")
+    private String jwtSecret;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -39,7 +42,7 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
-                                .decoder(jwtDecoder())
+                                .decoder(compositeJwtDecoder())
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 );
 
@@ -47,8 +50,23 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+    public JwtDecoder compositeJwtDecoder() {
+        // Декодер для локальных JWT токенов (от Accounts сервиса, HMAC256)
+        byte[] keyBytes = jwtSecret.getBytes();
+        javax.crypto.SecretKey key = new javax.crypto.spec.SecretKeySpec(keyBytes, 0, keyBytes.length, "HMACSHA256");
+        NimbusJwtDecoder localJwtDecoder = NimbusJwtDecoder.withSecretKey(key).build();
+
+        // Декодер для JWT токенов от Keycloak (RS256)
+        NimbusJwtDecoder keycloakJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+
+        // Пробуем оба варианта
+        return token -> {
+            try {
+                return keycloakJwtDecoder.decode(token);
+            } catch (Exception e) {
+                return localJwtDecoder.decode(token);
+            }
+        };
     }
 
     @Bean

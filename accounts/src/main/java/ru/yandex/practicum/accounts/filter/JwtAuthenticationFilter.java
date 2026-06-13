@@ -4,7 +4,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,12 +27,20 @@ import java.io.IOException;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final JwtUtil jwtUtil;
     private final JwtDecoder keycloakJwtDecoder;
+
+    public JwtAuthenticationFilter(
+            UserDetailsServiceImpl userDetailsService,
+            JwtUtil jwtUtil,
+            JwtDecoder keycloakJwtDecoder) {
+        this.userDetailsService = userDetailsService;
+        this.jwtUtil = jwtUtil;
+        this.keycloakJwtDecoder = keycloakJwtDecoder;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -69,8 +76,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         log.info("JwtAuthenticationFilter: Successfully authenticated user: {}", login);
                     }
                 }
+            } catch (JwtException e) {
+                // Не является валидным JWT
+                log.debug("JwtAuthenticationFilter: Not a valid JWT: {}", e.getMessage());
             } catch (Exception e) {
-                log.warn("JwtAuthenticationFilter: Invalid JWT token: {}", e.getMessage());
+                log.warn("JwtAuthenticationFilter: Error processing JWT: {}", e.getMessage());
             }
         }
 

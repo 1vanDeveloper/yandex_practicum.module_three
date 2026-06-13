@@ -12,6 +12,7 @@ import ru.yandex.practicum.transfer.dto.TransferRequest;
 import ru.yandex.practicum.transfer.dto.TransferResponse;
 import ru.yandex.practicum.transfer.service.TransferService;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -23,10 +24,28 @@ public class TransferController {
 
     private final TransferService transferService;
 
+    /**
+     * Универсальный endpoint для переводов.
+     * Принимает query параметры: value, login (получатель)
+     * Отправитель берётся из JWT токена
+     */
     @PostMapping
-    public CompletableFuture<ResponseEntity<TransferResponse>> createTransfer(
-            @Valid @RequestBody TransferRequest request) {
-        log.info("POST /transfer received from {} to {}", request.fromLogin(), request.toLogin());
+    public CompletableFuture<ResponseEntity<TransferResponse>> processTransfer(
+            @RequestParam(required = false) Integer value,
+            @RequestParam(required = false) String login,
+            @Valid @RequestBody(required = false) TransferRequest requestBody,
+            @AuthenticationPrincipal Jwt jwt) {
+        
+        String fromLogin = jwt.getSubject();
+        String toLogin = login != null ? login : (requestBody != null ? requestBody.toLogin() : null);
+        BigDecimal amount = value != null ? BigDecimal.valueOf(value) : (requestBody != null ? requestBody.amount() : null);
+        
+        if (toLogin == null || amount == null) {
+            throw new IllegalArgumentException("Missing required parameters: value and login (query) or request body");
+        }
+        
+        log.info("POST /transfer received from {} to {}, amount: {}", fromLogin, toLogin, amount);
+        TransferRequest request = new TransferRequest(fromLogin, toLogin, amount, null);
         return transferService.createTransfer(request)
                 .thenApply(ResponseEntity::ok);
     }

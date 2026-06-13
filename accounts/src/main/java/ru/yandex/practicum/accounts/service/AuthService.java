@@ -39,13 +39,18 @@ public class AuthService {
             throw new IllegalArgumentException("User with email '" + request.getEmail() + "' already exists");
         }
 
+        LocalDate birthDate = LocalDate.parse(request.getBirthDate(), DateTimeFormatter.ISO_LOCAL_DATE);
+        if (birthDate.isAfter(LocalDate.now().minusYears(18))) {
+            throw new IllegalArgumentException("User must be at least 18 years old");
+        }
+
         Account account = Account.builder()
                 .login(request.getLogin())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .birthDate(LocalDate.parse(request.getBirthDate(), DateTimeFormatter.ISO_LOCAL_DATE))
+                .birthDate(birthDate)
                 .amount(BigDecimal.ZERO)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

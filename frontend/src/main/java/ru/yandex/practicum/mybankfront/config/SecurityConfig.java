@@ -13,15 +13,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.core.annotation.Order;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "spring.security.enabled", havingValue = "true", matchIfMissing = true)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class SecurityConfig {
-
-    private final CustomAuthenticationFilter customAuthenticationFilter;
-    private final SessionAuthenticationFilter sessionAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -30,23 +29,22 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .csrfTokenRequestHandler(requestHandler)
+                .disable()
             )
+            .formLogin(form -> form.disable())
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .maximumSessions(1)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.GET, "/login", "/register").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .requestMatchers("/css/**", "/js/**", "/static/**").permitAll()
+                .requestMatchers("/", "/index", "/index.html").permitAll()
+                .requestMatchers("/login", "/register").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/static/**", "/images/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
             )
-            // Добавляем фильтры с явным порядком
-            .addFilterBefore(sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(customAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessHandler((request, response, authentication) -> {

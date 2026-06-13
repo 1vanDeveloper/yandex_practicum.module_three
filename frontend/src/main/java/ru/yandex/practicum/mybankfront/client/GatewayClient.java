@@ -4,14 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
 import ru.yandex.practicum.mybankfront.dto.LoginRequest;
 import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
+import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -43,26 +42,12 @@ public class GatewayClient {
         return instance.getUri().toString();
     }
 
-    private String getJwtToken() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getCredentials() instanceof String token) {
-            return token;
-        }
-        return null;
-    }
-
-    private String getUsernameFromToken() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof String username) {
-            return username;
-        }
-        return null;
-    }
-
     public CompletableFuture<JwtTokenResponse> login(LoginRequest request) {
         return CompletableFuture.supplyAsync(() -> {
             String gatewayUrl = getGatewayUrl();
             log.debug("GatewayClient: logging in user: {}", request.getLogin());
+            
+            // Отправляем как JSON
             return webClient.post()
                 .uri(gatewayUrl + "/gateway/auth/login")
                 .bodyValue(request)
@@ -72,15 +57,33 @@ public class GatewayClient {
         });
     }
 
-    public CompletableFuture<AccountResponse> getAccount() {
+    public CompletableFuture<Void> register(RegisterRequest request) {
+        return CompletableFuture.runAsync(() -> {
+            String gatewayUrl = getGatewayUrl();
+            log.debug("GatewayClient: registering user: {}", request.getLogin());
+            
+            // Отправляем как JSON
+            webClient.post()
+                .uri(gatewayUrl + "/gateway/auth/register")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
+        });
+    }
+
+    public CompletableFuture<AccountResponse> getAccount(String jwtToken) {
         return CompletableFuture.supplyAsync(() -> {
             String gatewayUrl = getGatewayUrl();
-            String token = getJwtToken();
-            String username = getUsernameFromToken();
-            log.debug("GatewayClient: getting account for username: {}", username);
+            log.debug("GatewayClient: getting account with provided token");
+            
+            if (jwtToken == null) {
+                throw new IllegalStateException("JWT token is null");
+            }
+            
             return webClient.get()
                 .uri(gatewayUrl + "/gateway/account")
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
                 .bodyToMono(AccountResponse.class)
                 .block();
@@ -90,14 +93,19 @@ public class GatewayClient {
     public CompletableFuture<AccountResponse> updateAccount(
             String firstName,
             String lastName,
-            String birthDate) {
+            String birthDate,
+            String jwtToken) {
         return CompletableFuture.supplyAsync(() -> {
             String gatewayUrl = getGatewayUrl();
-            String token = getJwtToken();
-            log.debug("GatewayClient: updating account");
+            log.debug("GatewayClient: updating account with provided token");
+            
+            if (jwtToken == null) {
+                throw new IllegalStateException("JWT token is null");
+            }
+            
             return webClient.put()
                 .uri(gatewayUrl + "/gateway/account")
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + jwtToken)
                 .bodyValue(new UpdateAccountRequest(firstName, lastName, birthDate))
                 .retrieve()
                 .bodyToMono(AccountResponse.class)
@@ -105,30 +113,38 @@ public class GatewayClient {
         });
     }
 
-    public CompletableFuture<Void> processCash(Integer value, String action) {
+    public CompletableFuture<Void> processCash(Integer value, String action, String jwtToken) {
         return CompletableFuture.runAsync(() -> {
             String gatewayUrl = getGatewayUrl();
-            String token = getJwtToken();
             String url = gatewayUrl + "/gateway/cash?value=" + value + "&action=" + action;
-            log.debug("GatewayClient: processing cash action: {}", action);
+            log.debug("GatewayClient: processing cash action: {} with provided token", action);
+            
+            if (jwtToken == null) {
+                throw new IllegalStateException("JWT token is null");
+            }
+            
             webClient.post()
                 .uri(url)
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();
         });
     }
 
-    public CompletableFuture<Void> processTransfer(Integer value, String toLogin) {
+    public CompletableFuture<Void> processTransfer(Integer value, String toLogin, String jwtToken) {
         return CompletableFuture.runAsync(() -> {
             String gatewayUrl = getGatewayUrl();
-            String token = getJwtToken();
             String url = gatewayUrl + "/gateway/transfer?value=" + value + "&login=" + toLogin;
-            log.debug("GatewayClient: processing transfer to: {}", toLogin);
+            log.debug("GatewayClient: processing transfer to: {} with provided token", toLogin);
+            
+            if (jwtToken == null) {
+                throw new IllegalStateException("JWT token is null");
+            }
+            
             webClient.post()
                 .uri(url)
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .block();

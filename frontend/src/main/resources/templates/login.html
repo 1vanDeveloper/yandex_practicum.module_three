@@ -16,6 +16,11 @@
                         <h4 class="mb-0 text-center">Вход в Банк</h4>
                     </div>
                     <div class="card-body">
+                        <!-- Сообщение об успешной регистрации -->
+                        <div class="alert alert-success" role="alert" th:if="${param.registered}">
+                            <span>Регистрация успешна! Теперь вы можете войти.</span>
+                        </div>
+
                         <!-- Сообщение об успешном logout -->
                         <div class="alert alert-success" role="alert" th:if="${param.logout}">
                             <span>Вы успешно вышли из системы</span>
