@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.accounts.client.NotificationsClient;
 import ru.yandex.practicum.accounts.dto.NotificationRequest;
@@ -28,19 +30,19 @@ public class OutboxProcessor {
     private static final int MAX_RETRY_COUNT = 3;
     private static final int BATCH_SIZE = 10;
 
+    @Transactional
     public CompletableFuture<Void> processPendingMessages() {
-        return CompletableFuture.supplyAsync(() ->
-                outboxRepository.findPendingMessages(BATCH_SIZE))
-            .thenCompose(messages -> {
-                if (messages.isEmpty()) {
-                    return CompletableFuture.completedFuture(null);
-                }
-                List<CompletableFuture<Void>> futures = messages.stream()
-                    .limit(BATCH_SIZE)
-                    .map(this::processMessage)
-                    .toList();
-                return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-            });
+        List<OutboxMessage> messages = outboxRepository.findPendingMessagesForUpdate(BATCH_SIZE);
+        
+        if (messages.isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        
+        List<CompletableFuture<Void>> futures = messages.stream()
+            .limit(BATCH_SIZE)
+            .map(this::processMessage)
+            .toList();
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
     }
 
     private CompletableFuture<Void> processMessage(OutboxMessage message) {
@@ -61,7 +63,7 @@ public class OutboxProcessor {
     }
 
     private CompletableFuture<Void> sendNotificationFallback(OutboxMessage message, Throwable t) {
-        log.warn("Circuit breaker opened for notifications service, message {} will be retried later: {}", 
+        log.warn("Circuit breaker opened for notifications service, message {} will be retried later: {}",
                 message.getId(), t.getMessage());
         return CompletableFuture.completedFuture(null);
     }
@@ -77,16 +79,22 @@ public class OutboxProcessor {
 
     private CompletableFuture<Void> updateMessageStatus(UUID id, String status, String errorMessage) {
         return CompletableFuture.supplyAsync(() -> {
-            OutboxMessage existing = outboxRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Message not found: " + id));
-            existing.setStatus(status);
-            existing.setErrorMessage(errorMessage);
-            existing.setUpdatedAt(LocalDateTime.now());
-            if (OutboxMessage.Status.FAILED.getValue().equals(status)) {
-                existing.setRetryCount(existing.getRetryCount() + 1);
+            try {
+                OutboxMessage existing = outboxRepository.findById(id)
+                    .orElseThrow(() -> new IllegalStateException("Message not found: " + id));
+                
+                existing.setStatus(status);
+                existing.setErrorMessage(errorMessage);
+                existing.setUpdatedAt(LocalDateTime.now());
+                if (OutboxMessage.Status.FAILED.getValue().equals(status)) {
+                    existing.setRetryCount(existing.getRetryCount() + 1);
+                }
+                outboxRepository.save(existing);
+                return null;
+            } catch (OptimisticLockingFailureException e) {
+                log.warn("Optimistic lock failed for message {}, skipping (already processed by another instance)", id);
+                return null;
             }
-            outboxRepository.save(existing);
-            return null;
         });
     }
 

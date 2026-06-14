@@ -41,6 +41,7 @@ CREATE TRIGGER update_accounts_updated_at
 -- Outbox table for reliable messaging between accounts and notifications services
 CREATE TABLE IF NOT EXISTS accounts.outbox_messages (
     id UUID PRIMARY KEY,
+    idempotency_key VARCHAR(255) NOT NULL UNIQUE,
     version BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -14,12 +14,20 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(schema = "accounts", name = "outbox_messages")
+@Table(schema = "accounts", name = "outbox_messages", 
+    uniqueConstraints = @UniqueConstraint(columnNames = "idempotency_key"))
 public class OutboxMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private String idempotencyKey;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
