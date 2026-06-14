@@ -18,7 +18,6 @@ import ru.yandex.practicum.cash.entity.TransactionType;
 import ru.yandex.practicum.cash.service.CashService;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -70,30 +69,6 @@ public abstract class ContractVerifierBase {
                             null,
                             null,
                             null
-                    ));
-
-            Mockito.when(mock.getTransactionsByLogin(Mockito.anyString()))
-                    .thenReturn(List.of(
-                            new TransactionResponse(
-                                    1L,
-                                    "test_user",
-                                    TransactionType.DEPOSIT,
-                                    BigDecimal.valueOf(100.00),
-                                    TransactionStatus.COMPLETED,
-                                    null,
-                                    null,
-                                    null
-                            ),
-                            new TransactionResponse(
-                                    2L,
-                                    "test_user",
-                                    TransactionType.WITHDRAW,
-                                    BigDecimal.valueOf(50.00),
-                                    TransactionStatus.COMPLETED,
-                                    null,
-                                    null,
-                                    null
-                            )
                     ));
 
             return mock;

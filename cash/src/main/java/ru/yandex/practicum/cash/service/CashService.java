@@ -22,9 +22,6 @@ import ru.yandex.practicum.cash.exception.TransactionFailedException;
 import ru.yandex.practicum.cash.mapper.CashTransactionMapper;
 import ru.yandex.practicum.cash.repository.CashTransactionRepository;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -149,22 +146,5 @@ public class CashService {
             transactionRepository.save(failedTransaction);
             throw new TransactionFailedException("Withdrawal failed: " + e.getMessage(), e);
         }
-    }
-
-    @Transactional(readOnly = true)
-    public List<TransactionResponse> getTransactionsByLogin(String login) {
-        log.debug("Getting transactions for login: {}", login);
-        List<CashTransaction> transactions = transactionRepository.findByAccountLoginOrderByCreatedAtDesc(login);
-        return transactions.stream()
-                .map(mapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public TransactionResponse getTransactionById(Long id, String login) {
-        log.debug("Getting transaction by id: {} for login: {}", id, login);
-        return transactionRepository.findByIdAndAccountLogin(id, login)
-                .map(mapper::toResponse)
-                .orElseThrow(() -> new AccountNotFoundException("Transaction not found for login: " + login));
     }
 }

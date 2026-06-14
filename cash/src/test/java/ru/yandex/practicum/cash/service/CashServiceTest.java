@@ -25,8 +25,6 @@ import ru.yandex.practicum.cash.mapper.CashTransactionMapper;
 import ru.yandex.practicum.cash.repository.CashTransactionRepository;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -133,69 +131,7 @@ class CashServiceTest {
         assertThrows(InsufficientFundsException.class, () -> cashService.withdraw(request));
     }
 
-    @Test
-    void testGetTransactionsByLogin_whenTransactionsExist_returnsList() {
-        // Given
-        String login = "test_user";
-        CashTransaction tx1 = createTransaction(1L, login, TransactionType.DEPOSIT, new BigDecimal("100.00"), TransactionStatus.COMPLETED);
-        CashTransaction tx2 = createTransaction(2L, login, TransactionType.WITHDRAW, new BigDecimal("50.00"), TransactionStatus.COMPLETED);
-        List<CashTransaction> transactions = List.of(tx1, tx2);
-
-        when(transactionRepository.findByAccountLoginOrderByCreatedAtDesc(login)).thenReturn(transactions);
-        when(mapper.toResponse(tx1)).thenReturn(new TransactionResponse(
-                1L, login, TransactionType.DEPOSIT, new BigDecimal("100.00"),
-                TransactionStatus.COMPLETED, null, null, null
-        ));
-        when(mapper.toResponse(tx2)).thenReturn(new TransactionResponse(
-                2L, login, TransactionType.WITHDRAW, new BigDecimal("50.00"),
-                TransactionStatus.COMPLETED, null, null, null
-        ));
-
-        // When
-        List<TransactionResponse> result = cashService.getTransactionsByLogin(login);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(transactionRepository).findByAccountLoginOrderByCreatedAtDesc(login);
-    }
-
-    @Test
-    void testGetTransactionById_whenExists_returnsResponse() {
-        // Given
-        Long id = 1L;
-        String login = "test_user";
-        CashTransaction transaction = createTransaction(id, login, TransactionType.DEPOSIT, 
-                new BigDecimal("100.00"), TransactionStatus.COMPLETED);
-        TransactionResponse expectedResponse = new TransactionResponse(
-                id, login, TransactionType.DEPOSIT, new BigDecimal("100.00"),
-                TransactionStatus.COMPLETED, null, null, null
-        );
-
-        when(transactionRepository.findByIdAndAccountLogin(id, login)).thenReturn(Optional.of(transaction));
-        when(mapper.toResponse(transaction)).thenReturn(expectedResponse);
-
-        // When
-        TransactionResponse response = cashService.getTransactionById(id, login);
-
-        // Then
-        assertNotNull(response);
-        assertEquals(id, response.id());
-        verify(transactionRepository).findByIdAndAccountLogin(id, login);
-    }
-
-    @Test
-    void testGetTransactionById_whenNotExists_throwsException() {
-        // Given
-        Long id = 999L;
-        String login = "test_user";
-        when(transactionRepository.findByIdAndAccountLogin(id, login)).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThrows(RuntimeException.class, () -> cashService.getTransactionById(id, login));
-    }
-
-    private CashTransaction createTransaction(Long id, String login, TransactionType type, 
+    private CashTransaction createTransaction(Long id, String login, TransactionType type,
                                                BigDecimal amount, TransactionStatus status) {
         CashTransaction tx = new CashTransaction();
         tx.setId(id);
