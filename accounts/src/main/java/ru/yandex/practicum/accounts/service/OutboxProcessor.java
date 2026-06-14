@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.accounts.client.NotificationsClient;
 import ru.yandex.practicum.accounts.dto.NotificationRequest;
 import ru.yandex.practicum.accounts.entity.OutboxMessage;
@@ -28,7 +29,7 @@ public class OutboxProcessor {
     private static final int BATCH_SIZE = 10;
 
     public CompletableFuture<Void> processPendingMessages() {
-        return CompletableFuture.supplyAsync(() -> 
+        return CompletableFuture.supplyAsync(() ->
                 outboxRepository.findPendingMessages(BATCH_SIZE))
             .thenCompose(messages -> {
                 if (messages.isEmpty()) {
@@ -52,10 +53,17 @@ public class OutboxProcessor {
             });
     }
 
+    @CircuitBreaker(name = "notificationsService", fallbackMethod = "sendNotificationFallback")
     private CompletableFuture<Void> sendToNotificationsService(OutboxMessage message) {
         String notificationsUrl = getNotificationsServiceUrl();
         NotificationRequest request = new NotificationRequest(message.getLogin(), message.getMessage());
         return notificationsClient.sendNotification(notificationsUrl, request);
+    }
+
+    private CompletableFuture<Void> sendNotificationFallback(OutboxMessage message, Throwable t) {
+        log.warn("Circuit breaker opened for notifications service, message {} will be retried later: {}", 
+                message.getId(), t.getMessage());
+        return CompletableFuture.completedFuture(null);
     }
 
     private String getNotificationsServiceUrl() {

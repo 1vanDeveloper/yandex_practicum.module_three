@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.transfer.client.AccountsClient;
 import ru.yandex.practicum.transfer.client.NotificationsClient;
 import ru.yandex.practicum.transfer.dto.NotificationRequest;
@@ -42,17 +43,18 @@ public class TransferService {
                         .principal("transfer-service")
                         .build()
         );
-        
+
         if (authorizedClient == null || authorizedClient.getAccessToken() == null) {
             throw new TransferFailedException("Failed to obtain access token");
         }
-        
+
         return authorizedClient.getAccessToken().getTokenValue();
     }
 
+    @CircuitBreaker(name = "accountsService", fallbackMethod = "createTransferFallback")
     @Transactional
     public CompletableFuture<TransferResponse> createTransfer(TransferRequest request) {
-        log.info("Processing transfer from {} to {} for amount {}", 
+        log.info("Processing transfer from {} to {} for amount {}",
                 request.fromLogin(), request.toLogin(), request.amount());
 
         // Validate self-transfer
@@ -64,11 +66,9 @@ public class TransferService {
 
         String token = getAccessToken();
 
-        // Async chain: debit -> credit -> save transfer -> send notifications
         return accountsClient.debitAccount(request.fromLogin(), request.amount(), token)
                 .thenCompose(v -> accountsClient.creditAccount(request.toLogin(), request.amount(), token))
                 .thenApply(v -> {
-                    // Save successful transfer
                     Transfer transfer = Transfer.builder()
                             .fromAccountLogin(request.fromLogin())
                             .toAccountLogin(request.toLogin())
@@ -78,18 +78,11 @@ public class TransferService {
                     return transferRepository.save(transfer);
                 })
                 .thenCompose(transfer -> {
-                    // Send notifications asynchronously
                     List<CompletableFuture<Void>> notifications = List.of(
-                        notificationsClient.sendNotification(
-                                new NotificationRequest(request.fromLogin(), 
-                                        "Money transferred: " + request.amount() + " to " + request.toLogin()),
-                                token
-                        ),
-                        notificationsClient.sendNotification(
-                                new NotificationRequest(request.toLogin(), 
-                                        "Money received: " + request.amount() + " from " + request.fromLogin()),
-                                token
-                        )
+                        sendNotificationSafely(request.fromLogin(),
+                                "Money transferred: " + request.amount() + " to " + request.toLogin(), token),
+                        sendNotificationSafely(request.toLogin(),
+                                "Money received: " + request.amount() + " from " + request.fromLogin(), token)
                     );
                     return CompletableFuture.allOf(notifications.toArray(new CompletableFuture[0]))
                             .thenApply(v -> transfer);
@@ -97,8 +90,7 @@ public class TransferService {
                 .thenApply(mapper::toResponse)
                 .exceptionally(ex -> {
                     log.error("Transfer failed from {} to {}: {}", request.fromLogin(), request.toLogin(), ex.getMessage());
-                    
-                    // Save failed transfer
+
                     Transfer failedTransfer = Transfer.builder()
                             .fromAccountLogin(request.fromLogin())
                             .toAccountLogin(request.toLogin())
@@ -107,13 +99,29 @@ public class TransferService {
                             .errorMessage(ex.getMessage())
                             .build();
                     transferRepository.save(failedTransfer);
-                    
-                    if (ex.getCause() instanceof InsufficientFundsException || 
+
+                    if (ex.getCause() instanceof InsufficientFundsException ||
                         ex.getCause() instanceof AccountNotFoundException ||
                         ex.getCause() instanceof SelfTransferException) {
                         throw (RuntimeException) ex.getCause();
                     }
                     throw new TransferFailedException("Transfer failed: " + ex.getMessage(), ex);
                 });
+    }
+
+    private CompletableFuture<TransferResponse> createTransferFallback(TransferRequest request, Throwable t) {
+        log.error("Circuit breaker opened for accounts service (transfer): {}", t.getMessage());
+        CompletableFuture<TransferResponse> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new TransferFailedException("Accounts service unavailable, please try again later", t));
+        return failedFuture;
+    }
+
+    private CompletableFuture<Void> sendNotificationSafely(String login, String message, String token) {
+        try {
+            return notificationsClient.sendNotification(new NotificationRequest(login, message), token);
+        } catch (Exception e) {
+            log.warn("Failed to send notification: {}", e.getMessage());
+            return CompletableFuture.completedFuture(null);
+        }
     }
 }

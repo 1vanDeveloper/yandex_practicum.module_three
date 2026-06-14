@@ -7,6 +7,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.cash.client.AccountsClient;
 import ru.yandex.practicum.cash.client.NotificationsClient;
 import ru.yandex.practicum.cash.dto.DepositRequest;
@@ -40,48 +41,38 @@ public class CashService {
                         .principal("cash-service")
                         .build()
         );
-        
+
         if (authorizedClient == null || authorizedClient.getAccessToken() == null) {
             throw new TransactionFailedException("Failed to obtain access token");
         }
-        
+
         return authorizedClient.getAccessToken().getTokenValue();
     }
 
+    @CircuitBreaker(name = "accountsService", fallbackMethod = "depositFallback")
     @Transactional
     public TransactionResponse deposit(DepositRequest request) {
         log.info("Processing deposit for login: {}, amount: {}", request.login(), request.amount());
-        
+
         try {
             String token = getAccessToken();
-            
-            // Call Accounts service to deposit money
+
             accountsClient.deposit(request, token);
-            
-            // Create transaction record
+
             CashTransaction transaction = CashTransaction.builder()
                     .accountLogin(request.login())
                     .transactionType(TransactionType.DEPOSIT)
                     .amount(request.amount())
                     .status(TransactionStatus.COMPLETED)
                     .build();
-            
+
             CashTransaction savedTransaction = transactionRepository.save(transaction);
             log.info("Deposit transaction completed: {}", savedTransaction.getId());
-            
-            // Send notification
-            try {
-                notificationsClient.sendNotification(
-                        new NotificationRequest(request.login(), 
-                                "Deposit completed: " + request.amount()),
-                        token
-                );
-            } catch (Exception e) {
-                log.warn("Failed to send notification for deposit: {}", e.getMessage());
-            }
-            
+
+            sendNotificationSafely(request.login(), "Deposit completed: " + request.amount(), token);
+
             return mapper.toResponse(savedTransaction);
-            
+
         } catch (InsufficientFundsException | AccountNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -98,40 +89,35 @@ public class CashService {
         }
     }
 
+    private TransactionResponse depositFallback(DepositRequest request, Throwable t) {
+        log.error("Circuit breaker opened for accounts service (deposit): {}", t.getMessage());
+        throw new TransactionFailedException("Accounts service unavailable, please try again later", t);
+    }
+
+    @CircuitBreaker(name = "accountsService", fallbackMethod = "withdrawFallback")
     @Transactional
     public TransactionResponse withdraw(WithdrawRequest request) {
         log.info("Processing withdrawal for login: {}, amount: {}", request.login(), request.amount());
-        
+
         try {
             String token = getAccessToken();
-            
-            // Call Accounts service to withdraw money
+
             accountsClient.withdraw(request, token);
-            
-            // Create transaction record
+
             CashTransaction transaction = CashTransaction.builder()
                     .accountLogin(request.login())
                     .transactionType(TransactionType.WITHDRAW)
                     .amount(request.amount())
                     .status(TransactionStatus.COMPLETED)
                     .build();
-            
+
             CashTransaction savedTransaction = transactionRepository.save(transaction);
             log.info("Withdrawal transaction completed: {}", savedTransaction.getId());
-            
-            // Send notification
-            try {
-                notificationsClient.sendNotification(
-                        new NotificationRequest(request.login(), 
-                                "Withdrawal completed: " + request.amount()),
-                        token
-                );
-            } catch (Exception e) {
-                log.warn("Failed to send notification for withdrawal: {}", e.getMessage());
-            }
-            
+
+            sendNotificationSafely(request.login(), "Withdrawal completed: " + request.amount(), token);
+
             return mapper.toResponse(savedTransaction);
-            
+
         } catch (InsufficientFundsException | AccountNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -145,6 +131,19 @@ public class CashService {
                     .build();
             transactionRepository.save(failedTransaction);
             throw new TransactionFailedException("Withdrawal failed: " + e.getMessage(), e);
+        }
+    }
+
+    private TransactionResponse withdrawFallback(WithdrawRequest request, Throwable t) {
+        log.error("Circuit breaker opened for accounts service (withdraw): {}", t.getMessage());
+        throw new TransactionFailedException("Accounts service unavailable, please try again later", t);
+    }
+
+    private void sendNotificationSafely(String login, String message, String token) {
+        try {
+            notificationsClient.sendNotification(new NotificationRequest(login, message), token);
+        } catch (Exception e) {
+            log.warn("Failed to send notification: {}", e.getMessage());
         }
     }
 }

@@ -27,14 +27,22 @@ public class GatewayRoutesConfig {
                 .path("/gateway/auth/login")
                 .and()
                 .method(org.springframework.http.HttpMethod.POST)
-                .filters(f -> f.rewritePath("/gateway/auth/login", "/auth/login"))
+                .filters(f -> f
+                    .rewritePath("/gateway/auth/login", "/auth/login")
+                    .circuitBreaker(config -> config
+                        .setName("accountsService")
+                        .setFallbackUri("forward:/fallback/accounts")))
                 .uri("http://accounts:8080"))
 
             .route("accounts-auth-register", r -> r
                 .path("/gateway/auth/register")
                 .and()
                 .method(org.springframework.http.HttpMethod.POST)
-                .filters(f -> f.rewritePath("/gateway/auth/register", "/auth/register"))
+                .filters(f -> f
+                    .rewritePath("/gateway/auth/register", "/auth/register")
+                    .circuitBreaker(config -> config
+                        .setName("accountsService")
+                        .setFallbackUri("forward:/fallback/accounts")))
                 .uri("http://accounts:8080"))
 
             // Accounts service routes - доступ к аккаунту пользователя
@@ -42,14 +50,22 @@ public class GatewayRoutesConfig {
                 .path("/gateway/account")
                 .and()
                 .method(org.springframework.http.HttpMethod.GET)
-                .filters(f -> f.rewritePath("/gateway/account", "/accounts/me"))
+                .filters(f -> f
+                    .rewritePath("/gateway/account", "/accounts/me")
+                    .circuitBreaker(config -> config
+                        .setName("accountsService")
+                        .setFallbackUri("forward:/fallback/accounts")))
                 .uri("http://accounts:8080"))
 
             .route("accounts-account-update", r -> r
                 .path("/gateway/account")
                 .and()
                 .method(org.springframework.http.HttpMethod.PUT)
-                .filters(f -> f.rewritePath("/gateway/account", "/accounts/me"))
+                .filters(f -> f
+                    .rewritePath("/gateway/account", "/accounts/me")
+                    .circuitBreaker(config -> config
+                        .setName("accountsService")
+                        .setFallbackUri("forward:/fallback/accounts")))
                 .uri("http://accounts:8080"))
 
             // Accounts list route
@@ -57,19 +73,31 @@ public class GatewayRoutesConfig {
                 .path("/gateway/accounts")
                 .and()
                 .method(org.springframework.http.HttpMethod.GET)
-                .filters(f -> f.rewritePath("/gateway/accounts", "/accounts"))
+                .filters(f -> f
+                    .rewritePath("/gateway/accounts", "/accounts")
+                    .circuitBreaker(config -> config
+                        .setName("accountsService")
+                        .setFallbackUri("forward:/fallback/accounts")))
                 .uri("http://accounts:8080"))
 
             // Cash service routes
             .route("cash", r -> r
                 .path("/gateway/cash")
-                .filters(f -> f.rewritePath("/gateway/cash", "/cash"))
+                .filters(f -> f
+                    .rewritePath("/gateway/cash", "/cash")
+                    .circuitBreaker(config -> config
+                        .setName("cashService")
+                        .setFallbackUri("forward:/fallback/cash")))
                 .uri("http://cash:8080"))
 
             // Transfer service routes
             .route("transfer", r -> r
                 .path("/gateway/transfer")
-                .filters(f -> f.rewritePath("/gateway/transfer", "/transfer"))
+                .filters(f -> f
+                    .rewritePath("/gateway/transfer", "/transfer")
+                    .circuitBreaker(config -> config
+                        .setName("transferService")
+                        .setFallbackUri("forward:/fallback/transfer")))
                 .uri("http://transfer:8080"))
 
             .build();
