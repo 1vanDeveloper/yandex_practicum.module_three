@@ -23,7 +23,6 @@ import ru.yandex.practicum.transfer.repository.TransferRepository;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -116,25 +115,5 @@ public class TransferService {
                     }
                     throw new TransferFailedException("Transfer failed: " + ex.getMessage(), ex);
                 });
-    }
-
-    @Transactional(readOnly = true)
-    public CompletableFuture<List<TransferResponse>> getTransfersByLogin(String login) {
-        log.debug("Getting transfers for login: {}", login);
-        List<Transfer> transfers = transferRepository.findByFromAccountLoginOrToAccountLoginOrderByCreatedAtDesc(login, login);
-        return CompletableFuture.completedFuture(
-                transfers.stream()
-                        .map(mapper::toResponse)
-                        .collect(Collectors.toList())
-        );
-    }
-
-    @Transactional(readOnly = true)
-    public CompletableFuture<TransferResponse> getTransferById(Long id) {
-        log.debug("Getting transfer by id: {}", id);
-        return transferRepository.findById(id)
-                .map(transfer -> CompletableFuture.completedFuture(mapper.toResponse(transfer)))
-                .orElse(CompletableFuture.failedFuture(
-                        new AccountNotFoundException("Transfer not found with id: " + id)));
     }
 }

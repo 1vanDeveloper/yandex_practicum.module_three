@@ -30,9 +30,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -138,58 +136,6 @@ class TransferServiceTest {
         } catch (Exception e) {
             assertTrue(e.getCause() instanceof InsufficientFundsException);
         }
-    }
-
-    @Test
-    void testGetTransfersByLogin_whenTransfersExist_returnsList() {
-        // Given
-        String login = "test_user";
-        List<Transfer> transfers = List.of(
-                createTransfer(1L, login, "other_user", new BigDecimal("100.00"), TransferStatus.COMPLETED),
-                createTransfer(2L, "other_user", login, new BigDecimal("50.00"), TransferStatus.COMPLETED)
-        );
-
-        when(transferRepository.findByFromAccountLoginOrToAccountLoginOrderByCreatedAtDesc(login, login))
-                .thenReturn(transfers);
-        when(mapper.toResponse(any(Transfer.class))).thenAnswer(invocation -> {
-            Transfer tx = invocation.getArgument(0);
-            return new TransferResponse(
-                    tx.getId(), tx.getFromAccountLogin(), tx.getToAccountLogin(),
-                    tx.getAmount(), tx.getStatus(), tx.getErrorMessage(), null, null
-            );
-        });
-
-        // When
-        CompletableFuture<List<TransferResponse>> future = transferService.getTransfersByLogin(login);
-        List<TransferResponse> result = future.join();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(transferRepository).findByFromAccountLoginOrToAccountLoginOrderByCreatedAtDesc(login, login);
-    }
-
-    @Test
-    void testGetTransferById_whenExists_returnsResponse() {
-        // Given
-        Long id = 1L;
-        Transfer transfer = createTransfer(id, "sender", "receiver", new BigDecimal("100.00"), TransferStatus.COMPLETED);
-        TransferResponse expectedResponse = new TransferResponse(
-                id, "sender", "receiver", new BigDecimal("100.00"),
-                TransferStatus.COMPLETED, null, null, null
-        );
-
-        when(transferRepository.findById(id)).thenReturn(Optional.of(transfer));
-        when(mapper.toResponse(transfer)).thenReturn(expectedResponse);
-
-        // When
-        CompletableFuture<TransferResponse> future = transferService.getTransferById(id);
-        TransferResponse response = future.join();
-
-        // Then
-        assertNotNull(response);
-        assertEquals(id, response.id());
-        verify(transferRepository).findById(id);
     }
 
     private Transfer createTransfer(Long id, String from, String to, BigDecimal amount, TransferStatus status) {

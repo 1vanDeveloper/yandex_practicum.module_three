@@ -17,7 +17,6 @@ import ru.yandex.practicum.transfer.entity.TransferStatus;
 import ru.yandex.practicum.transfer.service.TransferService;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @SpringBootTest(
@@ -60,33 +59,6 @@ public abstract class ContractVerifierBase {
                                     null,
                                     null
                             )));
-
-            Mockito.when(mock.getTransferById(Mockito.anyLong()))
-                    .thenReturn(CompletableFuture.completedFuture(
-                            new TransferResponse(
-                                    1L,
-                                    "sender_user",
-                                    "receiver_user",
-                                    BigDecimal.valueOf(100.00),
-                                    TransferStatus.COMPLETED,
-                                    null,
-                                    null,
-                                    null
-                            )));
-
-            Mockito.when(mock.getTransfersByLogin(Mockito.anyString()))
-                    .thenReturn(CompletableFuture.completedFuture(List.of(
-                            new TransferResponse(
-                                    1L,
-                                    "test_user",
-                                    "other_user",
-                                    BigDecimal.valueOf(100.00),
-                                    TransferStatus.COMPLETED,
-                                    null,
-                                    null,
-                                    null
-                            )
-                    )));
 
             return mock;
         }
