@@ -163,4 +163,18 @@ public class AuthController {
         }
         return "redirect:/login";
     }
+
+    /**
+     * POST /logout - выход из системы.
+     */
+    @PostMapping("/logout")
+    public String logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            log.info("User logged out, session id: {}", session.getId());
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
+        return "redirect:/login";
+    }
 }
