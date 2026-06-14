@@ -35,6 +35,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.46")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.security:spring-security-oauth2-jose")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     testImplementation("org.postgresql:postgresql:42.7.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

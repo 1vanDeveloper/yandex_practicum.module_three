@@ -46,59 +46,59 @@ class GatewayServiceTest {
     @Test
     void getAccount_shouldReturnAccountResponse() {
         // Arrange
-        when(gatewayClient.getAccount(eq("testuser")))
+        when(gatewayClient.getAccount(anyString()))
                 .thenReturn(CompletableFuture.completedFuture(testAccount));
 
         // Act
-        CompletableFuture<AccountResponse> result = gatewayService.getAccount("testuser");
+        CompletableFuture<AccountResponse> result = gatewayService.getAccount("test-token");
 
         // Assert
         assertNotNull(result);
         assertEquals(testAccount, result.join());
-        verify(gatewayClient).getAccount(eq("testuser"));
+        verify(gatewayClient).getAccount(anyString());
     }
 
     @Test
     void updateAccount_shouldReturnUpdatedAccountResponse() {
         // Arrange
-        when(gatewayClient.updateAccount(eq("testuser"), eq("Test"), eq("User"), anyString()))
+        when(gatewayClient.updateAccount(eq("Test"), eq("User"), eq("1990-01-01"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(testAccount));
 
         // Act
         CompletableFuture<AccountResponse> result = gatewayService.updateAccount(
-                "testuser", "Test", "User", "1990-01-01");
+                "Test", "User", "1990-01-01", "test-token");
 
         // Assert
         assertNotNull(result);
         assertEquals(testAccount, result.join());
-        verify(gatewayClient).updateAccount(eq("testuser"), eq("Test"), eq("User"), anyString());
+        verify(gatewayClient).updateAccount(eq("Test"), eq("User"), eq("1990-01-01"), anyString());
     }
 
     @Test
     void processCash_shouldCallGatewayClient() {
         // Arrange
-        when(gatewayClient.processCash(eq("testuser"), eq(100), eq("PUT")))
+        when(gatewayClient.processCash(eq(100), eq("PUT"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
-        CompletableFuture<Void> result = gatewayService.processCash("testuser", 100, "PUT");
+        CompletableFuture<Void> result = gatewayService.processCash(100, "PUT", "test-token");
 
         // Assert
         assertNotNull(result);
-        verify(gatewayClient).processCash(eq("testuser"), eq(100), eq("PUT"));
+        verify(gatewayClient).processCash(eq(100), eq("PUT"), anyString());
     }
 
     @Test
     void processTransfer_shouldCallGatewayClient() {
         // Arrange
-        when(gatewayClient.processTransfer(eq("testuser"), eq(500), eq("recipient")))
+        when(gatewayClient.processTransfer(eq(500), eq("recipient"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
-        CompletableFuture<Void> result = gatewayService.processTransfer("testuser", 500, "recipient");
+        CompletableFuture<Void> result = gatewayService.processTransfer(500, "recipient", "test-token");
 
         // Assert
         assertNotNull(result);
-        verify(gatewayClient).processTransfer(eq("testuser"), eq(500), eq("recipient"));
+        verify(gatewayClient).processTransfer(eq(500), eq("recipient"), anyString());
     }
 }
