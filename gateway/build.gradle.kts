@@ -13,15 +13,13 @@ java {
     }
 }
 
-val springCloudVersion = "2024.0.1"
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
-    }
-}
+val springCloudVersion = "2025.0.0"
 
 dependencies {
+    // Spring Boot BOM
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
+    // Spring Cloud BOM
+    implementation(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
     // Spring Cloud Gateway (WebFlux-based)
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
     
@@ -40,8 +38,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     
     // Lombok
-    compileOnly("org.projectlombok:lombok:1.18.36")
-    annotationProcessor("org.projectlombok:lombok:1.18.36")
+    compileOnly("org.projectlombok:lombok:1.18.46")
+    annotationProcessor("org.projectlombok:lombok:1.18.46")
     
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
