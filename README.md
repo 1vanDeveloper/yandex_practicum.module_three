@@ -32,6 +32,7 @@
 - Docker & Docker Compose
 - Consul (Service Discovery)
 - Spring Cloud Gateway
+- **Resilience4j** (Circuit Breaker, Retry, Rate Limiter)
 
 ---
 
@@ -70,8 +71,8 @@
 | **Service Discovery** | Consul (`spring-cloud-starter-consul-discovery`) |
 | **OAuth2 Authorization Code Flow** | Frontend → Keycloak → Gateway |
 | **OAuth2 Client Credentials** | Межсервисное взаимодействие |
-| **Transactional Outbox** | `accounts/service/OutboxService.java` |
-| **Circuit Breaker** | ❌ Не реализован (требуется Resilience4j) |
+| **Transactional Outbox** | `accounts/service/OutboxService.java`, `accounts/service/OutboxScheduler.java` |
+| **Circuit Breaker** | ✅ Resilience4j (`spring-cloud-starter-circuitbreaker-resilience4j`) |
 | **Contract Testing** | Spring Cloud Contract (accounts, cash, transfer, notifications) |
 
 ---

@@ -33,6 +33,10 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
     implementation("org.springframework.cloud:spring-cloud-starter-consul-config")
 
+    // Resilience4j Circuit Breaker
+    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.3.0")
+
     // Database
     runtimeOnly("org.postgresql:postgresql")
 
