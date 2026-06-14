@@ -42,7 +42,7 @@
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Browser   │ ──► │  Frontend   │ ──► │   Gateway   │
-│  (port 80)  │     │  (port 80)  │     │  (port 85)  │
+│ (port 8081) │     │ (port 8081) │     │ (port 8086) │
 └─────────────┘     └─────────────┘     └──────┬──────┘
                                                │
          ┌─────────────────────────────────────┼─────────────────────────────────────┐
@@ -50,14 +50,14 @@
          ▼                                     ▼                                     ▼
 ┌─────────────────┐              ┌─────────────────┐              ┌─────────────────┐
 │    Accounts     │              │      Cash       │              │    Transfer     │
-│   (port 8081)   │              │   (port 8082)   │              │   (port 8083)   │
+│   (port 8082)   │              │   (port 8084)   │              │   (port 8085)   │
 │  + PostgreSQL   │              │  + PostgreSQL   │              │  + PostgreSQL   │
 └─────────────────┘              └─────────────────┘              └─────────────────┘
          │
          ▼
 ┌─────────────────┐
 │  Notifications  │
-│   (port 8084)   │
+│   (port 8083)   │
 │  + PostgreSQL   │
 └─────────────────┘
 ```
@@ -78,17 +78,17 @@
 
 ## Порты сервисов
 
-| Сервис | Порт | Описание |
-|--------|------|----------|
-| **frontend** | 80 | Веб-интерфейс (Thymeleaf) |
-| **gateway** | 85 | API Gateway (единая точка входа) |
-| **accounts** | 8081 | Сервис аккаунтов |
-| **cash** | 8082 | Сервис операций с наличными |
-| **transfer** | 8083 | Сервис переводов |
-| **notifications** | 8084 | Сервис уведомлений |
-| **consul** | 8500 | Service Discovery UI |
-| **keycloak** | 8600 | OAuth2 провайдер |
-| **postgres** | 5432 | Основная БД |
+| Сервис | Порт (хост:контейнер) | Описание |
+|--------|----------------------|----------|
+| **frontend** | 8081:8080 | Веб-интерфейс (Thymeleaf) |
+| **gateway** | 8086:8080 | API Gateway (единая точка входа) |
+| **accounts** | 8082:8080 | Сервис аккаунтов |
+| **cash** | 8084:8080 | Сервис операций с наличными |
+| **transfer** | 8085:8080 | Сервис переводов |
+| **notifications** | 8083:8080 | Сервис уведомлений |
+| **consul** | 8500:8500 | Service Discovery UI |
+| **keycloak** | 8180:8080 | OAuth2 провайдер |
+| **postgres** | 5432:5432 | Основная БД |
 
 ---
 
@@ -167,8 +167,8 @@ Browser → Frontend (/login) → Keycloak → Frontend (JWT в сессии)
 ```
 
 **Конфигурация:**
-- Client ID: `frontend`
-- Redirect URI: `http://localhost:80/login/callback`
+- Client ID: `frontend-client`
+- Redirect URI: `http://localhost:8081/login/oauth2/code/frontend-client`
 - Scopes: `openid, profile, email`
 
 ### Client Credentials Flow (Межсервисное взаимодействие)
@@ -209,7 +209,7 @@ gateway/build/openapi.json
 После запуска gateway сервис доступен по адресу:
 
 ```
-http://localhost:85/swagger-ui.html
+http://localhost:8086/swagger-ui.html
 ```
 
 ### Основные эндпоинты
@@ -311,12 +311,12 @@ docker-compose up -d accounts
 
 | Сервис | URL |
 |--------|-----|
-| Frontend | `http://localhost:80/actuator/health` |
-| Gateway | `http://localhost:85/actuator/health` |
-| Accounts | `http://localhost:8081/actuator/health` |
-| Cash | `http://localhost:8082/actuator/health` |
-| Transfer | `http://localhost:8083/actuator/health` |
-| Notifications | `http://localhost:8084/actuator/health` |
+| Frontend | `http://localhost:8081/actuator/health` |
+| Gateway | `http://localhost:8086/actuator/health` |
+| Accounts | `http://localhost:8082/actuator/health` |
+| Cash | `http://localhost:8084/actuator/health` |
+| Transfer | `http://localhost:8085/actuator/health` |
+| Notifications | `http://localhost:8083/actuator/health` |
 
 ### Consul UI
 
@@ -329,7 +329,7 @@ http://localhost:8500
 ### Keycloak Admin Console
 
 ```
-http://localhost:8600
+http://localhost:8180
 Логин: admin
 Пароль: admin
 ```
