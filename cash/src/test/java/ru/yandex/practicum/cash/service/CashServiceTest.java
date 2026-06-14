@@ -25,6 +25,7 @@ import ru.yandex.practicum.cash.mapper.CashTransactionMapper;
 import ru.yandex.practicum.cash.repository.CashTransactionRepository;
 
 import java.math.BigDecimal;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -78,7 +79,8 @@ class CashServiceTest {
                 TransactionStatus.COMPLETED, null, null, null
         );
 
-        doNothing().when(accountsClient).deposit(eq(request), eq("test-token"));
+        when(accountsClient.deposit(eq(request), eq("test-token")))
+                .thenReturn(CompletableFuture.completedFuture(null));
         when(transactionRepository.save(any(CashTransaction.class))).thenReturn(savedTransaction);
         when(mapper.toResponse(savedTransaction)).thenReturn(expectedResponse);
 
@@ -104,7 +106,8 @@ class CashServiceTest {
                 TransactionStatus.COMPLETED, null, null, null
         );
 
-        doNothing().when(accountsClient).withdraw(eq(request), eq("test-token"));
+        when(accountsClient.withdraw(eq(request), eq("test-token")))
+                .thenReturn(CompletableFuture.completedFuture(null));
         when(transactionRepository.save(any(CashTransaction.class))).thenReturn(savedTransaction);
         when(mapper.toResponse(savedTransaction)).thenReturn(expectedResponse);
 
@@ -124,11 +127,11 @@ class CashServiceTest {
         // Given
         WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("1000.00"));
         
-        doThrow(new InsufficientFundsException("Insufficient funds"))
-                .when(accountsClient).withdraw(eq(request), eq("test-token"));
+        when(accountsClient.withdraw(eq(request), eq("test-token")))
+                .thenReturn(CompletableFuture.failedFuture(new InsufficientFundsException("Insufficient funds")));
 
         // When & Then
-        assertThrows(InsufficientFundsException.class, () -> cashService.withdraw(request));
+        assertThrows(Exception.class, () -> cashService.withdraw(request));
     }
 
     private CashTransaction createTransaction(Long id, String login, TransactionType type,

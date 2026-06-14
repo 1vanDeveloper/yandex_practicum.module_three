@@ -57,7 +57,7 @@ public class CashService {
         try {
             String token = getAccessToken();
 
-            accountsClient.deposit(request, token);
+            accountsClient.deposit(request, token).join();
 
             CashTransaction transaction = CashTransaction.builder()
                     .accountLogin(request.login())
@@ -114,7 +114,7 @@ public class CashService {
         try {
             String token = getAccessToken();
 
-            accountsClient.withdraw(request, token);
+            accountsClient.withdraw(request, token).join();
 
             CashTransaction transaction = CashTransaction.builder()
                     .accountLogin(request.login())
@@ -165,7 +165,7 @@ public class CashService {
 
     private void sendNotificationSafely(String login, String message, String token) {
         try {
-            notificationsClient.sendNotification(new NotificationRequest(login, message), token);
+            notificationsClient.sendNotification(new NotificationRequest(login, message), token).join();
         } catch (Exception e) {
             log.warn("Failed to send notification: {}", e.getMessage());
         }

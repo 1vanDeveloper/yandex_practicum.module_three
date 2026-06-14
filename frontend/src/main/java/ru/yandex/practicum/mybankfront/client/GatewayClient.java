@@ -1,11 +1,10 @@
 package ru.yandex.practicum.mybankfront.client;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.mybankfront.dto.AccountBrief;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
@@ -15,14 +14,22 @@ import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class GatewayClient {
 
-    private final WebClient webClient;
+    private final RestClient restClient;
     private final DiscoveryClient discoveryClient;
+    private final Executor executor;
+
+    public GatewayClient(DiscoveryClient discoveryClient) {
+        this.discoveryClient = discoveryClient;
+        this.restClient = RestClient.create();
+        this.executor = Executors.newCachedThreadPool();
+    }
 
     private String getGatewayUrl() {
         List<ServiceInstance> instances = discoveryClient.getInstances("gateway");
@@ -38,12 +45,12 @@ public class GatewayClient {
         log.debug("GatewayClient: logging in user: {}", request.getLogin());
 
         return CompletableFuture.supplyAsync(() ->
-            webClient.post()
+            restClient.post()
                 .uri(gatewayUrl + "/gateway/auth/login")
-                .bodyValue(request)
+                .body(request)
                 .retrieve()
-                .bodyToMono(JwtTokenResponse.class)
-                .block()
+                .body(JwtTokenResponse.class),
+            executor
         );
     }
 
@@ -60,12 +67,12 @@ public class GatewayClient {
         log.debug("GatewayClient: registering user: {}", request.getLogin());
 
         return CompletableFuture.runAsync(() ->
-            webClient.post()
+            restClient.post()
                 .uri(gatewayUrl + "/gateway/auth/register")
-                .bodyValue(request)
+                .body(request)
                 .retrieve()
-                .bodyToMono(Void.class)
-                .block()
+                .toBodilessEntity(),
+            executor
         );
     }
 
@@ -88,12 +95,12 @@ public class GatewayClient {
         }
 
         return CompletableFuture.supplyAsync(() ->
-            webClient.get()
+            restClient.get()
                 .uri(gatewayUrl + "/gateway/account")
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .bodyToMono(AccountResponse.class)
-                .block()
+                .body(AccountResponse.class),
+            executor
         );
     }
 
@@ -120,17 +127,17 @@ public class GatewayClient {
         }
 
         return CompletableFuture.supplyAsync(() ->
-            webClient.put()
+            restClient.put()
                 .uri(gatewayUrl + "/gateway/account")
                 .header("Authorization", "Bearer " + jwtToken)
-                .bodyValue(new UpdateAccountRequest(firstName, lastName, birthDate))
+                .body(new UpdateAccountRequest(firstName, lastName, birthDate))
                 .retrieve()
-                .bodyToMono(AccountResponse.class)
-                .block()
+                .body(AccountResponse.class),
+            executor
         );
     }
 
-    public CompletableFuture<AccountResponse> updateAccountFallback(String firstName, String lastName, 
+    public CompletableFuture<AccountResponse> updateAccountFallback(String firstName, String lastName,
             String birthDate, String jwtToken, Throwable t) {
         log.error("Circuit breaker opened for gateway service (updateAccount): {}", t.getMessage());
         CompletableFuture<AccountResponse> failedFuture = new CompletableFuture<>();
@@ -151,12 +158,12 @@ public class GatewayClient {
         }
 
         return CompletableFuture.runAsync(() ->
-            webClient.post()
+            restClient.post()
                 .uri(url)
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .bodyToMono(Void.class)
-                .block()
+                .toBodilessEntity(),
+            executor
         );
     }
 
@@ -180,12 +187,12 @@ public class GatewayClient {
         }
 
         return CompletableFuture.runAsync(() ->
-            webClient.post()
+            restClient.post()
                 .uri(url)
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .bodyToMono(Void.class)
-                .block()
+                .toBodilessEntity(),
+            executor
         );
     }
 
@@ -208,13 +215,12 @@ public class GatewayClient {
         }
 
         return CompletableFuture.supplyAsync(() ->
-            webClient.get()
+            restClient.get()
                 .uri(gatewayUrl + "/gateway/accounts")
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .bodyToFlux(AccountBrief.class)
-                .collectList()
-                .block()
+                .body(List.class),
+            executor
         );
     }
 
