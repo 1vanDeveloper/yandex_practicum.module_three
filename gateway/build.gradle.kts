@@ -43,7 +43,10 @@ dependencies {
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.46")
     annotationProcessor("org.projectlombok:lombok:1.18.46")
-    
+
+    // Spring Cloud Contract for stubs
+    testImplementation("org.springframework.cloud:spring-cloud-starter-contract-stub-runner")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")

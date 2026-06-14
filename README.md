@@ -262,8 +262,15 @@ notifications.notifications-- Уведомления
 | cash | ✓ | ✓ | ✓ (2) |
 | transfer | ✓ | ✓ | ✓ (1) |
 | notifications | ✓ | ✗ | ✓ (1) |
-| gateway | ✗ | ✗ | ✗ |
+| gateway | ✓ | ✓ | ✗ |
 | frontend | ✓ | ✓ | ✗ |
+
+**Gateway тесты:**
+- `GatewayApplicationTest` — загрузка контекста приложения
+- `GatewayRoutesConfigTest` — конфигурация маршрутов
+- `GatewayRoutesIntegrationTest` — integration-тесты маршрутизации
+- `GatewaySecurityIntegrationTest` — integration-тесты безопасности
+- `JwtAuthFilterTest` — unit-тесты фильтра JWT
 
 ### Контрактные тесты
 
