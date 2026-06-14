@@ -272,6 +272,12 @@ notifications.notifications-- Уведомления
 - `GatewaySecurityIntegrationTest` — integration-тесты безопасности
 - `JwtAuthFilterTest` — unit-тесты фильтра JWT
 
+**Контрактные тесты:**
+- **accounts**: getMyAccount, updateMyAccount, getAccount, internalDebit, internalWithdraw, internalCredit, internalDeposit
+- **cash**: processCashDeposit, processCashWithdraw
+- **transfer**: createTransfer
+- **notifications**: notificate
+
 ### Контрактные тесты
 
 Контракты расположены в `src/contractTest/resources/contracts/`:

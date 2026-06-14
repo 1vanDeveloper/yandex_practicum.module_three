@@ -2,7 +2,7 @@ plugins {
     id("java")
     id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
-    id("org.springframework.cloud.contract") version "5.0.0"
+    id("org.springframework.cloud.contract") version "5.0.1"
     id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
 
     groovy
@@ -63,13 +63,9 @@ dependencies {
     contractTestImplementation("org.springframework.boot:spring-boot-test")
     contractTestImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     contractTestImplementation("org.springframework.security:spring-security-test")
-
-    // Фикс: принудительно используем Groovy 4.x для совместимости с REST Assured
-    contractTestImplementation("org.apache.groovy:groovy:4.0.28")
-    contractTestImplementation("org.apache.groovy:groovy-json:4.0.28")
-    contractTestImplementation("org.apache.groovy:groovy-xml:4.0.28")
-    contractTestImplementation("org.apache.groovy:groovy-nio:4.0.28")
     contractTestImplementation("io.rest-assured:rest-assured:5.5.0")
+    contractTestImplementation("org.apache.groovy:groovy:4.0.22")
+    contractTestImplementation("org.apache.groovy:groovy-json:4.0.22")
 }
 
 tasks.test {

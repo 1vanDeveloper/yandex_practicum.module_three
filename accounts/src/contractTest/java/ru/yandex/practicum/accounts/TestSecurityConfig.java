@@ -4,7 +4,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -21,8 +20,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Test security configuration that disables authentication for contract tests.
+ * All requests are permitted and a test user is automatically authenticated.
+ */
 @TestConfiguration
-@ConditionalOnProperty(name = "spring.security.enabled", havingValue = "false")
 public class TestSecurityConfig {
 
     @Bean
@@ -43,23 +45,27 @@ public class TestSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Filter that authenticates all requests as test_user.
+     * This allows contract tests to run without actual JWT tokens.
+     */
     static class JwtTestFilter extends OncePerRequestFilter {
         @Override
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                        FilterChain filterChain) throws ServletException, IOException {
-            var userDetails = User.withUsername("test_user")
-                .password("")
-                .authorities(AuthorityUtils.createAuthorityList("ROLE_USER"))
-                .build();
-            var auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                userDetails,
-                null,
-                userDetails.getAuthorities()
-            );
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(auth);
-            SecurityContextHolder.setContext(context);
             try {
+                var userDetails = User.withUsername("test_user")
+                    .password("")
+                    .authorities(AuthorityUtils.createAuthorityList("ROLE_USER"))
+                    .build();
+                var auth = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+                );
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(auth);
+                SecurityContextHolder.setContext(context);
                 filterChain.doFilter(request, response);
             } finally {
                 SecurityContextHolder.clearContext();
