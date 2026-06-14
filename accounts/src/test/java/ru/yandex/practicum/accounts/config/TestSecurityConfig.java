@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @TestConfiguration
@@ -30,5 +32,23 @@ public class TestSecurityConfig {
     @Profile("test")
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    @Primary
+    @Profile("test")
+    public JwtDecoder keycloakJwtDecoder() {
+        return token -> {
+            throw new UnsupportedOperationException("JWT decoding not supported in tests");
+        };
+    }
+
+    @Bean
+    @Primary
+    @Profile("test")
+    public OAuth2AuthorizedClientManager authorizedClientManager() {
+        return request -> {
+            throw new UnsupportedOperationException("OAuth2 client not supported in tests");
+        };
     }
 }

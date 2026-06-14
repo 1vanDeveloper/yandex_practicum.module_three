@@ -14,7 +14,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.accounts.dto.AccountIdResponse;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.service.AccountService;
 
@@ -69,22 +68,26 @@ public abstract class ContractVerifierBase {
                                     LocalDate.of(1990, 5, 15),
                                     BigDecimal.valueOf(1000.00))));
 
-            Mockito.when(mock.createAccount(Mockito.any()))
-                    .thenReturn(CompletableFuture.completedFuture(
-                            new AccountIdResponse(1L)));
-
-            Mockito.when(mock.updateAccount(Mockito.anyString(), Mockito.any()))
-                    .thenReturn(CompletableFuture.completedFuture(
-                            new AccountResponse(
-                                    1L,
-                                    "test_user",
-                                    "Updated",
-                                    "Name",
-                                    "updated@example.com",
-                                    LocalDate.of(1995, 10, 20),
-                                    BigDecimal.valueOf(2000.00))));
-
             return mock;
+        }
+
+        @Bean
+        public org.springframework.security.oauth2.jwt.JwtDecoder keycloakJwtDecoder() {
+            return token -> {
+                throw new UnsupportedOperationException("JWT decoding not supported in contract tests");
+            };
+        }
+
+        @Bean
+        public org.springframework.web.client.RestClient restClient() {
+            return org.springframework.web.client.RestClient.create();
+        }
+
+        @Bean
+        public org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager authorizedClientManager() {
+            return request -> {
+                throw new UnsupportedOperationException("OAuth2 client not supported in contract tests");
+            };
         }
     }
 }
