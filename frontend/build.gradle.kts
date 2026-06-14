@@ -7,6 +7,12 @@ plugins {
 group = "ru.yandex.practicum"
 version = "1.0-SNAPSHOT"
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 val springCloudVersion = "2025.1.0"
 
 dependencies {
