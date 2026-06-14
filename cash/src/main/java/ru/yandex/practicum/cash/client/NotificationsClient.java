@@ -31,7 +31,7 @@ public class NotificationsClient {
             throw new RuntimeException("notifications-service not found in service discovery");
         }
         ServiceInstance instance = instances.get(0);
-        String url = instance.getUri().toString() + "/notifications";
+        String url = instance.getUri().toString() + "/notifications/notificate";
 
         Map<String, String> body = Map.of(
                 "login", request.login(),
