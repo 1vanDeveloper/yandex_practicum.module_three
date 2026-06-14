@@ -91,7 +91,19 @@ public class CashService {
 
     private TransactionResponse depositFallback(DepositRequest request, Throwable t) {
         log.error("Circuit breaker opened for accounts service (deposit): {}", t.getMessage());
-        throw new TransactionFailedException("Accounts service unavailable, please try again later", t);
+        
+        // Сохраняем транзакцию со статусом PENDING для последующей обработки
+        CashTransaction pendingTransaction = CashTransaction.builder()
+                .accountLogin(request.login())
+                .transactionType(TransactionType.DEPOSIT)
+                .amount(request.amount())
+                .status(TransactionStatus.PENDING)
+                .errorMessage("Accounts service temporarily unavailable. Transaction queued for retry.")
+                .build();
+        transactionRepository.save(pendingTransaction);
+        
+        // Возвращаем ответ с информацией о статусе
+        return mapper.toResponse(pendingTransaction);
     }
 
     @CircuitBreaker(name = "accountsService", fallbackMethod = "withdrawFallback")
@@ -136,7 +148,19 @@ public class CashService {
 
     private TransactionResponse withdrawFallback(WithdrawRequest request, Throwable t) {
         log.error("Circuit breaker opened for accounts service (withdraw): {}", t.getMessage());
-        throw new TransactionFailedException("Accounts service unavailable, please try again later", t);
+        
+        // Сохраняем транзакцию со статусом PENDING для последующей обработки
+        CashTransaction pendingTransaction = CashTransaction.builder()
+                .accountLogin(request.login())
+                .transactionType(TransactionType.WITHDRAW)
+                .amount(request.amount())
+                .status(TransactionStatus.PENDING)
+                .errorMessage("Accounts service temporarily unavailable. Transaction queued for retry.")
+                .build();
+        transactionRepository.save(pendingTransaction);
+        
+        // Возвращаем ответ с информацией о статусе
+        return mapper.toResponse(pendingTransaction);
     }
 
     private void sendNotificationSafely(String login, String message, String token) {

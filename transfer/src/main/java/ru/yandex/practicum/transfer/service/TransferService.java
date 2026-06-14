@@ -111,9 +111,28 @@ public class TransferService {
 
     private CompletableFuture<TransferResponse> createTransferFallback(TransferRequest request, Throwable t) {
         log.error("Circuit breaker opened for accounts service (transfer): {}", t.getMessage());
-        CompletableFuture<TransferResponse> failedFuture = new CompletableFuture<>();
-        failedFuture.completeExceptionally(new TransferFailedException("Accounts service unavailable, please try again later", t));
-        return failedFuture;
+        
+        // Сохраняем трансфер со статусом PENDING для последующей обработки
+        Transfer pendingTransfer = Transfer.builder()
+                .fromAccountLogin(request.fromLogin())
+                .toAccountLogin(request.toLogin())
+                .amount(request.amount())
+                .status(TransferStatus.PENDING)
+                .errorMessage("Accounts service temporarily unavailable. Transfer queued for retry.")
+                .build();
+        transferRepository.save(pendingTransfer);
+        
+        // Возвращаем ответ с информацией о статусе
+        return CompletableFuture.completedFuture(new TransferResponse(
+                pendingTransfer.getId(),
+                pendingTransfer.getFromAccountLogin(),
+                pendingTransfer.getToAccountLogin(),
+                pendingTransfer.getAmount(),
+                pendingTransfer.getStatus(),
+                pendingTransfer.getErrorMessage(),
+                pendingTransfer.getCreatedAt(),
+                pendingTransfer.getUpdatedAt()
+        ));
     }
 
     private CompletableFuture<Void> sendNotificationSafely(String login, String message, String token) {
