@@ -4,10 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +20,7 @@ import ru.yandex.practicum.mybankfront.service.GatewayService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,7 +38,7 @@ public class AuthController {
      * GET /login - страница входа с формой.
      */
     @GetMapping("/login")
-    public String loginPage(Model model) {
+    public String loginPage() {
         log.debug("Login page requested");
         return "login";
     }
@@ -48,8 +50,7 @@ public class AuthController {
     public RedirectView login(
             @RequestParam String login,
             @RequestParam String password,
-            HttpServletRequest request,
-            Model model) {
+            HttpServletRequest request) {
 
         log.info("AuthController: login form submitted for user: {}", login);
 
@@ -60,17 +61,19 @@ public class AuthController {
             log.info("AuthController: user {} authenticated successfully, token length: {}", login, tokenResponse.getToken() != null ? tokenResponse.getToken().length() : "null");
             
             // Извлекаем привилегии из JWT токена
-            List<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = new java.util.ArrayList<>();
+            List<SimpleGrantedAuthority> authorities = new ArrayList<>();
             try {
                 io.jsonwebtoken.Claims claims = io.jsonwebtoken.Jwts.parserBuilder()
                     .setSigningKey("mySecretKeyForJWTTokenGenerationMustBeLongEnough".getBytes(java.nio.charset.StandardCharsets.UTF_8))
                     .build()
                     .parseClaimsJws(tokenResponse.getToken())
                     .getBody();
-                List<String> privileges = claims.get("privileges", List.class);
-                if (privileges != null) {
-                    for (String privilege : privileges) {
-                        authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(privilege));
+                Object privilegesObj = claims.get("privileges");
+                if (privilegesObj instanceof java.util.List<?> privilegesList) {
+                    for (Object privilege : privilegesList) {
+                        if (privilege instanceof String privilegeStr) {
+                            authorities.add(new SimpleGrantedAuthority(privilegeStr));
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -78,18 +81,18 @@ public class AuthController {
             }
             
             // Создаём Authentication объект
-            org.springframework.security.core.Authentication authentication = 
-                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
                     login,
                     tokenResponse.getToken(),
                     authorities
                 );
             
             // Сохраняем в SecurityContext
-            org.springframework.security.core.context.SecurityContext securityContext = 
-                org.springframework.security.core.context.SecurityContextHolder.createEmptyContext();
+            var securityContext =
+                SecurityContextHolder.createEmptyContext();
             securityContext.setAuthentication(authentication);
-            org.springframework.security.core.context.SecurityContextHolder.setContext(securityContext);
+            SecurityContextHolder.setContext(securityContext);
             
             // Сохраняем SecurityContext и JWT токен в сессии
             HttpSession session = request.getSession(true);
@@ -112,7 +115,7 @@ public class AuthController {
      * GET /register - страница регистрации.
      */
     @GetMapping("/register")
-    public String registerPage(Model model) {
+    public String registerPage() {
         log.debug("Register page requested");
         return "register";
     }
@@ -127,8 +130,7 @@ public class AuthController {
             @RequestParam String email,
             @RequestParam String firstName,
             @RequestParam String lastName,
-            @RequestParam String birthDate,
-            Model model) {
+            @RequestParam String birthDate) {
 
         log.debug("Register form submitted for user: {}", login);
 

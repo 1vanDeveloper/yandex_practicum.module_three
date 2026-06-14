@@ -8,6 +8,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 
 import java.net.URI;
 import java.util.List;
@@ -78,28 +79,6 @@ public class AccountsClient {
                 throw new RuntimeException("Failed to credit account: " + response.getStatusCode());
             }
             return null;
-        });
-    }
-
-    public CompletableFuture<Map<String, Object>> getAccountByLogin(String login, String bearerToken) {
-        return CompletableFuture.supplyAsync(() -> {
-            List<ServiceInstance> instances = discoveryClient.getInstances("accounts-service");
-            if (instances.isEmpty()) {
-                throw new RuntimeException("accounts-service not found in service discovery");
-            }
-            ServiceInstance instance = instances.get(0);
-            String url = instance.getUri().toString() + "/accounts/" + login;
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + bearerToken);
-
-            RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, URI.create(url));
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(requestEntity, (Class<Map<String, Object>>)(Class<?>)Map.class);
-
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new RuntimeException("Failed to get account: " + response.getStatusCode());
-            }
-            return response.getBody();
         });
     }
 }
