@@ -9,7 +9,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.cash.dto.DepositRequest;
-import ru.yandex.practicum.cash.dto.TransactionIdResponse;
 import ru.yandex.practicum.cash.dto.TransactionResponse;
 import ru.yandex.practicum.cash.dto.WithdrawRequest;
 import ru.yandex.practicum.cash.service.CashService;

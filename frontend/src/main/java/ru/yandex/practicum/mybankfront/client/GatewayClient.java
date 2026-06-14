@@ -6,10 +6,9 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
-import ru.yandex.practicum.mybankfront.dto.LoginRequest;
 import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
+import ru.yandex.practicum.mybankfront.dto.LoginRequest;
 import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
 import java.util.List;

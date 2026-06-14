@@ -8,9 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import ru.yandex.practicum.cash.client.AccountsClient;
 import ru.yandex.practicum.cash.client.NotificationsClient;
@@ -21,17 +21,16 @@ import ru.yandex.practicum.cash.entity.CashTransaction;
 import ru.yandex.practicum.cash.entity.TransactionStatus;
 import ru.yandex.practicum.cash.entity.TransactionType;
 import ru.yandex.practicum.cash.exception.InsufficientFundsException;
-import ru.yandex.practicum.cash.exception.TransactionFailedException;
 import ru.yandex.practicum.cash.mapper.CashTransactionMapper;
 import ru.yandex.practicum.cash.repository.CashTransactionRepository;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

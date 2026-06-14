@@ -4,7 +4,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.Map;
 
 /**
  * Mock JWT token for testing.
