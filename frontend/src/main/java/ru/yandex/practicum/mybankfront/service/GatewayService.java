@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.mybankfront.client.GatewayClient;
+import ru.yandex.practicum.mybankfront.dto.AccountBrief;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
 import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
 import ru.yandex.practicum.mybankfront.dto.LoginRequest;
 import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -50,5 +52,10 @@ public class GatewayService {
     public CompletableFuture<Void> processTransfer(Integer value, String toLogin, String jwtToken) {
         log.info("Frontend: processing transfer to {} with provided token", toLogin);
         return gatewayClient.processTransfer(value, toLogin, jwtToken);
+    }
+
+    public CompletableFuture<List<AccountBrief>> getAccountBriefs(String jwtToken) {
+        log.info("Frontend: getting account briefs with provided token");
+        return gatewayClient.getAccountBriefs(jwtToken);
     }
 }

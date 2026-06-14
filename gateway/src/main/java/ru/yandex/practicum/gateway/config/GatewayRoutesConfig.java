@@ -52,6 +52,14 @@ public class GatewayRoutesConfig {
                 .filters(f -> f.rewritePath("/gateway/account", "/accounts/internal/me"))
                 .uri("http://accounts:8080"))
 
+            // Accounts list route
+            .route("accounts-list", r -> r
+                .path("/gateway/accounts")
+                .and()
+                .method(org.springframework.http.HttpMethod.GET)
+                .filters(f -> f.rewritePath("/gateway/accounts", "/accounts"))
+                .uri("http://accounts:8080"))
+
             // Cash service routes
             .route("cash", r -> r
                 .path("/gateway/cash")

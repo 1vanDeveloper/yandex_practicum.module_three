@@ -4,12 +4,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.accounts.dto.AccountBrief;
 import ru.yandex.practicum.accounts.dto.AccountIdResponse;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
 import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.service.AccountService;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -42,5 +44,10 @@ public class AccountController {
             @PathVariable String login,
             @Valid @RequestBody UpdateAccountRequest request) {
         return accountService.updateAccount(login, request);
+    }
+
+    @GetMapping
+    public CompletableFuture<List<AccountBrief>> getAllAccounts() {
+        return accountService.getAllAccounts();
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import ru.yandex.practicum.mybankfront.dto.AccountBrief;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
 import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
 import ru.yandex.practicum.mybankfront.dto.LoginRequest;
@@ -136,16 +137,35 @@ public class GatewayClient {
             String gatewayUrl = getGatewayUrl();
             String url = gatewayUrl + "/gateway/transfer?value=" + value + "&login=" + toLogin;
             log.debug("GatewayClient: processing transfer to: {} with provided token", toLogin);
-            
+
             if (jwtToken == null) {
                 throw new IllegalStateException("JWT token is null");
             }
-            
+
             webClient.post()
                 .uri(url)
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
                 .bodyToMono(Void.class)
+                .block();
+        });
+    }
+
+    public CompletableFuture<List<AccountBrief>> getAccountBriefs(String jwtToken) {
+        return CompletableFuture.supplyAsync(() -> {
+            String gatewayUrl = getGatewayUrl();
+            log.debug("GatewayClient: getting account briefs with provided token");
+
+            if (jwtToken == null) {
+                throw new IllegalStateException("JWT token is null");
+            }
+
+            return webClient.get()
+                .uri(gatewayUrl + "/gateway/accounts")
+                .header("Authorization", "Bearer " + jwtToken)
+                .retrieve()
+                .bodyToFlux(AccountBrief.class)
+                .collectList()
                 .block();
         });
     }

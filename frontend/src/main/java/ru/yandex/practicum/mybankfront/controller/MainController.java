@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.mybankfront.controller.dto.CashAction;
+import ru.yandex.practicum.mybankfront.dto.AccountBrief;
 import ru.yandex.practicum.mybankfront.dto.AccountResponse;
 import ru.yandex.practicum.mybankfront.service.GatewayService;
 
@@ -61,15 +62,18 @@ public class MainController {
         log.info("GET /account received for user: {}", login);
 
         return gatewayService.getAccount(jwtToken)
-                .thenApply(account -> {
-                    fillModel(model, account, null, null);
-                    return "main";
-                })
+                .thenCompose(account -> 
+                    gatewayService.getAccountBriefs(jwtToken)
+                        .thenApply(accounts -> {
+                            fillModel(model, account, accounts, null, null);
+                            return "main";
+                        })
+                )
                 .exceptionally(ex -> {
                     log.error("Error getting account", ex);
                     List<String> errors = new ArrayList<>();
                     errors.add("Ошибка получения данных аккаунта: " + ex.getCause().getMessage());
-                    fillModel(model, null, errors, null);
+                    fillModel(model, null, new ArrayList<>(), errors, null);
                     return "main";
                 });
     }
@@ -104,16 +108,19 @@ public class MainController {
         return gatewayService.updateAccount(firstName, lastName, birthdate.format(DateTimeFormatter.ISO_DATE), jwtToken)
                 .thenCompose(updatedAccount ->
                     gatewayService.getAccount(jwtToken)
-                        .thenApply(account -> {
-                            fillModel(model, account, null, "Данные успешно обновлены");
-                            return "main";
-                        })
+                        .thenCompose(account ->
+                            gatewayService.getAccountBriefs(jwtToken)
+                                .thenApply(accounts -> {
+                                    fillModel(model, account, accounts, null, "Данные успешно обновлены");
+                                    return "main";
+                                })
+                        )
                 )
                 .exceptionally(ex -> {
                     log.error("Error updating account for user: {}", login, ex);
                     List<String> errors = new ArrayList<>();
                     errors.add("Ошибка обновления данных: " + ex.getCause().getMessage());
-                    fillModel(model, null, errors, null);
+                    fillModel(model, null, new ArrayList<>(), errors, null);
                     return "main";
                 });
     }
@@ -142,18 +149,21 @@ public class MainController {
 
         return gatewayService.processCash(value, action.name(), jwtToken)
                 .thenCompose(v -> gatewayService.getAccount(jwtToken))
-                .thenApply(account -> {
-                    String info = action == CashAction.PUT
-                            ? "Счёт успешно пополнен на " + value
-                            : "Со счёта успешно снято " + value;
-                    fillModel(model, account, null, info);
-                    return "main";
-                })
+                .thenCompose(account ->
+                    gatewayService.getAccountBriefs(jwtToken)
+                        .thenApply(accounts -> {
+                            String info = action == CashAction.PUT
+                                    ? "Счёт успешно пополнен на " + value
+                                    : "Со счёта успешно снято " + value;
+                            fillModel(model, account, accounts, null, info);
+                            return "main";
+                        })
+                )
                 .exceptionally(ex -> {
                     log.error("Error processing cash for user: {}", login, ex);
                     List<String> errors = new ArrayList<>();
                     errors.add("Ошибка операции со счётом: " + ex.getCause().getMessage());
-                    fillModel(model, null, errors, null);
+                    fillModel(model, null, new ArrayList<>(), errors, null);
                     return "main";
                 });
     }
@@ -182,15 +192,18 @@ public class MainController {
 
         return gatewayService.processTransfer(value, toLogin, jwtToken)
                 .thenCompose(v -> gatewayService.getAccount(jwtToken))
-                .thenApply(account -> {
-                    fillModel(model, account, null, "Перевод успешно выполнен");
-                    return "main";
-                })
+                .thenCompose(account ->
+                    gatewayService.getAccountBriefs(jwtToken)
+                        .thenApply(accounts -> {
+                            fillModel(model, account, accounts, null, "Перевод успешно выполнен");
+                            return "main";
+                        })
+                )
                 .exceptionally(ex -> {
                     log.error("Error processing transfer from: {} to: {}", fromLogin, ex);
                     List<String> errors = new ArrayList<>();
                     errors.add("Ошибка перевода: " + ex.getCause().getMessage());
-                    fillModel(model, null, errors, null);
+                    fillModel(model, null, new ArrayList<>(), errors, null);
                     return "main";
                 });
     }
@@ -226,7 +239,7 @@ public class MainController {
     /**
      * Заполняет модель данными аккаунта.
      */
-    private void fillModel(Model model, AccountResponse account, List<String> errors, String info) {
+    private void fillModel(Model model, AccountResponse account, List<AccountBrief> accounts, List<String> errors, String info) {
         if (account != null) {
             String fullName = (account.getFirstName() != null ? account.getFirstName() : "") +
                     " " + (account.getLastName() != null ? account.getLastName() : "");
@@ -243,8 +256,7 @@ public class MainController {
             model.addAttribute("sum", 0);
         }
 
-        // Empty list of accounts for transfer (can be populated from another service)
-        model.addAttribute("accounts", new ArrayList<>());
+        model.addAttribute("accounts", accounts != null ? accounts : new ArrayList<>());
 
         if (errors != null && !errors.isEmpty()) {
             model.addAttribute("errors", errors);

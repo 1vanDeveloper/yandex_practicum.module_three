@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.accounts.dto.AccountBrief;
 import ru.yandex.practicum.accounts.dto.AccountIdResponse;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
@@ -13,6 +14,7 @@ import ru.yandex.practicum.accounts.mapper.AccountMapper;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -65,6 +67,19 @@ public class AccountService {
         }).thenCompose(updatedAccount ->
             outboxService.saveMessage(updatedAccount.getLogin(), "Account updated: " + updatedAccount.getLogin())
                 .thenApply(v -> accountMapper.toResponse(updatedAccount))
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public CompletableFuture<List<AccountBrief>> getAllAccounts() {
+        return CompletableFuture.supplyAsync(() ->
+            accountRepository.findAll().stream()
+                .map(account -> new AccountBrief(
+                        account.getLogin(),
+                        (account.getFirstName() != null ? account.getFirstName() : "") + " " +
+                        (account.getLastName() != null ? account.getLastName() : "")
+                ))
+                .toList()
         );
     }
 
