@@ -27,7 +27,6 @@ public class UpdateAccountRequest {
 
     private LocalDate birthDate;
 
-    @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Amount cannot be negative")
     private BigDecimal amount;
 }

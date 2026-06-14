@@ -10,6 +10,7 @@ import ru.yandex.practicum.accounts.dto.LoginRequest;
 import ru.yandex.practicum.accounts.dto.RegisterRequest;
 import ru.yandex.practicum.accounts.entity.Account;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
+import ru.yandex.practicum.accounts.service.OutboxService;
 import ru.yandex.practicum.accounts.util.JwtUtil;
 
 import java.math.BigDecimal;
@@ -26,6 +27,7 @@ public class AuthService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final OutboxService outboxService;
 
     @Transactional
     public Account register(RegisterRequest request) {
@@ -58,6 +60,10 @@ public class AuthService {
 
         Account saved = accountRepository.save(account);
         log.info("User registered successfully: {}", saved.getLogin());
+
+        // Отправляем нотификацию через outbox
+        outboxService.saveMessage(saved.getLogin(), "Account created: " + saved.getLogin());
+
         return saved;
     }
 
