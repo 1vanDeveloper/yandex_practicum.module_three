@@ -50,18 +50,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-}
-
-tasks.withType<Test> {
-    systemProperty("user.language", "en")
-    systemProperty("user.country", "US")
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-tasks.withType<Test> {
     systemProperty("user.language", "en")
     systemProperty("user.country", "US")
 }
