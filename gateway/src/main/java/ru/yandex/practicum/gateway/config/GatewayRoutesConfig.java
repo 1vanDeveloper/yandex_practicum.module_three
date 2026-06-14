@@ -42,14 +42,14 @@ public class GatewayRoutesConfig {
                 .path("/gateway/account")
                 .and()
                 .method(org.springframework.http.HttpMethod.GET)
-                .filters(f -> f.rewritePath("/gateway/account", "/accounts/internal/me"))
+                .filters(f -> f.rewritePath("/gateway/account", "/accounts/me"))
                 .uri("http://accounts:8080"))
 
             .route("accounts-account-update", r -> r
                 .path("/gateway/account")
                 .and()
                 .method(org.springframework.http.HttpMethod.PUT)
-                .filters(f -> f.rewritePath("/gateway/account", "/accounts/internal/me"))
+                .filters(f -> f.rewritePath("/gateway/account", "/accounts/me"))
                 .uri("http://accounts:8080"))
 
             // Accounts list route

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
+import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.service.AccountService;
 
 import java.math.BigDecimal;
@@ -66,6 +67,17 @@ public abstract class ContractVerifierBase {
                                     "User",
                                     "test@example.com",
                                     LocalDate.of(1990, 5, 15),
+                                    BigDecimal.valueOf(1000.00))));
+
+            Mockito.when(mock.updateAccount(Mockito.anyString(), Mockito.any(UpdateAccountRequest.class)))
+                    .thenReturn(CompletableFuture.completedFuture(
+                            new AccountResponse(
+                                    1L,
+                                    "test_user",
+                                    "Updated",
+                                    "Name",
+                                    "test@example.com",
+                                    LocalDate.of(1995, 10, 20),
                                     BigDecimal.valueOf(1000.00))));
 
             return mock;

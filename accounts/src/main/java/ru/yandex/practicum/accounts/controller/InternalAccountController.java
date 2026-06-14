@@ -7,9 +7,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.InternalBalanceRequest;
-import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.service.AccountService;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,23 +20,6 @@ import java.util.concurrent.CompletableFuture;
 public class InternalAccountController {
 
     private final AccountService accountService;
-
-    @GetMapping("/me")
-    public CompletableFuture<AccountResponse> getMyAccount(org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken authToken) {
-        String login = authToken.getToken().getSubject();
-        log.info("Internal getMyAccount: login={}", login);
-        return accountService.getAccountByLogin(login);
-    }
-
-    @PutMapping("/me")
-    @ResponseStatus(HttpStatus.OK)
-    public CompletableFuture<AccountResponse> updateMyAccount(
-            @Valid @RequestBody UpdateAccountRequest request,
-            org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken authToken) {
-        String login = authToken.getToken().getSubject();
-        log.info("Internal updateMyAccount: login={}", login);
-        return accountService.updateAccount(login, request);
-    }
 
     @PostMapping("/deposit")
     @ResponseStatus(HttpStatus.OK)
