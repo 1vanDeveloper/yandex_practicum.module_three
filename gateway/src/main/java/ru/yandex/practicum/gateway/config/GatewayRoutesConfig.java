@@ -32,7 +32,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("http://accounts:8080"))
+                .uri("lb://accounts-service"))
 
             .route("accounts-auth-register", r -> r
                 .path("/gateway/auth/register")
@@ -43,7 +43,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("http://accounts:8080"))
+                .uri("lb://accounts-service"))
 
             // Accounts service routes - доступ к аккаунту пользователя
             .route("accounts-account-get", r -> r
@@ -55,7 +55,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("http://accounts:8080"))
+                .uri("lb://accounts-service"))
 
             .route("accounts-account-update", r -> r
                 .path("/gateway/account")
@@ -66,7 +66,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("http://accounts:8080"))
+                .uri("lb://accounts-service"))
 
             // Accounts list route
             .route("accounts-list", r -> r
@@ -78,7 +78,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("http://accounts:8080"))
+                .uri("lb://accounts-service"))
 
             // Cash service routes
             .route("cash", r -> r
@@ -88,7 +88,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("cashService")
                         .setFallbackUri("forward:/fallback/cash")))
-                .uri("http://cash:8080"))
+                .uri("lb://cash-service"))
 
             // Transfer service routes
             .route("transfer", r -> r
@@ -98,7 +98,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("transferService")
                         .setFallbackUri("forward:/fallback/transfer")))
-                .uri("http://transfer:8080"))
+                .uri("lb://transfer-service"))
 
             .build();
     }
