@@ -24,19 +24,32 @@ public class GatewayClient {
     private final RestClient restClient;
     private final DiscoveryClient discoveryClient;
     private final Executor executor;
+    private final String gatewayServiceUrl;
 
-    public GatewayClient(DiscoveryClient discoveryClient) {
+    public GatewayClient(DiscoveryClient discoveryClient, 
+                         @org.springframework.beans.factory.annotation.Value("${gateway.service.url:http://localhost:8086}") String gatewayServiceUrl) {
         this.discoveryClient = discoveryClient;
         this.restClient = RestClient.create();
         this.executor = Executors.newCachedThreadPool();
+        this.gatewayServiceUrl = gatewayServiceUrl;
     }
 
     private String getGatewayUrl() {
-        List<ServiceInstance> instances = discoveryClient.getInstances("gateway");
-        if (instances.isEmpty()) {
-            throw new IllegalStateException("No gateway instances found in Consul");
+        // Пытаемся получить URL из Consul Discovery
+        try {
+            List<ServiceInstance> instances = discoveryClient.getInstances("gateway");
+            if (instances != null && !instances.isEmpty()) {
+                String url = instances.get(0).getUri().toString();
+                log.debug("Gateway URL from Consul: {}", url);
+                return url;
+            }
+        } catch (Exception e) {
+            log.debug("Consul discovery failed, using fallback URL: {}", e.getMessage());
         }
-        return instances.get(0).getUri().toString();
+        
+        // Fallback на прямой URL
+        log.debug("Using fallback gateway URL: {}", gatewayServiceUrl);
+        return gatewayServiceUrl;
     }
 
     @CircuitBreaker(name = "gatewayService", fallbackMethod = "loginFallback")

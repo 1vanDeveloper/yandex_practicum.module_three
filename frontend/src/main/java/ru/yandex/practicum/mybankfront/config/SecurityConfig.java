@@ -28,7 +28,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .disable()
             )
-            .formLogin(form -> form.disable())
+            .formLogin(form -> form
+                .loginPage("/login")
+                .permitAll()
+                .defaultSuccessUrl("/index.html", true)
+                .failureUrl("/login?error=true")
+            )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .maximumSessions(1)
@@ -40,6 +45,7 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/static/**", "/images/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers("/oauth2/**").permitAll()
                 .anyRequest().authenticated()
             )
             .logout(logout -> logout
