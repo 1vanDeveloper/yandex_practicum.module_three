@@ -47,15 +47,25 @@
 │    Accounts     │              │      Cash       │              │    Transfer     │
 │   (port 8082)   │              │   (port 8084)   │              │   (port 8085)   │
 │  + PostgreSQL   │              │  + PostgreSQL   │              │  + PostgreSQL   │
-└─────────────────┘              └─────────────────┘              └─────────────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Notifications  │
-│   (port 8083)   │
-│  + PostgreSQL   │
-└─────────────────┘
+│  + Outbox       │              │                 │              │                 │
+└────────┬────────┘              └────────┬────────┘              └────────┬────────┘
+         │                                │                                │
+         └────────────────────────────────┼────────────────────────────────┘
+                                          │
+                                          ▼
+                                 ┌─────────────────┐
+                                 │  Notifications  │
+                                 │   (port 8083)   │
+                                 │  + PostgreSQL   │
+                                 └─────────────────┘
 ```
+
+**Паттерн Transactional Outbox:**
+- **accounts** → outbox_messages → notifications (уведомления о создании/изменении аккаунта)
+
+**Прямая отправка сообщений:**
+- **cash** → notifications (уведомления о пополнении/снятии)
+- **transfer** → notifications (уведомления о переводах)
 
 ---
 
@@ -398,6 +408,75 @@ docker-compose up -d postgres
 ```bash
 docker-compose down -v
 docker-compose up --force-recreate -d
+```
+
+### Ошибка: "CircuitBreaker has exceeded failure rate threshold"
+
+**Причина:** Сервис-получатель недоступен или отвечает слишком медленно.
+
+**Решение:**
+```bash
+# Проверить статус сервиса
+docker-compose ps <service-name>
+
+# Проверить логи сервиса
+docker-compose logs -f <service-name>
+
+# Перезапустить сервис
+docker-compose restart <service-name>
+
+# Если проблема в сети — проверить Consul
+curl http://localhost:8500/v1/catalog/services
+```
+
+### Ошибка: "CircuitBreaker is OPEN"
+
+**Причина:** CircuitBreaker открыт после серии неудачных запросов.
+
+**Решение:**
+```bash
+# Подождать автоматического закрытия (по умолчанию 30 сек)
+# Или перезапустить gateway
+docker-compose restart gateway
+
+# Проверить метрики CircuitBreaker
+curl http://localhost:8086/actuator/circuitbreakerevents
+curl http://localhost:8086/actuator/circuitbreakerevents/<circuit-breaker-name>
+```
+
+### Ошибка: "No servers available for service: accounts-service"
+
+**Причина:** Сервис не зарегистрирован в Consul Discovery.
+
+**Решение:**
+```bash
+# Проверить регистрацию в Consul
+curl http://localhost:8500/v1/catalog/service/accounts-service
+
+# Проверить логи сервиса
+docker-compose logs accounts
+
+# Убедиться, что SPRING_CLOUD_CONSUL_HOST настроен правильно
+docker-compose exec accounts env | grep CONSUL
+
+# Перезапустить сервис
+docker-compose restart accounts
+```
+
+### Ошибка: "Consul health check failed"
+
+**Причина:** Health check сервиса не проходит.
+
+**Решение:**
+```bash
+# Проверить health check в Consul
+curl http://localhost:8500/v1/health/checks/accounts-service
+
+# Проверить actuator health
+curl http://localhost:8082/actuator/health
+
+# Перезапустить сервис
+docker-compose restart accounts
 ```
 
 ---
