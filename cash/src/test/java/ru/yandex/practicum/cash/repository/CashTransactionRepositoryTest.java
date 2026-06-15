@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import ru.yandex.practicum.cash.config.IntegrationTestConfig;
+import ru.yandex.practicum.cash.config.TestSecurityConfig;
 import ru.yandex.practicum.cash.entity.CashTransaction;
 import ru.yandex.practicum.cash.entity.TransactionStatus;
 import ru.yandex.practicum.cash.entity.TransactionType;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(IntegrationTestConfig.class)
+@Import(TestSecurityConfig.class)
 class CashTransactionRepositoryTest {
 
     @Autowired

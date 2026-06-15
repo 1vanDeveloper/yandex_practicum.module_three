@@ -4,9 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import ru.yandex.practicum.transfer.config.IntegrationTestConfig;
+import ru.yandex.practicum.transfer.config.TestSecurityConfig;
 import ru.yandex.practicum.transfer.entity.Transfer;
 import ru.yandex.practicum.transfer.entity.TransferStatus;
 
@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@ContextConfiguration(classes = {IntegrationTestConfig.class})
+@Import(TestSecurityConfig.class)
 class TransferRepositoryTest {
 
     @Autowired

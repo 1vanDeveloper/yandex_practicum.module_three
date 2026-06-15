@@ -181,6 +181,12 @@ docker-compose ps
 - `OutboxProcessorIntegrationTest` — тесты обработки outbox сообщений
 - `OutboxSchedulerIntegrationTest` — тесты планировщика
 
+**cash:**
+- `CashServiceIntegrationTest` — тесты сервиса с PostgreSQL (транзакции, поиск по статусу/логину)
+
+**transfer:**
+- `TransferServiceIntegrationTest` — тесты сервиса с PostgreSQL (переводы, поиск по отправителю/получателю)
+
 **gateway:**
 - `GatewayRoutesIntegrationTest` — тесты маршрутизации
 - `GatewaySecurityIntegrationTest` — тесты безопасности
