@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 @Component
 public class NotificationsClient {
@@ -20,10 +19,10 @@ public class NotificationsClient {
     private final RestClient restClient;
     private final Executor executor;
 
-    public NotificationsClient(DiscoveryClient discoveryClient) {
+    public NotificationsClient(DiscoveryClient discoveryClient, Executor asyncExecutor) {
         this.discoveryClient = discoveryClient;
         this.restClient = RestClient.create();
-        this.executor = Executors.newCachedThreadPool();
+        this.executor = asyncExecutor;
     }
 
     public CompletableFuture<Void> sendNotification(NotificationRequest request, String bearerToken) {

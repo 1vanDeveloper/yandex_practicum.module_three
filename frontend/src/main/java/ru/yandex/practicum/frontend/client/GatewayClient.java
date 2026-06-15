@@ -16,7 +16,6 @@ import ru.yandex.practicum.frontend.dto.RegisterRequest;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 @Component
 @Slf4j
@@ -27,11 +26,12 @@ public class GatewayClient {
     private final Executor executor;
     private final String gatewayServiceUrl;
 
-    public GatewayClient(DiscoveryClient discoveryClient, 
+    public GatewayClient(DiscoveryClient discoveryClient,
+                         Executor asyncExecutor,
                          @org.springframework.beans.factory.annotation.Value("${gateway.service.url:http://localhost:8086}") String gatewayServiceUrl) {
         this.discoveryClient = discoveryClient;
         this.restClient = RestClient.create();
-        this.executor = Executors.newCachedThreadPool();
+        this.executor = asyncExecutor;
         this.gatewayServiceUrl = gatewayServiceUrl;
     }
 

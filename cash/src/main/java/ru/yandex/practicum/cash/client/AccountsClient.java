@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 @Component
 public class AccountsClient {
@@ -21,10 +20,10 @@ public class AccountsClient {
     private final RestClient restClient;
     private final Executor executor;
 
-    public AccountsClient(DiscoveryClient discoveryClient) {
+    public AccountsClient(DiscoveryClient discoveryClient, Executor asyncExecutor) {
         this.discoveryClient = discoveryClient;
         this.restClient = RestClient.create();
-        this.executor = Executors.newCachedThreadPool();
+        this.executor = asyncExecutor;
     }
 
     public CompletableFuture<Void> deposit(DepositRequest request, String bearerToken) {
