@@ -1,14 +1,14 @@
-package ru.yandex.practicum.mybankfront.service;
+package ru.yandex.practicum.frontend.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.mybankfront.client.GatewayClient;
-import ru.yandex.practicum.mybankfront.dto.AccountBrief;
-import ru.yandex.practicum.mybankfront.dto.AccountResponse;
-import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
-import ru.yandex.practicum.mybankfront.dto.LoginRequest;
-import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
+import ru.yandex.practicum.frontend.client.GatewayClient;
+import ru.yandex.practicum.frontend.dto.AccountBrief;
+import ru.yandex.practicum.frontend.dto.AccountResponse;
+import ru.yandex.practicum.frontend.dto.JwtTokenResponse;
+import ru.yandex.practicum.frontend.dto.LoginRequest;
+import ru.yandex.practicum.frontend.dto.RegisterRequest;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.config;
+package ru.yandex.practicum.frontend.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

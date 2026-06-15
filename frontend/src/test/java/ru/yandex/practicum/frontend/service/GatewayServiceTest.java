@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.service;
+package ru.yandex.practicum.frontend.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.yandex.practicum.mybankfront.client.GatewayClient;
-import ru.yandex.practicum.mybankfront.dto.AccountResponse;
+import ru.yandex.practicum.frontend.client.GatewayClient;
+import ru.yandex.practicum.frontend.dto.AccountResponse;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

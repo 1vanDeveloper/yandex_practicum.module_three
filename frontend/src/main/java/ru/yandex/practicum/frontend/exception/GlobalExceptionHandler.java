@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.exception;
+package ru.yandex.practicum.frontend.exception;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

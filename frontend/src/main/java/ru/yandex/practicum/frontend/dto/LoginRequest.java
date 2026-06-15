@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.dto;
+package ru.yandex.practicum.frontend.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

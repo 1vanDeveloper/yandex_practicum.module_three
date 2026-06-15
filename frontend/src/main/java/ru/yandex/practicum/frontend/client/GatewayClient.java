@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.client;
+package ru.yandex.practicum.frontend.client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
@@ -6,11 +6,11 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import ru.yandex.practicum.mybankfront.dto.AccountBrief;
-import ru.yandex.practicum.mybankfront.dto.AccountResponse;
-import ru.yandex.practicum.mybankfront.dto.JwtTokenResponse;
-import ru.yandex.practicum.mybankfront.dto.LoginRequest;
-import ru.yandex.practicum.mybankfront.dto.RegisterRequest;
+import ru.yandex.practicum.frontend.dto.AccountBrief;
+import ru.yandex.practicum.frontend.dto.AccountResponse;
+import ru.yandex.practicum.frontend.dto.JwtTokenResponse;
+import ru.yandex.practicum.frontend.dto.LoginRequest;
+import ru.yandex.practicum.frontend.dto.RegisterRequest;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

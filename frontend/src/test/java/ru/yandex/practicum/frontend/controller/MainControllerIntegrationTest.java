@@ -1,14 +1,14 @@
-package ru.yandex.practicum.mybankfront.controller;
+package ru.yandex.practicum.frontend.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.ui.ConcurrentModel;
-import ru.yandex.practicum.mybankfront.controller.dto.CashAction;
-import ru.yandex.practicum.mybankfront.dto.AccountBrief;
-import ru.yandex.practicum.mybankfront.dto.AccountResponse;
-import ru.yandex.practicum.mybankfront.service.GatewayService;
+import ru.yandex.practicum.frontend.controller.dto.CashAction;
+import ru.yandex.practicum.frontend.dto.AccountBrief;
+import ru.yandex.practicum.frontend.dto.AccountResponse;
+import ru.yandex.practicum.frontend.service.GatewayService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

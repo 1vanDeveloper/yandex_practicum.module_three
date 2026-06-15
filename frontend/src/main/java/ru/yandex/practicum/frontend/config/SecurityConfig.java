@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.config;
+package ru.yandex.practicum.frontend.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

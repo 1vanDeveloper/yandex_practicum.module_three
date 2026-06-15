@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.controller;
+package ru.yandex.practicum.frontend.controller;
 
 import org.springframework.security.oauth2.jwt.Jwt;
 

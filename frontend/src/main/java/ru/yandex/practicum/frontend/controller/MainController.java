@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.controller;
+package ru.yandex.practicum.frontend.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -11,10 +11,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import ru.yandex.practicum.mybankfront.controller.dto.CashAction;
-import ru.yandex.practicum.mybankfront.dto.AccountBrief;
-import ru.yandex.practicum.mybankfront.dto.AccountResponse;
-import ru.yandex.practicum.mybankfront.service.GatewayService;
+import ru.yandex.practicum.frontend.controller.dto.CashAction;
+import ru.yandex.practicum.frontend.dto.AccountBrief;
+import ru.yandex.practicum.frontend.dto.AccountResponse;
+import ru.yandex.practicum.frontend.service.GatewayService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.mybankfront.config;
+package ru.yandex.practicum.frontend.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
