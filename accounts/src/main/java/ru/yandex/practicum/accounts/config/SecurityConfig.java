@@ -12,7 +12,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -79,23 +81,36 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtDecoder compositeJwtDecoder() {
-        // Создаём декодер для локальных JWT токенов (от Accounts сервиса)
+    public JwtDecoder localJwtDecoder() {
         byte[] keyBytes = jwtSecret.getBytes();
         SecretKey key = new SecretKeySpec(keyBytes, 0, keyBytes.length, "HMACSHA256");
-        NimbusJwtDecoder localJwtDecoder = NimbusJwtDecoder.withSecretKey(key).build();
+        return NimbusJwtDecoder.withSecretKey(key).build();
+    }
 
-        // Создаём декодер для JWT токенов от Keycloak
-        NimbusJwtDecoder keycloakJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+    @Bean
+    public JwtDecoder compositeJwtDecoder() {
+        // Создаём декодеры для обоих типов токенов
+        JwtDecoder keycloakDecoder = keycloakJwtDecoder();
+        JwtDecoder localDecoder = localJwtDecoder();
 
-        // Возвращаем декодер, который пробует оба варианта
+        // Возвращаем декодер, который определяет тип токена по issuer
         return token -> {
             try {
-                // Сначала пробуем валидировать как Keycloak токен
-                return keycloakJwtDecoder.decode(token);
-            } catch (Exception e) {
-                // Если не получилось, пробуем локальный токен
-                return localJwtDecoder.decode(token);
+                // Пробуем декодировать как Keycloak токен (проверяем issuer)
+                Jwt decoded = keycloakDecoder.decode(token);
+                String issuer = decoded.getIssuer().toString();
+                if (issuer.contains("keycloak") || issuer.contains("localhost:8180")) {
+                    return decoded;
+                }
+            } catch (JwtException e) {
+                // Не Keycloak токен, пробуем локальный
+            }
+
+            // Пробуем декодировать как локальный токен
+            try {
+                return localDecoder.decode(token);
+            } catch (JwtException e) {
+                throw new JwtException("Invalid token: not a valid Keycloak or local JWT token", e);
             }
         };
     }
