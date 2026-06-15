@@ -3,6 +3,7 @@ package ru.yandex.practicum.frontend.client;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -232,7 +233,8 @@ public class GatewayClient {
                 .uri(gatewayUrl + "/gateway/accounts")
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .body(List.class),
+                .body(new ParameterizedTypeReference<>() {
+                }),
             executor
         );
     }
