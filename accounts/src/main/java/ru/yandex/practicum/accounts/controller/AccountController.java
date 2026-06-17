@@ -26,7 +26,7 @@ public class AccountController {
             org.springframework.security.core.Authentication authentication) {
         String login = authentication.getName();
         log.info("GET /accounts/me: login={}", login);
-        return accountService.getAccountByLogin(login);
+        return CompletableFuture.supplyAsync(() -> accountService.getAccountByLogin(login));
     }
 
     @PutMapping("/me")
@@ -36,16 +36,16 @@ public class AccountController {
             org.springframework.security.core.Authentication authentication) {
         String login = authentication.getName();
         log.info("PUT /accounts/me: login={}", login);
-        return accountService.updateAccount(login, request);
+        return CompletableFuture.supplyAsync(() -> accountService.updateAccount(login, request));
     }
 
     @GetMapping("/{login}")
     public CompletableFuture<AccountResponse> getAccount(@PathVariable String login) {
-        return accountService.getAccountByLogin(login);
+        return CompletableFuture.supplyAsync(() -> accountService.getAccountByLogin(login));
     }
 
     @GetMapping
     public CompletableFuture<List<AccountBrief>> getAllAccounts() {
-        return accountService.getAllAccounts();
+        return CompletableFuture.supplyAsync(accountService::getAllAccounts);
     }
 }

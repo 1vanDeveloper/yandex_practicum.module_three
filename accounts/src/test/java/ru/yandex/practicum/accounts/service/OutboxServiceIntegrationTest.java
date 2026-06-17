@@ -46,7 +46,7 @@ class OutboxServiceIntegrationTest {
         String message = "Test notification message";
 
         // Save message and verify it returns correct data
-        OutboxMessage savedMessage = outboxService.saveMessage(login, message).join();
+        OutboxMessage savedMessage = outboxService.saveMessage(login, message);
 
         assertThat(savedMessage.getId()).isNotNull();
         assertThat(savedMessage.getLogin()).isEqualTo(login);
@@ -59,7 +59,7 @@ class OutboxServiceIntegrationTest {
 
     @Test
     void saveMessage_shouldSetCorrectTimestamps() {
-        OutboxMessage savedMessage = outboxService.saveMessage("user", "message").join();
+        OutboxMessage savedMessage = outboxService.saveMessage("user", "message");
 
         assertThat(savedMessage.getCreatedAt()).isNotNull();
         assertThat(savedMessage.getUpdatedAt()).isNotNull();
@@ -68,8 +68,8 @@ class OutboxServiceIntegrationTest {
     @Test
     void findPendingMessages_shouldReturnOnlyPendingMessages() {
         // Save two messages and verify findPendingMessages returns them correctly
-        outboxService.saveMessage("user1", "message1").join();
-        outboxService.saveMessage("user2", "message2").join();
+        outboxService.saveMessage("user1", "message1");
+        outboxService.saveMessage("user2", "message2");
 
         var messages = outboxRepository.findPendingMessages(10);
 

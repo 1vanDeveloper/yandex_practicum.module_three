@@ -48,8 +48,7 @@ public abstract class ContractVerifierBase {
         @Bean
         public NotificationService notificationService() {
             NotificationService mock = Mockito.mock(NotificationService.class);
-            Mockito.when(mock.logNotification(Mockito.any()))
-                    .thenReturn(CompletableFuture.completedFuture(null));
+            Mockito.doNothing().when(mock).logNotification(Mockito.any());
             return mock;
         }
     }

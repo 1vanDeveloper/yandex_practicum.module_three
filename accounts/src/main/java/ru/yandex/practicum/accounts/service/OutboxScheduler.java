@@ -18,7 +18,7 @@ public class OutboxScheduler {
     public void processOutboxMessages() {
         log.debug("Starting scheduled outbox message processing");
         try {
-            outboxProcessor.processPendingMessages().join();
+            outboxProcessor.processPendingMessages();
             log.debug("Outbox processing completed successfully");
         } catch (Exception e) {
             log.error("Outbox processing failed", e);

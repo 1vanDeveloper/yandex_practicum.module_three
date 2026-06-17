@@ -33,17 +33,15 @@ public class NotificationsClient {
         return authorizedClient.getAccessToken().getTokenValue();
     }
 
-    public CompletableFuture<Void> sendNotification(String notificationsUrl, NotificationRequest request) {
-        return CompletableFuture.runAsync(() -> {
-            String token = getAccessToken();
-            
-            restClient.post()
-                    .uri(notificationsUrl + "/notifications/notificate")
-                    .headers(headers -> headers.set("Authorization", "Bearer " + token))
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(request)
-                    .retrieve()
-                    .toBodilessEntity();
-        });
+    public void sendNotification(String notificationsUrl, NotificationRequest request) {
+        String token = getAccessToken();
+
+        restClient.post()
+                .uri(notificationsUrl + "/notifications/notificate")
+                .headers(headers -> headers.set("Authorization", "Bearer " + token))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .retrieve()
+                .toBodilessEntity();
     }
 }

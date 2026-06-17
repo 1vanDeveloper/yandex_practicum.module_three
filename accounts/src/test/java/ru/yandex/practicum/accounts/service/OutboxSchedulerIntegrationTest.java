@@ -46,7 +46,7 @@ class OutboxSchedulerIntegrationTest {
     @Test
     void processOutboxMessages_shouldProcessPendingMessages() throws Exception {
         // Save message
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message").join();
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
         assertThat(saved.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());
 
         // Run scheduler
@@ -63,7 +63,7 @@ class OutboxSchedulerIntegrationTest {
     @Test
     void processOutboxMessages_shouldUpdateMessageStatus() throws Exception {
         // Save message
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message").join();
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
 
         // Verify initial status is PENDING
         assertThat(saved.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());

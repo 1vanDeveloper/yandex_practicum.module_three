@@ -18,7 +18,6 @@ import ru.yandex.practicum.notifications.repository.NotificationRepository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -60,11 +59,8 @@ class NotificationControllerIntegrationTest {
         mockMvc.perform(post("/notifications/notificate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(request().asyncStarted())
             .andExpect(status().isOk());
 
-        Thread.sleep(1000); // Wait for async completion
-        
         assertEquals(1, notificationRepository.count());
     }
 
@@ -168,7 +164,6 @@ class NotificationControllerIntegrationTest {
         mockMvc.perform(post("/notifications/notificate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(request().asyncStarted())
             .andExpect(status().isOk());
     }
 
@@ -183,11 +178,8 @@ class NotificationControllerIntegrationTest {
         mockMvc.perform(post("/notifications/notificate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(request().asyncStarted())
             .andExpect(status().isOk());
 
-        Thread.sleep(1000); // Wait for async completion
-        
         assertEquals(1, notificationRepository.count());
     }
 }

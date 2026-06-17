@@ -53,94 +53,65 @@ public class TransferService {
 
     @CircuitBreaker(name = "accountsService", fallbackMethod = "createTransferFallback")
     @Transactional
-    public CompletableFuture<TransferResponse> createTransfer(TransferRequest request) {
+    public TransferResponse createTransfer(TransferRequest request) {
         log.info("Processing transfer from {} to {} for amount {}",
                 request.fromLogin(), request.toLogin(), request.amount());
 
         // Validate self-transfer
         if (request.fromLogin().equals(request.toLogin())) {
-            CompletableFuture<TransferResponse> failedFuture = new CompletableFuture<>();
-            failedFuture.completeExceptionally(new SelfTransferException("Cannot transfer to the same account"));
-            return failedFuture;
+            throw new SelfTransferException("Cannot transfer to the same account");
         }
 
         String token = getAccessToken();
 
-        return accountsClient.debitAccount(request.fromLogin(), request.amount(), token)
-                .thenCompose(v -> accountsClient.creditAccount(request.toLogin(), request.amount(), token))
-                .thenApply(v -> {
-                    Transfer transfer = Transfer.builder()
-                            .fromAccountLogin(request.fromLogin())
-                            .toAccountLogin(request.toLogin())
-                            .amount(request.amount())
-                            .status(TransferStatus.COMPLETED)
-                            .build();
-                    return transferRepository.save(transfer);
-                })
-                .thenCompose(transfer -> {
-                    List<CompletableFuture<Void>> notifications = List.of(
-                        sendNotificationSafely(request.fromLogin(),
-                                "Money transferred: " + request.amount() + " to " + request.toLogin(), token),
-                        sendNotificationSafely(request.toLogin(),
-                                "Money received: " + request.amount() + " from " + request.fromLogin(), token)
-                    );
-                    return CompletableFuture.allOf(notifications.toArray(new CompletableFuture[0]))
-                            .thenApply(v -> transfer);
-                })
-                .thenApply(mapper::toResponse)
-                .exceptionally(ex -> {
-                    log.error("Transfer failed from {} to {}: {}", request.fromLogin(), request.toLogin(), ex.getMessage());
+        // Debit from sender
+        accountsClient.debitAccount(request.fromLogin(), request.amount(), token).join();
 
-                    Transfer failedTransfer = Transfer.builder()
-                            .fromAccountLogin(request.fromLogin())
-                            .toAccountLogin(request.toLogin())
-                            .amount(request.amount())
-                            .status(TransferStatus.FAILED)
-                            .errorMessage(ex.getMessage())
-                            .build();
-                    transferRepository.save(failedTransfer);
+        // Credit to receiver
+        accountsClient.creditAccount(request.toLogin(), request.amount(), token).join();
 
-                    if (ex.getCause() instanceof InsufficientFundsException ||
-                        ex.getCause() instanceof AccountNotFoundException ||
-                        ex.getCause() instanceof SelfTransferException) {
-                        throw (RuntimeException) ex.getCause();
-                    }
-                    throw new TransferFailedException("Transfer failed: " + ex.getMessage(), ex);
-                });
-    }
-
-    private CompletableFuture<TransferResponse> createTransferFallback(TransferRequest request, Throwable t) {
-        log.error("Circuit breaker opened for accounts service (transfer): {}", t.getMessage());
-        
-        // Сохраняем трансфер со статусом PENDING для последующей обработки
-        Transfer pendingTransfer = Transfer.builder()
+        // Save transfer
+        Transfer transfer = Transfer.builder()
                 .fromAccountLogin(request.fromLogin())
                 .toAccountLogin(request.toLogin())
                 .amount(request.amount())
-                .status(TransferStatus.PENDING)
-                .errorMessage("Accounts service temporarily unavailable. Transfer queued for retry.")
+                .status(TransferStatus.COMPLETED)
                 .build();
-        transferRepository.save(pendingTransfer);
-        
-        // Возвращаем ответ с информацией о статусе
-        return CompletableFuture.completedFuture(new TransferResponse(
-                pendingTransfer.getId(),
-                pendingTransfer.getFromAccountLogin(),
-                pendingTransfer.getToAccountLogin(),
-                pendingTransfer.getAmount(),
-                pendingTransfer.getStatus(),
-                pendingTransfer.getErrorMessage(),
-                pendingTransfer.getCreatedAt(),
-                pendingTransfer.getUpdatedAt()
-        ));
+        Transfer savedTransfer = transferRepository.save(transfer);
+
+        // Send notifications (non-blocking, fire-and-forget)
+        sendNotificationsSafely(request.fromLogin(), request.toLogin(), request.amount(), token);
+
+        return mapper.toResponse(savedTransfer);
     }
 
-    private CompletableFuture<Void> sendNotificationSafely(String login, String message, String token) {
+    private void sendNotificationsSafely(String fromLogin, String toLogin, java.math.BigDecimal amount, String token) {
         try {
-            return notificationsClient.sendNotification(new NotificationRequest(login, message), token);
+            List<CompletableFuture<Void>> notifications = List.of(
+                notificationsClient.sendNotification(new NotificationRequest(fromLogin,
+                        "Money transferred: " + amount + " to " + toLogin), token),
+                notificationsClient.sendNotification(new NotificationRequest(toLogin,
+                        "Money received: " + amount + " from " + fromLogin), token)
+            );
+            CompletableFuture.allOf(notifications.toArray(new CompletableFuture[0])).join();
         } catch (Exception e) {
-            log.warn("Failed to send notification: {}", e.getMessage());
-            return CompletableFuture.completedFuture(null);
+            log.warn("Failed to send notifications: {}", e.getMessage());
         }
+    }
+
+    private TransferResponse createTransferFallback(TransferRequest request, Throwable t) {
+        log.error("Circuit breaker triggered for transfer from {} to {}: {}",
+                request.fromLogin(), request.toLogin(), t.getMessage());
+
+        Transfer failedTransfer = Transfer.builder()
+                .fromAccountLogin(request.fromLogin())
+                .toAccountLogin(request.toLogin())
+                .amount(request.amount())
+                .status(TransferStatus.FAILED)
+                .errorMessage("Circuit breaker: " + t.getMessage())
+                .build();
+        transferRepository.save(failedTransfer);
+
+        throw new TransferFailedException("Transfer failed due to circuit breaker: " + t.getMessage(), t);
     }
 }

@@ -81,9 +81,8 @@ public class TestOutboxConfig {
     public NotificationsClient testNotificationsClient() {
         return new NotificationsClient(RestClient.create(), null) {
             @Override
-            public CompletableFuture<Void> sendNotification(String notificationsUrl, NotificationRequest request) {
+            public void sendNotification(String notificationsUrl, NotificationRequest request) {
                 // Mock successful notification send
-                return CompletableFuture.completedFuture(null);
             }
         };
     }

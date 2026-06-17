@@ -24,12 +24,12 @@ import ru.yandex.practicum.transfer.mapper.TransferMapper;
 import ru.yandex.practicum.transfer.repository.TransferRepository;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -73,17 +73,8 @@ class TransferServiceTest {
         // Given
         TransferRequest request = new TransferRequest("same_user", "same_user", new BigDecimal("100.00"), null);
 
-        // When
-        CompletableFuture<TransferResponse> future = transferService.createTransfer(request);
-
-        // Then
-        assertTrue(future.isCompletedExceptionally());
-        try {
-            future.join();
-            fail("Expected exception to be thrown");
-        } catch (Exception e) {
-            assertTrue(e.getCause() instanceof SelfTransferException);
-        }
+        // When & Then
+        assertThrows(SelfTransferException.class, () -> transferService.createTransfer(request));
     }
 
     @Test
@@ -106,8 +97,7 @@ class TransferServiceTest {
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // When
-        CompletableFuture<TransferResponse> future = transferService.createTransfer(request);
-        TransferResponse response = future.join();
+        TransferResponse response = transferService.createTransfer(request);
 
         // Then
         assertNotNull(response);
@@ -125,17 +115,9 @@ class TransferServiceTest {
         when(accountsClient.debitAccount(eq("sender"), eq(new BigDecimal("1000.00")), eq("test-token")))
                 .thenReturn(CompletableFuture.failedFuture(new InsufficientFundsException("Insufficient funds")));
 
-        // When
-        CompletableFuture<TransferResponse> future = transferService.createTransfer(request);
-
-        // Then
-        assertTrue(future.isCompletedExceptionally());
-        try {
-            future.join();
-            fail("Expected exception to be thrown");
-        } catch (Exception e) {
-            assertTrue(e.getCause() instanceof InsufficientFundsException);
-        }
+        // When & Then
+        CompletionException exception = assertThrows(CompletionException.class, () -> transferService.createTransfer(request));
+        assertTrue(exception.getCause() instanceof InsufficientFundsException);
     }
 
     private Transfer createTransfer(Long id, String from, String to, BigDecimal amount, TransferStatus status) {

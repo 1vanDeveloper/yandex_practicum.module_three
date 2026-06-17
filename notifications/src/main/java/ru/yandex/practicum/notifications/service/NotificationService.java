@@ -9,8 +9,6 @@ import ru.yandex.practicum.notifications.entity.Notification;
 import ru.yandex.practicum.notifications.mapper.NotificationMapper;
 import ru.yandex.practicum.notifications.repository.NotificationRepository;
 
-import java.util.concurrent.CompletableFuture;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -20,14 +18,9 @@ public class NotificationService {
     private final NotificationMapper notificationMapper;
 
     @Transactional
-    public CompletableFuture<Void> logNotification(NotificationRequest request) {
-        return CompletableFuture.supplyAsync(() -> {
-            Notification notification = notificationMapper.toEntity(request);
-
-            log.info("Notification logged for user {}: {}", request.getLogin(), request.getMessage());
-
-            notificationRepository.save(notification);
-            return null;
-        });
+    public void logNotification(NotificationRequest request) {
+        Notification notification = notificationMapper.toEntity(request);
+        log.info("Notification logged for user {}: {}", request.getLogin(), request.getMessage());
+        notificationRepository.save(notification);
     }
 }

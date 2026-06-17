@@ -12,7 +12,6 @@ import ru.yandex.practicum.transfer.dto.TransferResponse;
 import ru.yandex.practicum.transfer.service.TransferService;
 
 import java.math.BigDecimal;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/transfer")
@@ -28,7 +27,7 @@ public class TransferController {
      * Отправитель берётся из JWT токена
      */
     @PostMapping
-    public CompletableFuture<ResponseEntity<TransferResponse>> processTransfer(
+    public ResponseEntity<TransferResponse> processTransfer(
             @RequestParam(required = false) Integer value,
             @RequestParam(required = false) String login,
             @Valid @RequestBody(required = false) TransferRequest requestBody,
@@ -44,7 +43,6 @@ public class TransferController {
 
         log.info("POST /transfer received from {} to {}, amount: {}", fromLogin, toLogin, amount);
         TransferRequest request = new TransferRequest(fromLogin, toLogin, amount, null);
-        return transferService.createTransfer(request)
-                .thenApply(ResponseEntity::ok);
+        return ResponseEntity.ok(transferService.createTransfer(request));
     }
 }

@@ -14,7 +14,6 @@ import ru.yandex.practicum.notifications.mapper.NotificationMapper;
 import ru.yandex.practicum.notifications.repository.NotificationRepository;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -60,9 +59,7 @@ class NotificationServiceTest {
         when(notificationMapper.toEntity(any(NotificationRequest.class))).thenReturn(notification);
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
 
-        CompletableFuture<Void> result = notificationService.logNotification(request);
-
-        result.get();
+        notificationService.logNotification(request);
 
         verify(notificationMapper).toEntity(any(NotificationRequest.class));
         verify(notificationRepository).save(any(Notification.class));
@@ -73,7 +70,7 @@ class NotificationServiceTest {
         when(notificationMapper.toEntity(any(NotificationRequest.class))).thenReturn(notification);
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
 
-        notificationService.logNotification(request).get();
+        notificationService.logNotification(request);
 
         verify(notificationMapper).toEntity(requestCaptor.capture());
         NotificationRequest capturedRequest = requestCaptor.getValue();
@@ -87,10 +84,8 @@ class NotificationServiceTest {
         when(notificationMapper.toEntity(any(NotificationRequest.class))).thenReturn(notification);
         when(notificationRepository.save(any(Notification.class))).thenThrow(new RuntimeException("Database error"));
 
-        CompletableFuture<Void> result = notificationService.logNotification(request);
-
-        assertThatThrownBy(() -> result.get())
-                .hasCauseInstanceOf(RuntimeException.class)
+        assertThatThrownBy(() -> notificationService.logNotification(request))
+                .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Database error");
     }
 }

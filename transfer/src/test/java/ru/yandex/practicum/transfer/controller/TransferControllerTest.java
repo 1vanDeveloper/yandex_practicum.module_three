@@ -48,7 +48,7 @@ class TransferControllerTest {
     void setUp() {
         reset(transferService);
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        
+
         // Setup mock JWT
         mockJwt = Jwt.withTokenValue("test-token")
             .header("alg", "none")
@@ -71,7 +71,7 @@ class TransferControllerTest {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(auth);
         SecurityContextHolder.setContext(context);
-        
+
         try {
             // Given
             TransferResponse response = new TransferResponse(
@@ -80,7 +80,7 @@ class TransferControllerTest {
             );
 
             when(transferService.createTransfer(any(TransferRequest.class)))
-                    .thenReturn(CompletableFuture.completedFuture(response));
+                    .thenReturn(response);
 
             // When & Then
             mockMvc.perform(post("/transfer")

@@ -17,29 +17,27 @@ public class OutboxService {
     private final OutboxNotificationRepository outboxRepository;
 
     @Transactional
-    public CompletableFuture<OutboxMessage> saveMessage(String login, String message) {
-        return CompletableFuture.supplyAsync(() -> {
-            // Генерируем idempotency key на основе логина и сообщения для дедупликации
-            String idempotencyKey = generateIdempotencyKey(login, message);
-            
-            // Проверяем, нет ли уже сообщения с таким ключом (защита от дубликатов)
-            OutboxMessage existing = outboxRepository.findByIdempotencyKey(idempotencyKey);
-            if (existing != null) {
-                return existing;
-            }
+    public OutboxMessage saveMessage(String login, String message) {
+        // Генерируем idempotency key на основе логина и сообщения для дедупликации
+        String idempotencyKey = generateIdempotencyKey(login, message);
 
-            OutboxMessage outboxMessage = OutboxMessage.builder()
-                    .idempotencyKey(idempotencyKey)
-                    .login(login)
-                    .message(message)
-                    .status(OutboxMessage.Status.PENDING.getValue())
-                    .retryCount(0)
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
-                    .build();
+        // Проверяем, нет ли уже сообщения с таким ключом (защита от дубликатов)
+        OutboxMessage existing = outboxRepository.findByIdempotencyKey(idempotencyKey);
+        if (existing != null) {
+            return existing;
+        }
 
-            return outboxRepository.save(outboxMessage);
-        });
+        OutboxMessage outboxMessage = OutboxMessage.builder()
+                .idempotencyKey(idempotencyKey)
+                .login(login)
+                .message(message)
+                .status(OutboxMessage.Status.PENDING.getValue())
+                .retryCount(0)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        return outboxRepository.save(outboxMessage);
     }
 
     /**

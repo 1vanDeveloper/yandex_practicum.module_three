@@ -17,7 +17,6 @@ import ru.yandex.practicum.transfer.entity.TransferStatus;
 import ru.yandex.practicum.transfer.service.TransferService;
 
 import java.math.BigDecimal;
-import java.util.concurrent.CompletableFuture;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -48,7 +47,7 @@ public abstract class ContractVerifierBase {
             TransferService mock = Mockito.mock(TransferService.class);
 
             Mockito.when(mock.createTransfer(Mockito.any()))
-                    .thenReturn(CompletableFuture.completedFuture(
+                    .thenReturn(
                             new TransferResponse(
                                     1L,
                                     "sender_user",
@@ -58,7 +57,7 @@ public abstract class ContractVerifierBase {
                                     null,
                                     null,
                                     null
-                            )));
+                            ));
 
             return mock;
         }

@@ -19,10 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration tests for NotificationService using PostgreSQL and Keycloak from docker-compose.
- * 
  * Перед запуском убедитесь, что сервисы запущены:
  * docker-compose up -d postgres keycloak
- * 
  * Tests verify database interactions with real PostgreSQL instance from docker-compose.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -48,12 +46,12 @@ class NotificationServiceIntegrationTest {
             .message("Test notification message")
             .build();
 
-        notificationService.logNotification(request).get();
+        notificationService.logNotification(request);
 
         List<Notification> notifications = notificationRepository.findAll();
         assertEquals(1, notifications.size());
         
-        Notification saved = notifications.get(0);
+        Notification saved = notifications.getFirst();
         assertEquals("test_user", saved.getLogin());
         assertEquals("Test notification message", saved.getMessage());
         assertNotNull(saved.getCreatedAt());
@@ -73,8 +71,8 @@ class NotificationServiceIntegrationTest {
             .message("Message for user 2")
             .build();
 
-        notificationService.logNotification(request1).get();
-        notificationService.logNotification(request2).get();
+        notificationService.logNotification(request1);
+        notificationService.logNotification(request2);
 
         List<Notification> notifications = notificationRepository.findAll();
         assertEquals(2, notifications.size());
@@ -97,11 +95,11 @@ class NotificationServiceIntegrationTest {
             .message(longMessage)
             .build();
 
-        notificationService.logNotification(request).get();
+        notificationService.logNotification(request);
 
         List<Notification> notifications = notificationRepository.findAll();
         assertEquals(1, notifications.size());
-        assertEquals(longMessage, notifications.get(0).getMessage());
+        assertEquals(longMessage, notifications.getFirst().getMessage());
     }
 
     @Test
@@ -112,7 +110,7 @@ class NotificationServiceIntegrationTest {
             .message("Test message")
             .build();
 
-        notificationService.logNotification(request).get();
+        notificationService.logNotification(request);
 
         Optional<Notification> saved = notificationRepository.findAll().stream().findFirst();
         assertTrue(saved.isPresent());
@@ -130,11 +128,11 @@ class NotificationServiceIntegrationTest {
             .message(specialMessage)
             .build();
 
-        notificationService.logNotification(request).get();
+        notificationService.logNotification(request);
 
         List<Notification> notifications = notificationRepository.findAll();
         assertEquals(1, notifications.size());
-        assertEquals(specialMessage, notifications.get(0).getMessage());
+        assertEquals(specialMessage, notifications.getFirst().getMessage());
     }
 
     @Test
@@ -147,11 +145,11 @@ class NotificationServiceIntegrationTest {
             .message("Test message")
             .build();
 
-        notificationService.logNotification(request).get();
+        notificationService.logNotification(request);
 
         LocalDateTime after = LocalDateTime.now();
         
-        Notification saved = notificationRepository.findAll().get(0);
+        Notification saved = notificationRepository.findAll().getFirst();
         assertTrue(saved.getCreatedAt().isAfter(before.minusSeconds(1)));
         assertTrue(saved.getCreatedAt().isBefore(after.plusSeconds(1)));
     }

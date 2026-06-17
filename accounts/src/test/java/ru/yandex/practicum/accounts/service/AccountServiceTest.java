@@ -7,7 +7,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.yandex.practicum.accounts.dto.AccountIdResponse;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
 import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
@@ -17,11 +16,11 @@ import ru.yandex.practicum.accounts.repository.AccountRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -96,8 +95,8 @@ class AccountServiceTest {
         when(accountMapper.toEntity(createRequest)).thenReturn(mappedAccount);
         when(passwordEncoder.encode("plain_password")).thenReturn("hashed_password");
         when(accountRepository.save(any(Account.class))).thenReturn(testAccount);
-        when(outboxService.saveMessage(any(String.class), any(String.class)))
-                .thenReturn(CompletableFuture.completedFuture(
+        when(outboxService.saveMessage(anyString(), anyString()))
+                .thenReturn(
                         ru.yandex.practicum.accounts.entity.OutboxMessage.builder()
                                 .id(java.util.UUID.randomUUID())
                                 .login("test_user")
@@ -105,11 +104,9 @@ class AccountServiceTest {
                                 .status("PENDING")
                                 .retryCount(0)
                                 .build()
-                ));
+                );
 
-        CompletableFuture<AccountIdResponse> result = accountService.createAccount(createRequest);
-
-        assertThat(result.join().getId()).isEqualTo(1L);
+        assertThat(accountService.createAccount(createRequest).getId()).isEqualTo(1L);
 
         verify(accountRepository).existsByLogin("test_user");
         verify(accountRepository).save(any(Account.class));
@@ -120,10 +117,8 @@ class AccountServiceTest {
     void createAccount_whenAccountAlreadyExists_shouldThrowException() {
         when(accountRepository.existsByLogin("test_user")).thenReturn(true);
 
-        CompletableFuture<AccountIdResponse> result = accountService.createAccount(createRequest);
-
-        assertThatThrownBy(() -> result.join())
-                .hasCauseInstanceOf(AccountService.AccountAlreadyExistsException.class);
+        assertThatThrownBy(() -> accountService.createAccount(createRequest))
+                .isInstanceOf(AccountService.AccountAlreadyExistsException.class);
 
         verify(accountRepository).existsByLogin("test_user");
     }
@@ -143,9 +138,7 @@ class AccountServiceTest {
         when(accountRepository.findByLogin("test_user")).thenReturn(java.util.Optional.of(testAccount));
         when(accountMapper.toResponse(testAccount)).thenReturn(response);
 
-        CompletableFuture<AccountResponse> result = accountService.getAccountByLogin("test_user");
-
-        AccountResponse accountResponse = result.join();
+        AccountResponse accountResponse = accountService.getAccountByLogin("test_user");
         assertThat(accountResponse.getId()).isEqualTo(1L);
         assertThat(accountResponse.getLogin()).isEqualTo("test_user");
         assertThat(accountResponse.getFirstName()).isEqualTo("Test");
@@ -155,10 +148,8 @@ class AccountServiceTest {
     void getAccountByLogin_whenAccountNotFound_shouldThrowException() {
         when(accountRepository.findByLogin("nonexistent")).thenReturn(java.util.Optional.empty());
 
-        CompletableFuture<AccountResponse> result = accountService.getAccountByLogin("nonexistent");
-
-        assertThatThrownBy(() -> result.join())
-                .hasCauseInstanceOf(AccountService.AccountNotFoundException.class);
+        assertThatThrownBy(() -> accountService.getAccountByLogin("nonexistent"))
+                .isInstanceOf(AccountService.AccountNotFoundException.class);
     }
 
     @Test
@@ -186,8 +177,8 @@ class AccountServiceTest {
         when(accountRepository.findByLogin("test_user")).thenReturn(java.util.Optional.of(testAccount));
         when(accountRepository.save(any(Account.class))).thenReturn(updatedAccount);
         when(accountMapper.toResponse(updatedAccount)).thenReturn(response);
-        when(outboxService.saveMessage(any(String.class), any(String.class)))
-                .thenReturn(CompletableFuture.completedFuture(
+        when(outboxService.saveMessage(anyString(), anyString()))
+                .thenReturn(
                         ru.yandex.practicum.accounts.entity.OutboxMessage.builder()
                                 .id(java.util.UUID.randomUUID())
                                 .login("test_user")
@@ -195,11 +186,9 @@ class AccountServiceTest {
                                 .status("PENDING")
                                 .retryCount(0)
                                 .build()
-                ));
+                );
 
-        CompletableFuture<AccountResponse> result = accountService.updateAccount("test_user", updateRequest);
-
-        AccountResponse accountResponse = result.join();
+        AccountResponse accountResponse = accountService.updateAccount("test_user", updateRequest);
         assertThat(accountResponse.getFirstName()).isEqualTo("Updated");
         assertThat(accountResponse.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(2000.00));
     }
@@ -208,9 +197,7 @@ class AccountServiceTest {
     void updateAccount_whenAccountNotFound_shouldThrowException() {
         when(accountRepository.findByLogin("nonexistent")).thenReturn(java.util.Optional.empty());
 
-        CompletableFuture<AccountResponse> result = accountService.updateAccount("nonexistent", updateRequest);
-
-        assertThatThrownBy(() -> result.join())
-                .hasCauseInstanceOf(AccountService.AccountNotFoundException.class);
+        assertThatThrownBy(() -> accountService.updateAccount("nonexistent", updateRequest))
+                .isInstanceOf(AccountService.AccountNotFoundException.class);
     }
 }

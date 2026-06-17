@@ -46,10 +46,10 @@ class OutboxProcessorIntegrationTest {
     @Test
     void processPendingMessages_shouldProcessPendingMessages() {
         // Save message
-        outboxService.saveMessage("test_user", "Test message").join();
+        outboxService.saveMessage("test_user", "Test message");
 
         // Process pending messages
-        outboxProcessor.processPendingMessages().join();
+        outboxProcessor.processPendingMessages();
 
         // Verify no pending messages remain
         var messages = outboxRepository.findPendingMessages(10);
@@ -59,13 +59,13 @@ class OutboxProcessorIntegrationTest {
     @Test
     void processPendingMessages_shouldUpdateMessageStatusToSent() {
         // Save message
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message").join();
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
 
         // Verify initial status is PENDING
         assertThat(saved.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());
 
         // Process and verify status changed to SENT
-        outboxProcessor.processPendingMessages().join();
+        outboxProcessor.processPendingMessages();
 
         OutboxMessage updated = outboxRepository.findById(saved.getId()).orElseThrow();
         assertThat(updated).isNotNull();
@@ -75,17 +75,17 @@ class OutboxProcessorIntegrationTest {
     @Test
     void processPendingMessages_shouldNotProcessAlreadySentMessages() {
         // Save message
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message").join();
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
 
         // First processing
-        outboxProcessor.processPendingMessages().join();
+        outboxProcessor.processPendingMessages();
 
         // Verify first processing changed status to SENT
         OutboxMessage first = outboxRepository.findById(saved.getId()).orElseThrow();
         assertThat(first.getStatus()).isEqualTo(OutboxMessage.Status.SENT.getValue());
 
         // Second processing should not change anything
-        outboxProcessor.processPendingMessages().join();
+        outboxProcessor.processPendingMessages();
 
         OutboxMessage second = outboxRepository.findById(first.getId()).orElseThrow();
         assertThat(second.getStatus()).isEqualTo(OutboxMessage.Status.SENT.getValue());

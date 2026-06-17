@@ -13,8 +13,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.yandex.practicum.notifications.dto.NotificationRequest;
 import ru.yandex.practicum.notifications.service.NotificationService;
 
-import java.util.concurrent.CompletableFuture;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,13 +46,9 @@ class NotificationControllerTest {
                 .message("Test notification message")
                 .build();
 
-        when(notificationService.logNotification(any(NotificationRequest.class)))
-                .thenReturn(CompletableFuture.completedFuture(null));
-
         mockMvc.perform(post("/notifications/notificate")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(request().asyncStarted())
                 .andExpect(status().isOk());
 
         verify(notificationService).logNotification(any(NotificationRequest.class));

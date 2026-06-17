@@ -60,35 +60,32 @@ public abstract class ContractVerifierBase {
 
             // Mock for getAccountByLogin - used by getMyAccount and getAccount
             Mockito.when(mock.getAccountByLogin(Mockito.anyString()))
-                    .thenReturn(CompletableFuture.completedFuture(
-                            new AccountResponse(
-                                    1L,
-                                    "test_user",
-                                    "Test",
-                                    "User",
-                                    "test@example.com",
-                                    LocalDate.of(1990, 5, 15),
-                                    BigDecimal.valueOf(1000.00))));
+                    .thenReturn(new AccountResponse(
+                            1L,
+                            "test_user",
+                            "Test",
+                            "User",
+                            "test@example.com",
+                            LocalDate.of(1990, 5, 15),
+                            BigDecimal.valueOf(1000.00)));
 
             // Mock for updateAccount - used by updateMyAccount
             Mockito.when(mock.updateAccount(Mockito.anyString(), Mockito.any(UpdateAccountRequest.class)))
-                    .thenReturn(CompletableFuture.completedFuture(
-                            new AccountResponse(
-                                    1L,
-                                    "test_user",
-                                    "Updated",
-                                    "Name",
-                                    "test@example.com",
-                                    LocalDate.of(1995, 10, 20),
-                                    BigDecimal.valueOf(1000.00))));
+                    .thenReturn(new AccountResponse(
+                            1L,
+                            "test_user",
+                            "Updated",
+                            "Name",
+                            "test@example.com",
+                            LocalDate.of(1995, 10, 20),
+                            BigDecimal.valueOf(1000.00)));
 
             // Mock for getAllAccounts
             Mockito.when(mock.getAllAccounts())
-                    .thenReturn(CompletableFuture.completedFuture(
-                            java.util.List.of(
-                                    new ru.yandex.practicum.accounts.dto.AccountBrief("user1", "User One"),
-                                    new ru.yandex.practicum.accounts.dto.AccountBrief("user2", "User Two")
-                            )));
+                    .thenReturn(java.util.List.of(
+                            new ru.yandex.practicum.accounts.dto.AccountBrief("user1", "User One"),
+                            new ru.yandex.practicum.accounts.dto.AccountBrief("user2", "User Two")
+                    ));
 
             return mock;
         }

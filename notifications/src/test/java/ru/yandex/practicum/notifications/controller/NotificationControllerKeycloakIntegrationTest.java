@@ -18,7 +18,6 @@ import ru.yandex.practicum.notifications.repository.NotificationRepository;
 import ru.yandex.practicum.notifications.util.KeycloakTokenUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -59,7 +58,7 @@ class NotificationControllerKeycloakIntegrationTest {
     void notificate_withValidUserJwtToken_shouldReturnOk() throws Exception {
         // Получаем токен пользователя от Keycloak (realm-export.json: user/password)
         String token = KeycloakTokenUtil.getUserToken("user", "password");
-        
+
         NotificationRequest request = NotificationRequest.builder()
             .login("test_user")
             .message("Test with JWT authentication")
@@ -69,10 +68,8 @@ class NotificationControllerKeycloakIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(request().asyncStarted())
             .andExpect(status().isOk());
 
-        Thread.sleep(1000);
         assertEquals(1, notificationRepository.count());
     }
 
@@ -82,7 +79,7 @@ class NotificationControllerKeycloakIntegrationTest {
         // Получаем service account токен от Keycloak для accounts-client
         // accounts-client имеет роль notifications:send по умолчанию
         String token = KeycloakTokenUtil.getClientToken("accounts-client", "accounts-secret");
-        
+
         NotificationRequest request = NotificationRequest.builder()
             .login("test_user")
             .message("Test with client credentials")
@@ -92,10 +89,8 @@ class NotificationControllerKeycloakIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(request().asyncStarted())
             .andExpect(status().isOk());
 
-        Thread.sleep(1000);
         assertEquals(1, notificationRepository.count());
     }
 }
