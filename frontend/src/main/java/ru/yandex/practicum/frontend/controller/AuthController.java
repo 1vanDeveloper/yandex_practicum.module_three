@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,6 +20,7 @@ import ru.yandex.practicum.frontend.dto.RegisterRequest;
 import ru.yandex.practicum.frontend.service.GatewayService;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,9 @@ import java.util.List;
 public class AuthController {
 
     private final GatewayService gatewayService;
+
+    @Value("${jwt.secret:mySecretKeyForJWTTokenGenerationMustBeLongEnough}")
+    private String jwtSecret;
 
     /**
      * GET /login - страница входа с формой.
@@ -64,7 +69,7 @@ public class AuthController {
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
             try {
                 io.jsonwebtoken.Claims claims = io.jsonwebtoken.Jwts.parserBuilder()
-                    .setSigningKey("mySecretKeyForJWTTokenGenerationMustBeLongEnough".getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                    .setSigningKey(jwtSecret.getBytes(StandardCharsets.UTF_8))
                     .build()
                     .parseClaimsJws(tokenResponse.getToken())
                     .getBody();
