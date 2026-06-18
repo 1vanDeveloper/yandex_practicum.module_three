@@ -1,0 +1,447 @@
+{
+  "id": "bank",
+  "realm": "bank",
+  "displayName": "Bank Realm",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "user",
+        "description": "Regular user role"
+      },
+      {
+        "name": "admin",
+        "description": "Administrator role"
+      },
+      {
+        "name": "gateway:access",
+        "description": "Access to gateway service"
+      }
+    ],
+    "client": {
+      "accounts-client": [
+        {
+          "name": "accounts:read",
+          "description": "Read access to account resources"
+        },
+        {
+          "name": "accounts:write",
+          "description": "Write access to account resources"
+        }
+      ],
+      "notifications-service": [
+        {
+          "name": "notifications:send",
+          "description": "Permission to send notifications"
+        }
+      ],
+      "gateway-client": [
+        {
+          "name": "accounts:modify",
+          "description": "Permission to modify accounts"
+        },
+        {
+          "name": "cash:modify",
+          "description": "Permission to modify cash operations"
+        },
+        {
+          "name": "transfer:modify",
+          "description": "Permission to modify transfers"
+        }
+      ],
+      "cash-client": [
+        {
+          "name": "accounts:modify",
+          "description": "Permission to modify accounts"
+        }
+      ],
+      "transfer-client": [
+        {
+          "name": "accounts:modify",
+          "description": "Permission to modify accounts"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "accounts-client",
+      "name": "Accounts Service Client",
+      "description": "OAuth2 client for Accounts service (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "accounts-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "accounts:read",
+        "accounts:write",
+        "notifications:send"
+      ]
+    },
+    {
+      "clientId": "frontend-client",
+      "name": "Frontend Client",
+      "description": "OAuth2 client for Frontend (authorization code flow for login)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "frontend-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/*",
+        "http://localhost:8081/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:8081"
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ]
+    },
+    {
+      "clientId": "frontend-service",
+      "name": "Frontend Service",
+      "description": "OAuth2 client for Frontend to call Gateway (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "frontend-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "gateway:access"
+      ]
+    },
+    {
+      "clientId": "notifications-service",
+      "name": "Notifications Service",
+      "description": "OAuth2 client for Notifications service (resource server)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "notifications-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ]
+    },
+    {
+      "clientId": "gateway-client",
+      "name": "Gateway Service Client",
+      "description": "OAuth2 client for Gateway service (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "gateway-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "accounts:modify",
+        "cash:modify",
+        "transfer:modify"
+      ]
+    },
+    {
+      "clientId": "cash-client",
+      "name": "Cash Service Client",
+      "description": "OAuth2 client for Cash service (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "cash-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "accounts:modify",
+        "notifications:send"
+      ]
+    },
+    {
+      "clientId": "transfer-client",
+      "name": "Transfer Service Client",
+      "description": "OAuth2 client for Transfer service (client credentials flow)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "transfer-secret",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "openid",
+        "profile",
+        "roles"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "defaultRoles": [
+        "accounts:modify",
+        "notifications:send"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "user",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "user@bank.com",
+      "firstName": "Test",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "user"
+      ]
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin@bank.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin",
+        "user"
+      ]
+    }
+  ],
+  "scopeMappings": [
+    {
+      "clientScope": "offline_access",
+      "roles": [
+        "offline_access"
+      ]
+    }
+  ],
+  "clientScopeMappings": {
+    "notifications-service": [
+      {
+        "client": "accounts-client",
+        "roles": [
+          "notifications:send"
+        ]
+      },
+      {
+        "client": "cash-client",
+        "roles": [
+          "notifications:send"
+        ]
+      },
+      {
+        "client": "transfer-client",
+        "roles": [
+          "notifications:send"
+        ]
+      }
+    ]
+  },
+  "defaultDefaultClientScopes": [
+    "web-origins",
+    "openid",
+    "profile",
+    "email",
+    "roles"
+  ],
+  "defaultOptionalClientScopes": [
+    "address",
+    "phone",
+    "offline_access"
+  ],
+  "browserSecurityHeaders": {
+    "contentSecurityPolicyReportOnly": "",
+    "xContentTypeOptions": "nosniff",
+    "referrerPolicy": "no-referrer",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "xXSSProtection": "1; mode=block",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  },
+  "smtpServer": {},
+  "eventsEnabled": false,
+  "eventsListeners": [
+    "jboss-logging"
+  ],
+  "enabledEventTypes": [],
+  "adminEventsEnabled": false,
+  "adminEventsDetailsEnabled": false,
+  "identityProviders": [],
+  "identityProviderMappers": [],
+  "components": {
+    "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
+      {
+        "name": "Allowed Client Scopes",
+        "providerId": "allowed-client-templates",
+        "subType": "authenticated",
+        "subComponents": {},
+        "config": {
+          "allow-default-scopes": [
+            "true"
+          ]
+        }
+      },
+      {
+        "name": "Full Scope Disabled",
+        "providerId": "scope",
+        "subType": "anonymous",
+        "subComponents": {},
+        "config": {}
+      }
+    ],
+    "org.keycloak.keys.KeyProvider": [
+      {
+        "name": "rsa-generated",
+        "providerId": "rsa-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "100"
+          ]
+        }
+      },
+      {
+        "name": "aes-generated",
+        "providerId": "aes-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "100"
+          ]
+        }
+      },
+      {
+        "name": "hmac-generated",
+        "providerId": "hmac-generated",
+        "subComponents": {},
+        "config": {
+          "priority": [
+            "100"
+          ],
+          "algorithm": [
+            "HS256"
+          ]
+        }
+      }
+    ]
+  },
+  "internationalizationEnabled": false,
+  "supportedLocales": [],
+  "attributes": {
+    "cibaBackchannelTokenDeliveryMode": "poll",
+    "cibaExpiresIn": "120",
+    "cibaAuthRequestedUserHint": "login_hint",
+    "oauth2DeviceCodeLifespan": "600",
+    "clientOfflineSessionMaxLifespan": "0",
+    "oauth2DevicePollingInterval": "5",
+    "clientSessionIdleTimeout": "0",
+    "clientSessionMaxLifespan": "0",
+    "clientOfflineSessionIdleTimeout": "0",
+    "cibaInterval": "5",
+    "realmReusableOtpCode": "false"
+  },
+  "keycloakVersion": "24.0.1",
+  "userManagedAccessAllowed": false,
+  "clientProfiles": {
+    "profiles": []
+  },
+  "clientPolicies": {
+    "policies": []
+  }
+}
