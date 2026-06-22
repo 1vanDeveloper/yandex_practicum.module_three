@@ -1,0 +1,60 @@
+# Настройки PostgreSQL
+replicaCount: 1
+
+image:
+  repository: "postgres"
+  tag: "14"
+  pullPolicy: "IfNotPresent"
+
+service:
+  type: "ClusterIP"
+  port: 5432
+
+# Настройки PostgreSQL
+postgresql:
+  username: "user"
+  password: "password"
+  database: "bank"
+  dataDir: "/data/postgres"
+
+# Схемы для каждого сервиса
+schemas:
+  - "accounts"
+  - "cash"
+  - "notifications"
+  - "transfer"
+
+# Ресурсы
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "1024Mi"
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+
+# Хранилище
+persistence:
+  enabled: true
+  size: "5Gi"
+  storageClass: ""
+  accessModes:
+    - "ReadWriteOnce"
+
+livenessProbe:
+  exec:
+    command:
+      - "pg_isready"
+      - "-U"
+      - "user"
+  initialDelaySeconds: 60
+  periodSeconds: 10
+
+readinessProbe:
+  exec:
+    command:
+      - "pg_isready"
+      - "-U"
+      - "user"
+  initialDelaySeconds: 30
+  periodSeconds: 5

@@ -1,11 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ .Chart.Name }}
   labels:
     app: {{ .Chart.Name }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
 spec:
+  serviceName: {{ .Chart.Name }}
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -24,20 +25,22 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
-              containerPort: 8080
+            - name: postgres
+              containerPort: 5432
               protocol: TCP
           env:
-            {{- include "notifications.env" . | nindent 12 }}
-          volumeMounts:
-            - name: config
-              mountPath: /app/config
+            {{- include "postgresql.env" . | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.postgresql.dataDir }}
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -50,7 +53,15 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: config
-          configMap:
-            name: {{ .Chart.Name }}-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}

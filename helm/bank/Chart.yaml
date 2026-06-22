@@ -6,6 +6,12 @@ version: 0.1.0
 appVersion: "1.0.0"
 
 dependencies:
+  - name: postgresql
+    version: 0.1.0
+    repository: "file://../postgresql"
+  - name: consul
+    version: 0.1.0
+    repository: "file://../consul"
   - name: keycloak
     version: 0.1.0
     repository: "file://../keycloak"

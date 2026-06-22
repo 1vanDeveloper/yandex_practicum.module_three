@@ -29,6 +29,9 @@ spec:
               protocol: TCP
           env:
             {{- include "frontend.env" . | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
@@ -47,3 +50,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ .Chart.Name }}-config
