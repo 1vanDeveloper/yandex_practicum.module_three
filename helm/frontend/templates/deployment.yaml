@@ -43,26 +43,6 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: GATEWAY_SERVICE_NAME
-            - name: SPRING_CLOUD_CONSUL_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_HOST
-            - name: SPRING_CLOUD_CONSUL_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_PORT
-            - name: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
-            - name: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
             - name: SPRING_CLOUD_LOADBALANCER_ENABLED
               valueFrom:
                 configMapKeyRef:

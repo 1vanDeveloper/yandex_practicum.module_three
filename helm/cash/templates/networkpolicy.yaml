@@ -21,14 +21,14 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: postgres
+              app: postgresql
       ports:
         - protocol: TCP
           port: 5432
     - to:
         - podSelector:
             matchLabels:
-              app: consul
+              app: keycloak
       ports:
         - protocol: TCP
-          port: 8500
+          port: 8080

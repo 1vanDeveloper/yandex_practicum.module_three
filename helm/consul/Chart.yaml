@@ -1,6 +1,0 @@
-apiVersion: v2
-name: consul
-description: Helm-чарт для Consul (Service Discovery)
-type: application
-version: 0.1.0
-appVersion: "1.17"

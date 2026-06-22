@@ -6,7 +6,7 @@ global:
   
   # PostgreSQL
   postgresql:
-    host: "postgres"
+    host: "postgresql"
     port: 5432
     database: "bank"
     username: "user"
@@ -16,10 +16,5 @@ global:
   keycloak:
     url: "http://keycloak:8080"
     realm: "bank"
-  
-  # Consul
-  consul:
-    host: "consul"
-    port: 8500
 
 # Настройки для каждого сервиса переопределяются в его values.yaml

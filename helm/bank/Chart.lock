@@ -2,9 +2,6 @@ dependencies:
 - name: postgresql
   repository: file://../postgresql
   version: 0.1.0
-- name: consul
-  repository: file://../consul
-  version: 0.1.0
 - name: keycloak
   repository: file://../keycloak
   version: 0.1.0
@@ -26,5 +23,5 @@ dependencies:
 - name: transfer
   repository: file://../transfer
   version: 0.1.0
-digest: sha256:74247905e122dcab03162706942f1cb39874b8dae3e21047e9789ac9a4bb8ca5
-generated: "2026-06-22T19:14:09.124705+03:00"
+digest: sha256:7b879f2a42cd0ac100be848c5985ba30f2c676a0633b2048bce04acb3639bd71
+generated: "2026-06-22T19:26:20.470068+03:00"

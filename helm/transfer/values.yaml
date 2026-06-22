@@ -9,9 +9,6 @@ global:
   keycloak:
     url: "http://keycloak:8080"
     realm: "bank"
-  consul:
-    host: "consul"
-    port: 8500
 
 postgresql:
   username: "user"

@@ -38,26 +38,6 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: SPRING_APPLICATION_NAME
-            - name: SPRING_CLOUD_CONSUL_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_HOST
-            - name: SPRING_CLOUD_CONSUL_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_PORT
-            - name: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
-            - name: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
             - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED
               valueFrom:
                 configMapKeyRef:

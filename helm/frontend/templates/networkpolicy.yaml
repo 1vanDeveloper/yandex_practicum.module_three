@@ -25,7 +25,7 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: consul
+              app: keycloak
       ports:
         - protocol: TCP
-          port: 8500
+          port: 8080

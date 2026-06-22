@@ -10,7 +10,25 @@ spec:
     - Ingress
     - Egress
   ingress:
-    - from: []
+    - from:
+        - podSelector:
+            matchLabels:
+              app: accounts
+        - podSelector:
+            matchLabels:
+              app: cash
+        - podSelector:
+            matchLabels:
+              app: transfer
+        - podSelector:
+            matchLabels:
+              app: notifications
+        - podSelector:
+            matchLabels:
+              app: frontend
+        - podSelector:
+            matchLabels:
+              app: gateway
       ports:
         - protocol: TCP
           port: 8080

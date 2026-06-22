@@ -58,26 +58,6 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: SPRING_JPA_HIBERNATE_DDL_MODE
-            - name: SPRING_CLOUD_CONSUL_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_HOST
-            - name: SPRING_CLOUD_CONSUL_PORT
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_PORT
-            - name: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
-            - name: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               valueFrom:
                 secretKeyRef:
@@ -128,9 +108,6 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_ACCOUNTS
-          volumeMounts:
-            - name: config
-              mountPath: /app/config
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
@@ -149,7 +126,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: config
-          configMap:
-            name: {{ .Chart.Name }}-config
