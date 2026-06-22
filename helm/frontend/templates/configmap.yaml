@@ -5,20 +5,25 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 data:
-  application.yaml: |
-    spring:
-      application:
-        name: {{ .Chart.Name }}
-      cloud:
-        consul:
-          host: {{ .Values.global.consul.host | default "consul" }}
-          port: {{ .Values.global.consul.port | default 8500 }}
-          discovery:
-            enabled: true
-            preferIpAddress: true
-            serviceName: {{ .Chart.Name }}
-        loadbalancer:
-          enabled: true
-    gateway:
-      service:
-        name: gateway
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
+  GATEWAY_SERVICE_NAME: "{{ .Values.gateway.serviceName }}"
+  SPRING_CLOUD_CONSUL_HOST: "{{ .Values.global.consul.host | default "consul" }}"
+  SPRING_CLOUD_CONSUL_PORT: "{{ .Values.global.consul.port | default 8500 }}"
+  SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED: "true"
+  SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS: "true"
+  SPRING_CLOUD_LOADBALANCER_ENABLED: "true"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI: "${KEYCLOAK_ISSUER_URI}"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTHORIZATION_URI: "{{ .Values.keycloak.authorizationUri }}"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI: "{{ .Values.keycloak.tokenUri }}"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_INFO_URI: "{{ .Values.keycloak.userInfoUri }}"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_JWK_SET_URI: "${KEYCLOAK_JWK_SET_URI}"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_NAME_ATTRIBUTE: "preferred_username"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "${KEYCLOAK_ISSUER_URI}"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "${KEYCLOAK_JWK_SET_URI}"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_ID: "{{ .Values.oauth2.clientId }}"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_REDIRECT_URI: "{{ .Values.oauth2.redirectUri }}"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_SCOPE: "openid,profile,email"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_PROVIDER: "keycloak"
+  LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT: "{{ .Values.logging.level }}"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD: "{{ .Values.logging.cloudLevel }}"

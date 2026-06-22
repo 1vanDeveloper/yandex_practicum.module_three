@@ -9,6 +9,24 @@ global:
     host: "consul"
     port: 8500
 
+jwt:
+  secret: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
+  expiration: "86400000"
+
+oauth2:
+  clientId: "gateway-client"
+  clientSecret: "gateway-secret"
+
+keycloak:
+  issuerUri: "http://keycloak:8080/realms/bank"
+  jwkSetUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
+  tokenUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/token"
+
+logging:
+  level: "DEBUG"
+  gatewayLevel: "DEBUG"
+  securityLevel: "DEBUG"
+
 image:
   repository: "bank-gateway"
   tag: "latest"

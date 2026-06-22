@@ -28,10 +28,121 @@ spec:
               containerPort: 8080
               protocol: TCP
           env:
-            {{- include "frontend.env" . | nindent 12 }}
-          volumeMounts:
-            - name: config
-              mountPath: /app/config
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: SPRING_APPLICATION_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_APPLICATION_NAME
+            - name: GATEWAY_SERVICE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: GATEWAY_SERVICE_NAME
+            - name: SPRING_CLOUD_CONSUL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_CONSUL_HOST
+            - name: SPRING_CLOUD_CONSUL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_CONSUL_PORT
+            - name: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
+            - name: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
+            - name: SPRING_CLOUD_LOADBALANCER_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_LOADBALANCER_ENABLED
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_ISSUER_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTHORIZATION_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTHORIZATION_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_INFO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_INFO_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_JWK_SET_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_JWK_SET_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_NAME_ATTRIBUTE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_NAME_ATTRIBUTE
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_ISSUER_URI
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_JWK_SET_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: OAUTH2_CLIENT_SECRET
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_REDIRECT_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_REDIRECT_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_SCOPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_SCOPE
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_PROVIDER
+            - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
@@ -50,7 +161,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: config
-          configMap:
-            name: {{ .Chart.Name }}-config

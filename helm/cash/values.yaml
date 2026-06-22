@@ -3,17 +3,38 @@ replicaCount: 1
 
 global:
   postgresql:
-    host: "postgres"
+    host: "postgresql"
     port: 5432
     database: "bank"
-    username: "user"
-    password: "password"
   keycloak:
     url: "http://keycloak:8080"
     realm: "bank"
   consul:
     host: "consul"
     port: 8500
+
+postgresql:
+  username: "user"
+  password: "password"
+
+jwt:
+  secret: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
+  expiration: "86400000"
+
+oauth2:
+  clientId: "cash-client"
+  clientSecret: "cash-secret"
+
+keycloak:
+  issuerUri: "http://keycloak:8080/realms/bank"
+  jwkSetUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
+  tokenUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/token"
+
+jpa:
+  ddlMode: "validate"
+
+logging:
+  level: "INFO"
 
 image:
   repository: "bank-cash"

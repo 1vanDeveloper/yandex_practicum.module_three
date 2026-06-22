@@ -28,10 +28,106 @@ spec:
               containerPort: 8080
               protocol: TCP
           env:
-            {{- include "cash.env" . | nindent 12 }}
-          volumeMounts:
-            - name: config
-              mountPath: /app/config
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: SPRING_APPLICATION_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_APPLICATION_NAME
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_DATASOURCE_URL
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: POSTGRES_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_JPA_HIBERNATE_DDL_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_JPA_HIBERNATE_DDL_MODE
+            - name: SPRING_CLOUD_CONSUL_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_CONSUL_HOST
+            - name: SPRING_CLOUD_CONSUL_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_CONSUL_PORT
+            - name: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED
+            - name: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_ISSUER_URI
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_JWK_SET_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: OAUTH2_CLIENT_SECRET
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_AUTHORIZATION_GRANT_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_AUTHORIZATION_GRANT_TYPE
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_PROVIDER
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: JWT_SECRET
+            - name: JWT_EXPIRATION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: JWT_EXPIRATION
+            - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_CASH
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_CASH
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
@@ -50,7 +146,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: config
-          configMap:
-            name: {{ .Chart.Name }}-config

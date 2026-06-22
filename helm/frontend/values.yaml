@@ -9,6 +9,25 @@ global:
     host: "consul"
     port: 8500
 
+gateway:
+  serviceName: "gateway"
+
+oauth2:
+  clientId: "frontend-client"
+  clientSecret: "frontend-secret"
+  redirectUri: "http://localhost:8081/login/oauth2/code/frontend-client"
+
+keycloak:
+  issuerUri: "http://keycloak:8080/realms/bank"
+  jwkSetUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
+  authorizationUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/auth"
+  tokenUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/token"
+  userInfoUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/userinfo"
+
+logging:
+  level: "INFO"
+  cloudLevel: "INFO"
+
 image:
   repository: "bank-frontend"
   tag: "latest"

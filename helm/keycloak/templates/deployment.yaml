@@ -35,7 +35,26 @@ spec:
               containerPort: 9000
               protocol: TCP
           env:
-            {{- include "keycloak.env" . | nindent 12 }}
+            - name: KEYCLOAK_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_ADMIN
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_ADMIN_PASSWORD
+            - name: KC_DB
+              value: "{{ .Values.keycloak.db }}"
+            - name: KC_HOSTNAME_URL
+              value: "{{ .Values.keycloak.hostnameUrl }}"
+            - name: KC_HOSTNAME_ADMIN_URL
+              value: "{{ .Values.keycloak.hostnameAdminUrl }}"
+            - name: KC_HOSTNAME_STRICT
+              value: "{{ .Values.keycloak.hostnameStrict }}"
+            - name: KC_HOSTNAME_STRICT_HTTPS
+              value: "{{ .Values.keycloak.hostnameStrictHttps }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

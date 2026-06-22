@@ -5,28 +5,23 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 data:
-  application.yaml: |
-    spring:
-      application:
-        name: {{ .Chart.Name }}
-      cloud:
-        consul:
-          host: {{ .Values.global.consul.host | default "consul" }}
-          port: {{ .Values.global.consul.port | default 8500 }}
-          discovery:
-            enabled: true
-            preferIpAddress: true
-            serviceName: {{ .Chart.Name }}
-        gateway:
-          discovery:
-            locator:
-              enabled: true
-              lowerCaseServiceId: true
-    management:
-      endpoints:
-        web:
-          exposure:
-            include: health,info,routes
-      endpoint:
-        health:
-          show-details: always
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
+  SPRING_CLOUD_CONSUL_HOST: "{{ .Values.global.consul.host | default "consul" }}"
+  SPRING_CLOUD_CONSUL_PORT: "{{ .Values.global.consul.port | default 8500 }}"
+  SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED: "true"
+  SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS: "true"
+  SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED: "true"
+  SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER_CASE_SERVICE_ID: "true"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "${KEYCLOAK_ISSUER_URI}"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "${KEYCLOAK_JWK_SET_URI}"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI: "{{ .Values.keycloak.tokenUri }}"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_CLIENT_ID: "{{ .Values.oauth2.clientId }}"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_AUTHORIZATION_GRANT_TYPE: "client_credentials"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_PROVIDER: "keycloak"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_SCOPE: "accounts:modify,cash:modify,transfer:modify"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,routes"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+  LOGGING_LEVEL_RU_YANDEX_PRACTICUM_GATEWAY: "{{ .Values.logging.level }}"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY: "{{ .Values.logging.gatewayLevel }}"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: "{{ .Values.logging.securityLevel }}"
