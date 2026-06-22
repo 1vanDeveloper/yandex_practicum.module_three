@@ -1,0 +1,47 @@
+# Настройки сервиса Notifications
+replicaCount: 1
+
+global:
+  postgresql:
+    host: "postgres"
+    port: 5432
+    database: "bank"
+    username: "user"
+    password: "password"
+  keycloak:
+    url: "http://keycloak:8080"
+    realm: "bank"
+  consul:
+    host: "consul"
+    port: 8500
+
+image:
+  repository: "bank-notifications"
+  tag: "latest"
+  pullPolicy: "IfNotPresent"
+
+service:
+  type: "ClusterIP"
+  port: 8080
+
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+livenessProbe:
+  httpGet:
+    path: "/actuator/health/liveness"
+    port: 8080
+  initialDelaySeconds: 60
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: "/actuator/health/readiness"
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 5

@@ -1,0 +1,48 @@
+# Настройки Keycloak
+replicaCount: 1
+
+image:
+  repository: "quay.io/keycloak/keycloak"
+  tag: "24.0.1"
+  pullPolicy: "IfNotPresent"
+
+service:
+  type: "ClusterIP"
+  port: 8080
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "1024Mi"
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+
+# Настройки Keycloak
+keycloak:
+  adminUser: "admin"
+  adminPassword: "admin"
+  db: "dev-file"
+  hostnameStrict: false
+  hostnameStrictHttps: false
+  hostnameUrl: "http://keycloak:8080"
+  hostnameAdminUrl: "http://keycloak:8080"
+
+# Realm конфигурация
+realm:
+  name: "bank"
+  import: true
+
+livenessProbe:
+  httpGet:
+    path: "/health/live"
+    port: 9000
+  initialDelaySeconds: 60
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: "/health/ready"
+    port: 9000
+  initialDelaySeconds: 30
+  periodSeconds: 5

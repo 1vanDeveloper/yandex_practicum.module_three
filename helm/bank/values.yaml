@@ -1,0 +1,25 @@
+# Глобальные настройки для всех сервисов
+global:
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  
+  # PostgreSQL
+  postgresql:
+    host: "postgres"
+    port: 5432
+    database: "bank"
+    username: "user"
+    password: "password"
+  
+  # Keycloak
+  keycloak:
+    url: "http://keycloak:8080"
+    realm: "bank"
+  
+  # Consul
+  consul:
+    host: "consul"
+    port: 8500
+
+# Настройки для каждого сервиса переопределяются в его values.yaml
