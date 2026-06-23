@@ -1,4 +1,4 @@
-apiVersion: network.k8s.io/v1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: {{ .Chart.Name }}
@@ -18,6 +18,12 @@ spec:
         - protocol: TCP
           port: 8080
   egress:
+    # Allow DNS resolution
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
     - to:
         - podSelector:
             matchLabels:

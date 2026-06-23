@@ -38,26 +38,6 @@ services:
       - ./scripts/schema.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
       - ./scripts/data.sql:/docker-entrypoint-initdb.d/2-data.sql:ro
 
-  consul:
-    container_name: consul
-    image: hashicorp/consul:1.17
-    hostname: consul
-    command: agent -server -ui -bootstrap-expect=1 -client=0.0.0.0
-    ports:
-      - "8500:8500"   # HTTP API
-      - "8600:8600"   # DNS
-    volumes:
-      - consul-data:/consul/data
-      - consul-config:/consul/config
-    environment:
-      - CONSUL_BIND_INTERFACE=eth0
-    healthcheck:
-      test: ["CMD", "consul", "members"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   accounts:
     container_name: accounts
     build:
@@ -73,9 +53,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_MODE=validate
-      - SPRING_CLOUD_CONSUL_HOST=consul
-      - SPRING_CLOUD_CONSUL_PORT=8500
-      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
       # OAuth2 Resource Server - валидация JWT от Keycloak
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
@@ -88,8 +65,6 @@ services:
     depends_on:
       postgres:
         condition: service_started
-      consul:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     healthcheck:
@@ -112,16 +87,8 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       # Application name
       - SPRING_APPLICATION_NAME=frontend
-      # Gateway service - используется Consul Discovery + LoadBalancer
-      - GATEWAY_SERVICE_NAME=gateway
-      # Spring Cloud Consul (Service Discovery)
-      - SPRING_CLOUD_CONSUL_HOST=consul
-      - SPRING_CLOUD_CONSUL_PORT=8500
-      - SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED=true
-      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
-      - SPRING_CLOUD_CONSUL_DISCOVERY_SERVICE_NAME=frontend
-      # Spring Cloud LoadBalancer
-      - SPRING_CLOUD_LOADBALANCER_ENABLED=true
+      # Gateway service URL
+      - GATEWAY_SERVICE_URL=http://gateway:8080
       # OAuth2 Client для Authorization Code Flow (пользовательская аутентификация)
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTHORIZATION_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/auth
@@ -138,14 +105,9 @@ services:
       # OAuth2 Resource Server для валидации JWT
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
-      # Gateway service URL
-      - GATEWAY_SERVICE_URL=http://gateway:8080
       # Logging
       - LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT=INFO
-      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD=INFO
     depends_on:
-      consul:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
       gateway:
@@ -172,17 +134,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_MODE=validate
-      - SPRING_CLOUD_CONSUL_HOST=consul
-      - SPRING_CLOUD_CONSUL_PORT=8500
-      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
       # OAuth2 Resource Server - валидация JWT от Keycloak
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
     depends_on:
       postgres:
         condition: service_started
-      consul:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     healthcheck:
@@ -207,9 +164,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_MODE=validate
-      - SPRING_CLOUD_CONSUL_HOST=consul
-      - SPRING_CLOUD_CONSUL_PORT=8500
-      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
       # OAuth2 Resource Server - валидация JWT от Keycloak
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
@@ -222,8 +176,6 @@ services:
     depends_on:
       postgres:
         condition: service_started
-      consul:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     healthcheck:
@@ -248,9 +200,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
       - SPRING_JPA_HIBERNATE_DDL_MODE=validate
-      - SPRING_CLOUD_CONSUL_HOST=consul
-      - SPRING_CLOUD_CONSUL_PORT=8500
-      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
       # OAuth2 Resource Server - валидация JWT от Keycloak
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/bank
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/bank/protocol/openid-connect/certs
@@ -263,8 +212,6 @@ services:
     depends_on:
       postgres:
         condition: service_started
-      consul:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     healthcheck:
@@ -300,12 +247,6 @@ services:
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_AUTHORIZATION_GRANT_TYPE=client_credentials
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_PROVIDER=keycloak
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_SCOPE=accounts:modify,cash:modify,transfer:modify
-      # Spring Cloud Consul (Service Discovery)
-      - SPRING_CLOUD_CONSUL_HOST=consul
-      - SPRING_CLOUD_CONSUL_PORT=8500
-      - SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED=true
-      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
-      - SPRING_CLOUD_CONSUL_DISCOVERY_SERVICE_NAME=gateway
       # Spring Cloud Gateway Routes
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER_CASE_SERVICE_ID=true
@@ -317,8 +258,6 @@ services:
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY=DEBUG
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY=DEBUG
     depends_on:
-      consul:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
       accounts:
@@ -336,8 +275,4 @@ services:
 
 volumes:
   cache:
-    driver: local
-  consul-data:
-    driver: local
-  consul-config:
     driver: local

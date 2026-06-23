@@ -1,4 +1,4 @@
-apiVersion: network.k8s.io/v1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: {{ .Chart.Name }}
@@ -26,4 +26,10 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
-  egress: []
+  egress:
+    # Allow DNS resolution
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

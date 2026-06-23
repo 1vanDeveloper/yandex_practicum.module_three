@@ -23,9 +23,6 @@ dependencies {
     // Spring Cloud Gateway (WebFlux-based)
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
 
-    // Service Discovery
-    implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
-
     // Resilience4j Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j")
     

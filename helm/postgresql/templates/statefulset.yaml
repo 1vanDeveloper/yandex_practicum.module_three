@@ -54,6 +54,10 @@ spec:
               mountPath: {{ .Values.postgresql.dataDir }}
             - name: init-scripts
               mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: init-scripts
+          configMap:
+            name: {{ .Chart.Name }}-init-scripts
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

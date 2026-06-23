@@ -38,21 +38,21 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: SPRING_APPLICATION_NAME
-            - name: SPRING_DATASOURCE_URL
+            - name: DATABASE_URL
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_DATASOURCE_URL
-            - name: SPRING_DATASOURCE_USERNAME
+                  key: DATABASE_URL
+            - name: DATABASE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ .Chart.Name }}-secrets
-                  key: POSTGRES_USERNAME
-            - name: SPRING_DATASOURCE_PASSWORD
+                  key: DATABASE_USERNAME
+            - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Chart.Name }}-secrets
-                  key: POSTGRES_PASSWORD
+                  key: DATABASE_PASSWORD
             - name: SPRING_JPA_HIBERNATE_DDL_MODE
               valueFrom:
                 configMapKeyRef:

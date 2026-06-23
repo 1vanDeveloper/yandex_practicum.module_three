@@ -2,8 +2,7 @@ package ru.yandex.practicum.accounts.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +24,9 @@ public class OutboxProcessor {
 
     private final OutboxNotificationRepository outboxRepository;
     private final NotificationsClient notificationsClient;
-    private final DiscoveryClient discoveryClient;
+
+    @Value("${notifications.service.url:http://notifications:8080}")
+    private String notificationsServiceUrl;
 
     private static final int MAX_RETRY_COUNT = 3;
     private static final int BATCH_SIZE = 10;
@@ -52,18 +53,8 @@ public class OutboxProcessor {
 
     @CircuitBreaker(name = "notificationsService", fallbackMethod = "sendNotificationFallback")
     private void sendToNotificationsService(OutboxMessage message) {
-        String notificationsUrl = getNotificationsServiceUrl();
         NotificationRequest request = new NotificationRequest(message.getLogin(), message.getMessage());
-        notificationsClient.sendNotification(notificationsUrl, request);
-    }
-
-    private String getNotificationsServiceUrl() {
-        List<ServiceInstance> instances = discoveryClient.getInstances("notifications-service");
-        if (instances.isEmpty()) {
-            throw new IllegalStateException("No instances of notifications-service found in Consul");
-        }
-        ServiceInstance instance = instances.getFirst();
-        return instance.getUri().toString();
+        notificationsClient.sendNotification(notificationsServiceUrl, request);
     }
 
     @Transactional

@@ -10,7 +10,7 @@ data:
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
   
   # Database configuration (non-sensitive)
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=accounts"
+  DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=accounts"
   SPRING_JPA_HIBERNATE_DDL_MODE: "{{ .Values.jpa.ddlMode }}"
   
   # OAuth2 Resource Server (non-sensitive URLs)
