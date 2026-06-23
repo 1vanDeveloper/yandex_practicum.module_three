@@ -19,7 +19,6 @@ import ru.yandex.practicum.frontend.dto.LoginRequest;
 import ru.yandex.practicum.frontend.dto.RegisterRequest;
 import ru.yandex.practicum.frontend.service.GatewayService;
 
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -146,7 +145,6 @@ public class AuthController {
                 .firstName(firstName)
                 .lastName(lastName)
                 .birthDate(LocalDate.parse(birthDate))
-                .amount(BigDecimal.ZERO)
                 .build();
 
         try {
