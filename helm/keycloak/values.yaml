@@ -34,15 +34,15 @@ realm:
   import: true
 
 livenessProbe:
-  httpGet:
-    path: "/health/live"
-    port: 9000
+  tcpSocket:
+    port: 8080
   initialDelaySeconds: 60
   periodSeconds: 10
+  failureThreshold: 3
 
 readinessProbe:
-  httpGet:
-    path: "/health/ready"
-    port: 9000
+  tcpSocket:
+    port: 8080
   initialDelaySeconds: 30
-  periodSeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3
