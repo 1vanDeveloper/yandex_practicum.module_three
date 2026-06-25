@@ -6,7 +6,7 @@
 
 - Редактирование данных аккаунта (ФИО, дата рождения)
 - Пополнение и снятие денег со счёта
-- Перевод денег между аккаунтам
+- Перевод денег между аккаунтами
 - Получение уведомлений об операциях
 
 ---
@@ -82,7 +82,7 @@
 - **Spring Cloud Contract** (Contract Testing)
 - **OpenAPI 3.0** (Swagger)
 - **Lombok**
-- **Docker & Helm**
+- **Docker, Colima & Helm**
 
 ---
 
@@ -92,7 +92,8 @@
 
 - Java 21+
 - Docker
-- kubectl + Kubernetes кластер (Kind/K3s/minikube)
+- Colima + Kubernetes
+- kubectl
 - Helm 3.x
 - Git
 
@@ -103,7 +104,7 @@
 ### 1. Клонирование репозитория
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/1vanDeveloper/yandex_practicum.module_three.git
 cd yandex_practicum.module_three
 ```
 
@@ -113,13 +114,14 @@ cd yandex_practicum.module_three
 ./gradlew build
 ```
 
-### 3. Создание Kind кластера
+### 3. Запуск Colima с Kubernetes
 
 ```bash
-# Создание кластера (если не создан)
-kind create cluster --name bank
+# Запуск Colima с Kubernetes (если не запущен)
+colima start --kubernetes
 
 # Проверка
+colima status
 kubectl cluster-info
 kubectl get nodes
 ```
@@ -127,8 +129,8 @@ kubectl get nodes
 ### 4. Развёртывание приложения
 
 ```bash
-# Сборка Docker образов и загрузка в Kind
-make kind-load
+# Сборка Docker образов (автоматически доступны в Colima)
+make docker-build
 
 # Развёртывание через Helm
 make k8s-deploy
@@ -153,8 +155,8 @@ kubectl logs -l app=accounts -f
 ### 6. Доступ к приложению
 
 ```bash
-# Frontend доступен через NodePort 30813
-open http://localhost:30813
+# Frontend доступен через NodePort 32190
+open http://localhost:32190
 
 # Keycloak Admin Console
 open http://localhost:8180
@@ -248,18 +250,18 @@ make helm-unit-test
 
 ### Предварительные требования
 
-- Kubernetes кластер (Kind/K3s/minikube)
+- Colima с Kubernetes запущена
 - kubectl настроен на кластер
 - Helm 3.x установлен
 
 ### 1. Подготовка кластера
 
 ```bash
-# Для Kind: создание кластера
-kind create cluster --name bank
+# Запуск Colima с Kubernetes
+colima start --kubernetes
 
-# Загрузка Docker образов
-make kind-load
+# Проверка
+kubectl cluster-info
 ```
 
 ### 2. Установка Helm-чартов
@@ -289,8 +291,8 @@ kubectl logs -l app=gateway -f
 ### 4. Доступ к приложению
 
 ```bash
-# Frontend доступен через NodePort 30813
-open http://localhost:30813
+# Frontend доступен через NodePort 32190
+open http://localhost:32190
 
 # Или через port-forward
 kubectl port-forward svc/frontend 8080:8080
@@ -322,8 +324,7 @@ make k8s-delete
 | Команда | Описание |
 |---------|----------|
 | `make build` | Сборка всех модулей |
-| `make docker-build` | Сборка Docker образов |
-| `make kind-load` | Загрузка образов в Kind кластер |
+| `make docker-build` | Сборка Docker образов (автоматически доступны в Colima) |
 | `make k8s-deploy` | Развёртывание в Kubernetes |
 | `make k8s-rollback` | Откат релиза |
 | `make k8s-status` | Проверка статуса подов и сервисов |
@@ -334,7 +335,7 @@ make k8s-delete
 | `make helm-unit-test` | Helm unit-тесты |
 | `make helm-test` | Helm lint + unit-тесты |
 | `make helm-template` | Рендеринг Helm шаблонов |
-| `make dev` | Полный цикл: build + kind-load + k8s-deploy |
+| `make dev` | Полный цикл: build + docker-build + k8s-deploy |
 | `make test` | Запуск всех тестов |
 
 ---
@@ -410,7 +411,7 @@ Browser → Frontend → Keycloak → Frontend (JWT в сессии)
 **Конфигурация:**
 - Client ID: `frontend-client`
 - Client Secret: `frontend-secret`
-- Redirect URI: `http://localhost:30813/login/oauth2/code/frontend-client`
+- Redirect URI: `http://localhost:32190/login/oauth2/code/frontend-client`
 
 ### Межсервисное взаимодействие (Client Credentials)
 
@@ -435,8 +436,8 @@ Browser → Frontend → Keycloak → Frontend (JWT в сессии)
 ### Ошибка: "ImagePullBackOff"
 
 ```bash
-# Убедитесь, что образы загружены в Kind
-make kind-load
+# Убедитесь, что Colima запущена с Kubernetes
+colima status
 
 # Проверьте статус подов
 kubectl get pods
@@ -504,15 +505,21 @@ brew install helm  # macOS
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 ```
 
-### Ошибка: "kind: command not found"
+### Ошибка: "colima: command not found"
 
 ```bash
-# Установка Kind
-brew install kind  # macOS
-# или
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
-chmod +x ./kind
-sudo mv ./kind /usr/local/bin/kind
+# Установка Colima
+brew install colima  # macOS
+
+# Запуск с Kubernetes
+colima start --kubernetes
+```
+
+### Ошибка: "kubectl: command not found"
+
+```bash
+# Установка kubectl
+brew install kubectl  # macOS
 ```
 
 ---
