@@ -58,8 +58,6 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     testImplementation("org.springframework.boot:spring-boot-test")
     testImplementation("org.mockito:mockito-core")
-    testImplementation("org.springframework:spring-tx")
-    testImplementation("org.springframework.boot:spring-boot-starter-jdbc")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Contract Test dependencies
