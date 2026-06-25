@@ -1,0 +1,100 @@
+suite: Cash Service Deployment Tests
+templates:
+  - deployment.yaml
+tests:
+  - it: should create deployment with correct name
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: cash
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: cash
+
+  - it: should use correct image
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "bank-cash:latest"
+
+  - it: should configure probes
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /actuator/health/liveness
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /actuator/health/readiness
+
+  - it: should set OAuth2 client ID environment variable
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[?(@.name == "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_ID")].valueFrom.configMapKeyRef.name
+          value: cash-config
+---
+suite: Cash Service Tests
+templates:
+  - service.yaml
+tests:
+  - it: should create service with correct name
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: cash
+      - equal:
+          path: spec.selector.app
+          value: cash
+---
+suite: Cash NetworkPolicy Tests
+templates:
+  - networkpolicy.yaml
+tests:
+  - it: should create NetworkPolicy with correct name
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: cash
+
+  - it: should allow ingress from gateway and transfer
+    asserts:
+      - contains:
+          path: spec.ingress[0].from
+          content:
+            podSelector:
+              matchLabels:
+                app: gateway
+      - contains:
+          path: spec.ingress[0].from
+          content:
+            podSelector:
+              matchLabels:
+                app: transfer
+
+  - it: should allow egress to accounts and notifications
+    asserts:
+      - contains:
+          path: spec.egress
+          content:
+            to:
+              - podSelector:
+                  matchLabels:
+                    app: accounts
+            ports:
+              - port: 8080
+                protocol: TCP
+      - contains:
+          path: spec.egress
+          content:
+            to:
+              - podSelector:
+                  matchLabels:
+                    app: notifications
+            ports:
+              - port: 8080
+                protocol: TCP

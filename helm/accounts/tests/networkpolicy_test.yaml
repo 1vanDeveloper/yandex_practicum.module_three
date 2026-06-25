@@ -1,0 +1,89 @@
+suite: Accounts NetworkPolicy Tests
+templates:
+  - networkpolicy.yaml
+tests:
+  - it: should create NetworkPolicy with correct name
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: accounts
+
+  - it: should select correct pods
+    asserts:
+      - equal:
+          path: spec.podSelector.matchLabels.app
+          value: accounts
+
+  - it: should allow ingress from gateway
+    asserts:
+      - contains:
+          path: spec.ingress[0].from
+          content:
+            podSelector:
+              matchLabels:
+                app: gateway
+
+  - it: should allow ingress from frontend
+    asserts:
+      - contains:
+          path: spec.ingress[0].from
+          content:
+            podSelector:
+              matchLabels:
+                app: frontend
+
+  - it: should allow ingress on port 8080
+    asserts:
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 8080
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: TCP
+
+  - it: should allow egress to PostgreSQL
+    asserts:
+      - contains:
+          path: spec.egress
+          content:
+            to:
+              - podSelector:
+                  matchLabels:
+                    app: postgresql
+            ports:
+              - port: 5432
+                protocol: TCP
+
+  - it: should allow egress to Keycloak
+    asserts:
+      - contains:
+          path: spec.egress
+          content:
+            to:
+              - podSelector:
+                  matchLabels:
+                    app: keycloak
+            ports:
+              - port: 8080
+                protocol: TCP
+
+  - it: should allow DNS egress
+    asserts:
+      - equal:
+          path: spec.egress[0].ports
+          value:
+            - port: 53
+              protocol: UDP
+            - port: 53
+              protocol: TCP
+
+  - it: should have both Ingress and Egress policy types
+    asserts:
+      - contains:
+          path: spec.policyTypes
+          content: Ingress
+      - contains:
+          path: spec.policyTypes
+          content: Egress

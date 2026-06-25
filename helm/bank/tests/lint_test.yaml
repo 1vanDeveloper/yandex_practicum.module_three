@@ -1,0 +1,41 @@
+suite: Helm Chart Lint Tests
+tests:
+  - it: should pass helm lint for accounts chart
+    asserts:
+      - failedTemplate:
+          errorMessage: ""
+
+  - it: should pass helm lint for cash chart
+    asserts:
+      - failedTemplate:
+          errorMessage: ""
+
+  - it: should pass helm lint for transfer chart
+    asserts:
+      - failedTemplate:
+          errorMessage: ""
+
+  - it: should pass helm lint for notifications chart
+    asserts:
+      - failedTemplate:
+          errorMessage: ""
+
+  - it: should pass helm lint for gateway chart
+    asserts:
+      - failedTemplate:
+          errorMessage: ""
+
+  - it: should pass helm lint for frontend chart
+    asserts:
+      - failedTemplate:
+          errorMessage: ""
+
+  - it: should pass helm lint for postgresql chart
+    asserts:
+      - failedTemplate:
+          errorMessage: ""
+
+  - it: should pass helm lint for keycloak chart
+    asserts:
+      - failedTemplate:
+          errorMessage: ""

@@ -1,0 +1,130 @@
+suite: Bank Platform Integration Tests
+templates:
+  - templates/deployment.yaml
+  - templates/service.yaml
+tests:
+  - it: should render all subchart templates
+    set:
+      accounts:
+        enabled: true
+      cash:
+        enabled: true
+      transfer:
+        enabled: true
+      notifications:
+        enabled: true
+      gateway:
+        enabled: true
+      frontend:
+        enabled: true
+      postgresql:
+        enabled: true
+      keycloak:
+        enabled: true
+    asserts:
+      - hasDocuments:
+          count: 8
+
+  - it: should have consistent labels across all services
+    template: templates/service.yaml
+    set:
+      global:
+        labels:
+            app.kubernetes.io/part-of: bank
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/part-of"]
+          value: bank
+
+  - it: should use ClusterIP for internal services
+    template: templates/service.yaml
+    set:
+      accounts:
+        service:
+          type: ClusterIP
+      cash:
+        service:
+          type: ClusterIP
+      transfer:
+        service:
+          type: ClusterIP
+      notifications:
+        service:
+          type: ClusterIP
+      gateway:
+        service:
+          type: ClusterIP
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
+  - it: should use NodePort for frontend
+    template: templates/service.yaml
+    set:
+      frontend:
+        service:
+          type: NodePort
+          nodePort: 30813
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+      - equal:
+          path: spec.ports[0].nodePort
+          value: 30813
+---
+suite: Bank Platform PostgreSQL Tests
+templates:
+  - postgresql/templates/statefulset.yaml
+  - postgresql/templates/service.yaml
+tests:
+  - it: should create PostgreSQL StatefulSet
+    template: postgresql/templates/statefulset.yaml
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: postgresql
+
+  - it: should create PostgreSQL Service
+    template: postgresql/templates/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: postgresql
+      - equal:
+          path: spec.ports[0].port
+          value: 5432
+---
+suite: Bank Platform Keycloak Tests
+templates:
+  - keycloak/templates/deployment.yaml
+  - keycloak/templates/service.yaml
+tests:
+  - it: should create Keycloak Deployment
+    template: keycloak/templates/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: keycloak
+
+  - it: should create Keycloak Service
+    template: keycloak/templates/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: keycloak
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+      - equal:
+          path: spec.ports[1].port
+          value: 9000
