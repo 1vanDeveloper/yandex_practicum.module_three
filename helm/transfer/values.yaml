@@ -10,26 +10,35 @@ global:
     url: "http://keycloak:8080"
     realm: "bank"
 
-postgresql:
-  username: "user"
-  password: "password"
+# Переменные окружения (не чувствительные)
+env:
+  JAVA_OPTS: "-Xmx512m -Xms256m"
+  LOGGING_LEVEL_ROOT: "INFO"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus"
 
-jwt:
-  secret: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
-  expiration: "86400000"
+# Секреты (чувствительные данные)
+# ⚠️ В production переопределять через --set или values-secret.yaml (не коммитить в git!)
+secrets:
+  # PostgreSQL credentials (DEV default: user/password)
+  DATABASE_USERNAME: "user"
+  DATABASE_PASSWORD: "password"
+  
+  # JWT Configuration (DEV default: mySecretKeyForJWTTokenGenerationMustBeLongEnough)
+  JWT_SECRET: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
+  JWT_EXPIRATION: "86400000"
+  
+  # OAuth2 Client Credentials (DEV default: transfer-secret)
+  OAUTH2_CLIENT_SECRET: "transfer-secret"
+  
+  # Keycloak URLs (DEV default: http://keycloak:8080/realms/bank)
+  KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/bank"
+  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
 
-oauth2:
-  clientId: "transfer-client"
-  clientSecret: "transfer-secret"
-
-keycloak:
-  issuerUri: "http://keycloak:8080/realms/bank"
-  jwkSetUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
-  tokenUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/token"
-
+# JPA настройки
 jpa:
   ddlMode: "validate"
 
+# Логирование
 logging:
   level: "INFO"
 

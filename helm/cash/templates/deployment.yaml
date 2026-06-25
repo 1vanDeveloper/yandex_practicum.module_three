@@ -28,6 +28,12 @@ spec:
               containerPort: 8080
               protocol: TCP
           env:
+            # Custom environment variables from values.yaml
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            # Standard environment variables
             - name: SPRING_PROFILES_ACTIVE
               valueFrom:
                 configMapKeyRef:

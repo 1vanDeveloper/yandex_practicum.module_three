@@ -6,19 +6,27 @@ global:
     url: "http://keycloak:8080"
     realm: "bank"
 
-jwt:
-  secret: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
-  expiration: "86400000"
+# Переменные окружения (не чувствительные)
+env:
+  JAVA_OPTS: "-Xmx512m -Xms256m"
+  LOGGING_LEVEL_ROOT: "INFO"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus"
 
-oauth2:
-  clientId: "gateway-client"
-  clientSecret: "gateway-secret"
+# Секреты (чувствительные данные)
+# ⚠️ В production переопределять через --set или values-secret.yaml (не коммитить в git!)
+secrets:
+  # JWT Configuration (DEV default: mySecretKeyForJWTTokenGenerationMustBeLongEnough)
+  JWT_SECRET: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
+  JWT_EXPIRATION: "86400000"
+  
+  # OAuth2 Client Credentials (DEV default: gateway-secret)
+  OAUTH2_CLIENT_SECRET: "gateway-secret"
+  
+  # Keycloak URLs (DEV default: http://keycloak:8080/realms/bank)
+  KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/bank"
+  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
 
-keycloak:
-  issuerUri: "http://keycloak:8080/realms/bank"
-  jwkSetUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
-  tokenUri: "http://keycloak:8080/realms/bank/protocol/openid-connect/token"
-
+# Логирование
 logging:
   level: "DEBUG"
   gatewayLevel: "DEBUG"
