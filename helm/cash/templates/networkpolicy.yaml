@@ -14,6 +14,9 @@ spec:
         - podSelector:
             matchLabels:
               app: gateway
+        - podSelector:
+            matchLabels:
+              app: transfer
       ports:
         - protocol: TCP
           port: 8080
@@ -35,6 +38,20 @@ spec:
         - podSelector:
             matchLabels:
               app: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              app: accounts
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              app: notifications
       ports:
         - protocol: TCP
           port: 8080

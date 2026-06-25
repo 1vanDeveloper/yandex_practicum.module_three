@@ -93,6 +93,8 @@ public class GatewayRoutesConfig {
             // Cash service routes
             .route("cash", r -> r
                 .path("/gateway/cash")
+                .and()
+                .method(org.springframework.http.HttpMethod.POST)
                 .filters(f -> f
                     .rewritePath("/gateway/cash", "/cash")
                     .circuitBreaker(config -> config
@@ -103,6 +105,8 @@ public class GatewayRoutesConfig {
             // Transfer service routes
             .route("transfer", r -> r
                 .path("/gateway/transfer")
+                .and()
+                .method(org.springframework.http.HttpMethod.POST)
                 .filters(f -> f
                     .rewritePath("/gateway/transfer", "/transfer")
                     .circuitBreaker(config -> config

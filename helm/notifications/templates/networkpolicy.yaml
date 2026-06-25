@@ -14,6 +14,12 @@ spec:
         - podSelector:
             matchLabels:
               app: accounts
+        - podSelector:
+            matchLabels:
+              app: cash
+        - podSelector:
+            matchLabels:
+              app: transfer
       ports:
         - protocol: TCP
           port: 8080

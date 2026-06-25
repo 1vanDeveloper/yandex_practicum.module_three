@@ -63,7 +63,7 @@ public class AuthController {
         try {
             JwtTokenResponse tokenResponse = gatewayService.login(loginRequest).join();
             log.info("AuthController: user {} authenticated successfully, token length: {}", login, tokenResponse.getToken() != null ? tokenResponse.getToken().length() : "null");
-            
+
             // Извлекаем привилегии из JWT токена
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
             try {
@@ -83,7 +83,7 @@ public class AuthController {
             } catch (Exception e) {
                 log.warn("Failed to extract privileges from JWT: {}", e.getMessage());
             }
-            
+
             // Создаём Authentication объект
             UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
@@ -91,13 +91,13 @@ public class AuthController {
                     tokenResponse.getToken(),
                     authorities
                 );
-            
+
             // Сохраняем в SecurityContext
             var securityContext =
                 SecurityContextHolder.createEmptyContext();
             securityContext.setAuthentication(authentication);
             SecurityContextHolder.setContext(securityContext);
-            
+
             // Сохраняем SecurityContext и JWT токен в сессии
             HttpSession session = request.getSession(true);
             session.setAttribute("SPRING_SECURITY_CONTEXT", securityContext);
