@@ -41,19 +41,19 @@ public class IntegrationTestConfig {
     @Primary
     public OAuth2AuthorizedClientManager authorizedClientManager() {
         OAuth2AuthorizedClientManager manager = mock(OAuth2AuthorizedClientManager.class);
-        
+
         OAuth2AccessToken accessToken = new OAuth2AccessToken(
                 OAuth2AccessToken.TokenType.BEARER,
                 "test-token",
                 Instant.now(),
                 Instant.now().plusSeconds(3600)
         );
-        
+
         OAuth2AuthorizedClient authorizedClient = mock(OAuth2AuthorizedClient.class);
         when(authorizedClient.getAccessToken()).thenReturn(accessToken);
-        
+
         when(manager.authorize(any(OAuth2AuthorizeRequest.class))).thenReturn(authorizedClient);
-        
+
         return manager;
     }
 
@@ -68,7 +68,7 @@ public class IntegrationTestConfig {
                 .authorizationGrantType(org.springframework.security.oauth2.core.AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .tokenUri("http://localhost:8080/token")
                 .build();
-        
+
         return new InMemoryClientRegistrationRepository(dummyClient);
     }
 

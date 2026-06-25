@@ -23,11 +23,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Integration tests for NotificationController with Keycloak JWT authentication.
- * 
- * Перед запуском убедитесь, что сервисы запущены:
- * docker-compose up -d keycloak postgres
- * 
- * Тесты используют реальные JWT токены от Keycloak (localhost:8180).
+ *
+ * Перед запуском убедитесь, что настроен port-forward:
+ *   kubectl port-forward svc/keycloak 8180:8080 &
+ *   kubectl port-forward svc/postgresql 5432:5432 &
+ *
+ * Тесты используют service account JWT токены от Keycloak для межсервисного взаимодействия.
+ * Пользователи получают токены через accounts service, а не напрямую от Keycloak.
  * Запуск: ./gradlew :notifications:test --tests "*KeycloakIntegrationTest*" -Dspring.profiles.active=keycloak
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -51,26 +53,6 @@ class NotificationControllerKeycloakIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         objectMapper = new ObjectMapper();
         notificationRepository.deleteAll();
-    }
-
-    @Test
-    @DisplayName("POST /notifications/notificate - с валидным JWT токеном от Keycloak (user token)")
-    void notificate_withValidUserJwtToken_shouldReturnOk() throws Exception {
-        // Получаем токен пользователя от Keycloak (realm-export.json: user/password)
-        String token = KeycloakTokenUtil.getUserToken("user", "password");
-
-        NotificationRequest request = NotificationRequest.builder()
-            .login("test_user")
-            .message("Test with JWT authentication")
-            .build();
-
-        mockMvc.perform(post("/notifications/notificate")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isOk());
-
-        assertEquals(1, notificationRepository.count());
     }
 
     @Test
