@@ -6,7 +6,7 @@
 
 - Редактирование данных аккаунта (ФИО, дата рождения)
 - Пополнение и снятие денег со счёта
-- Перевод денег между аккаунтами
+- Перевод денег между аккаунтам
 - Получение уведомлений об операциях
 
 ---
@@ -17,19 +17,18 @@
 
 | Сервис | Порт | Описание |
 |--------|------|----------|
-| **frontend** | 8081 | Веб-интерфейс (Thymeleaf + Spring Security OAuth2) |
-| **gateway** | 8086 | API Gateway (единая точка входа) |
-| **accounts** | 8082 | Сервис аккаунтов пользователей |
-| **cash** | 8084 | Сервис операций с наличными |
-| **transfer** | 8085 | Сервис переводов между аккаунтами |
-| **notifications** | 8083 | Сервис уведомлений |
+| **frontend** | 8080 | Веб-интерфейс (Thymeleaf + Spring Security OAuth2) |
+| **gateway** | 8080 | API Gateway (единая точка входа) |
+| **accounts** | 8080 | Сервис аккаунтов пользователей |
+| **cash** | 8080 | Сервис операций с наличными |
+| **transfer** | 8080 | Сервис переводов между аккаунтами |
+| **notifications** | 8080 | Сервис уведомлений |
 
 ### Инфраструктура
 
 | Компонент | Порт | Описание |
 |-----------|------|----------|
-| **Consul** | 8500 | Service Discovery |
-| **Keycloak** | 8180 | OAuth2/OIDC провайдер |
+| **Keycloak** | 8080 | OAuth2/OIDC провайдер |
 | **PostgreSQL** | 5432 | Основная БД (schema per service) |
 
 ### Схема взаимодействия
@@ -37,7 +36,7 @@
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Browser   │ ──► │  Frontend   │ ──► │   Gateway   │
-│ (port 8081) │     │ (port 8081) │     │ (port 8086) │
+│  (NodePort) │     │  (ClusterIP)│     │ (ClusterIP) │
 └─────────────┘     └─────────────┘     └──────┬──────┘
                                                │
          ┌─────────────────────────────────────┼─────────────────────────────────────┐
@@ -45,7 +44,7 @@
          ▼                                     ▼                                     ▼
 ┌─────────────────┐              ┌─────────────────┐              ┌─────────────────┐
 │    Accounts     │              │      Cash       │              │    Transfer     │
-│   (port 8082)   │              │   (port 8084)   │              │   (port 8085)   │
+│   (ClusterIP)   │              │  (ClusterIP)    │              │  (ClusterIP)    │
 │  + PostgreSQL   │              │  + PostgreSQL   │              │  + PostgreSQL   │
 │  + Outbox       │              │                 │              │                 │
 └────────┬────────┘              └────────┬────────┘              └────────┬────────┘
@@ -55,7 +54,7 @@
                                           ▼
                                  ┌─────────────────┐
                                  │  Notifications  │
-                                 │   (port 8083)   │
+                                 │  (ClusterIP)    │
                                  │  + PostgreSQL   │
                                  └─────────────────┘
 ```
@@ -78,12 +77,12 @@
 - **Spring Data JPA** (PostgreSQL)
 - **Spring Security OAuth2** (Keycloak)
 - **Spring Cloud Gateway**
-- **Consul** (Service Discovery)
+- **Kubernetes** (Service Discovery через DNS)
 - **Resilience4j** (Circuit Breaker)
 - **Spring Cloud Contract** (Contract Testing)
 - **OpenAPI 3.0** (Swagger)
 - **Lombok**
-- **Docker & Docker Compose**
+- **Docker & Helm**
 
 ---
 
@@ -91,278 +90,229 @@
 
 ### Предварительные требования
 
-- Docker & Docker Compose
-- Java 21
-
-### Запуск всех сервисов
-
-```bash
-make up-local-infra
-# или
-docker-compose up --force-recreate --renew-anon-volumes -d
-```
-
-### Остановка всех сервисов
-
-```bash
-make down-local-infra
-# или
-docker-compose down --remove-orphans -v
-```
-
-### Проверка статуса
-
-```bash
-docker-compose ps
-```
+- Java 21+
+- Docker
+- kubectl + Kubernetes кластер (Kind/K3s/minikube)
+- Helm 3.x
+- Git
 
 ---
 
-## Разработка
+## Локальная разработка
 
-### Сборка всех модулей
+### 1. Клонирование репозитория
+
+```bash
+git clone <repository-url>
+cd yandex_practicum.module_three
+```
+
+### 2. Сборка проекта
 
 ```bash
 ./gradlew build
 ```
 
-### Запуск отдельных сервисов (локально)
+### 3. Создание Kind кластера
 
 ```bash
-# Accounts service
-./gradlew :accounts:bootRun
+# Создание кластера (если не создан)
+kind create cluster --name bank
 
-# Cash service
-./gradlew :cash:bootRun
+# Проверка
+kubectl cluster-info
+kubectl get nodes
+```
 
-# Transfer service
-./gradlew :transfer:bootRun
+### 4. Развёртывание приложения
 
-# Notifications service
-./gradlew :notifications:bootRun
+```bash
+# Сборка Docker образов и загрузка в Kind
+make kind-load
 
-# Gateway service
-./gradlew :gateway:bootRun
+# Развёртывание через Helm
+make k8s-deploy
 
-# Frontend service
-./gradlew :frontend:bootRun
+# Или вручную:
+# helm upgrade --install bank helm/bank --timeout 5m --wait
+```
+
+### 5. Проверка статуса
+
+```bash
+# Проверка подов
+kubectl get pods -l app.kubernetes.io/part-of=bank
+
+# Проверка сервисов
+kubectl get svc
+
+# Проверка логов
+kubectl logs -l app=accounts -f
+```
+
+### 6. Доступ к приложению
+
+```bash
+# Frontend доступен через NodePort 30813
+open http://localhost:30813
+
+# Keycloak Admin Console
+open http://localhost:8180
+# Логин: admin / Пароль: admin
+# Realm: bank
+```
+
+### 7. Port-forward для отладки
+
+```bash
+# PostgreSQL для интеграционных тестов
+kubectl port-forward svc/postgresql 5432:5432 &
+
+# Keycloak для интеграционных тестов
+kubectl port-forward svc/keycloak 8180:8080 &
+
+# Frontend
+kubectl port-forward svc/frontend 8080:8080
 ```
 
 ---
 
 ## Тестирование
 
-### Запуск всех тестов
+### Все тесты
 
 ```bash
+make test
+# или
 ./gradlew test contractTest
 ```
 
-### Покрытие тестами
+### Unit-тесты
 
-| Сервис | Unit | Integration | Contract |
-|--------|------|-------------|----------|
-| **accounts** | ✓ | ✓ | ✓ |
-| **cash** | ✓ | ✓ | ✓ |
-| **transfer** | ✓ | ✓ | ✓ |
-| **notifications** | ✓ | ✓ | ✓ |
-| **gateway** | ✓ | ✓ | — |
-| **frontend** | ✓ | ✓ | — |
+```bash
+./gradlew test
+```
 
 ### Интеграционные тесты
 
-**notifications:**
-- `NotificationServiceIntegrationTest` — тесты сервиса с PostgreSQL
-- `NotificationControllerIntegrationTest` — тесты контроллера без аутентификации
-- `NotificationControllerKeycloakIntegrationTest` — тесты с JWT токенами от Keycloak
+**Требования:** Запущены PostgreSQL и Keycloak через port-forward
 
-**accounts:**
-- `OutboxServiceIntegrationTest` — тесты outbox паттерна
-- `OutboxProcessorIntegrationTest` — тесты обработки outbox сообщений
-- `OutboxSchedulerIntegrationTest` — тесты планировщика
+```bash
+# Настроить port-forward
+kubectl port-forward svc/postgresql 5432:5432 &
+kubectl port-forward svc/keycloak 8180:8080 &
 
-**cash:**
-- `CashServiceIntegrationTest` — тесты сервиса с PostgreSQL (транзакции, поиск по статусу/логину)
+# Accounts
+./gradlew :accounts:test --tests "*IntegrationTest*"
 
-**transfer:**
-- `TransferServiceIntegrationTest` — тесты сервиса с PostgreSQL (переводы, поиск по отправителю/получателю)
+# Cash
+./gradlew :cash:test --tests "*IntegrationTest*"
 
-**gateway:**
-- `GatewayRoutesIntegrationTest` — тесты маршрутизации
-- `GatewaySecurityIntegrationTest` — тесты безопасности
+# Transfer
+./gradlew :transfer:test --tests "*IntegrationTest*"
+
+# Notifications
+./gradlew :notifications:test --tests "*IntegrationTest*"
+
+# Gateway
+./gradlew :gateway:test --tests "*IntegrationTest*"
+```
 
 ### Контрактные тесты
 
-Контракты расположены в `src/contractTest/resources/contracts/`:
+```bash
+./gradlew contractTest
+```
+
+### Helm-тесты
+
+**Требования:** Установлен плагин helm-unittest
 
 ```bash
-# Accounts contracts (7 контрактов)
-accounts/src/contractTest/resources/contracts/
+# Установка плагина
+helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false
 
-# Cash contracts (2 контракта)
-cash/src/contractTest/resources/contracts/
+# Запуск тестов
+make helm-test
 
-# Transfer contracts (1 контракт)
-transfer/src/contractTest/resources/contracts/
+# Только lint
+make helm-lint
 
-# Notifications contracts (1 контракт)
-notifications/src/contractTest/resources/contracts/
+# Только unit-тесты
+make helm-unit-test
 ```
 
 ---
 
-## OAuth2 Аутентификация
+## Развёртывание в Kubernetes
 
-### Authorization Code Flow (Frontend)
+### Предварительные требования
 
-Пользователь аутентифицируется через Keycloak:
+- Kubernetes кластер (Kind/K3s/minikube)
+- kubectl настроен на кластер
+- Helm 3.x установлен
 
-```
-Browser → Frontend (/login) → Keycloak → Frontend (JWT в сессии)
-```
-
-**Конфигурация:**
-- Client ID: `frontend-client`
-- Client Secret: `frontend-secret`
-- Redirect URI: `http://localhost:8081/login/oauth2/code/frontend-client`
-- Scopes: `openid, profile, email`
-
-### Client Credentials Flow (Межсервисное взаимодействие)
-
-Сервисы аутентифицируются друг перед другом:
-
-```
-Frontend → Gateway → Accounts (с JWT токеном)
-```
-
-**Конфигурация сервисов:**
-
-| Сервис | Client ID | Client Secret |
-|--------|-----------|---------------|
-| accounts | `accounts-client` | `accounts-secret` |
-| cash | `cash-client` | `cash-secret` |
-| transfer | `transfer-client` | `transfer-secret` |
-| gateway | `gateway-client` | `gateway-secret` |
-
-### Тестовые пользователи Keycloak
-
-| Username | Password | Roles |
-|----------|----------|-------|
-| `user` | `password` | `user` |
-| `admin` | `admin` | `admin, user` |
-
----
-
-## API Документация
-
-### OpenAPI спецификация
-
-Сервис **gateway** предоставляет OpenAPI документацию:
+### 1. Подготовка кластера
 
 ```bash
-# Генерация OpenAPI docs
-./gradlew :gateway:generateOpenApiDocs
+# Для Kind: создание кластера
+kind create cluster --name bank
 
-# Путь к файлу
-gateway/build/openapi.json
+# Загрузка Docker образов
+make kind-load
 ```
 
-### Swagger UI
-
-После запуска gateway сервис доступен по адресу:
-
-```
-http://localhost:8086/swagger-ui.html
-```
-
-### Основные эндпоинты
-
-| Метод | Путь | Описание |
-|-------|------|----------|
-| `GET` | `/gateway/account` | Получить данные аккаунта |
-| `PUT` | `/gateway/account` | Обновить данные аккаунта |
-| `POST` | `/gateway/cash` | Пополнить/снять деньги |
-| `POST` | `/gateway/transfer` | Перевод на другой аккаунт |
-| `GET` | `/gateway/accounts` | Список аккаунтов для перевода |
-
----
-
-## База данных
-
-PostgreSQL инициализируется схемой и тестовыми данными:
-
-| Файл | Описание |
-|------|----------|
-| `scripts/schema.sql` | Схема базы данных |
-| `scripts/data.sql` | Тестовые данные |
-
-### Структура БД
-
-```sql
-accounts.accounts          -- Аккаунты пользователей
-accounts.outbox_messages   -- Outbox для событий (Transactional Outbox pattern)
-cash.cash_transactions     -- Транзакции наличных
-transfer.transfers         -- Переводы между аккаунтами
-notifications.notifications-- Уведомления
-```
-
----
-
-## Проверка работоспособности
-
-### Health Check эндпоинты
-
-| Сервис | URL |
-|--------|-----|
-| Frontend | `http://localhost:8081/actuator/health` |
-| Gateway | `http://localhost:8086/actuator/health` |
-| Accounts | `http://localhost:8082/actuator/health` |
-| Cash | `http://localhost:8084/actuator/health` |
-| Transfer | `http://localhost:8085/actuator/health` |
-| Notifications | `http://localhost:8083/actuator/health` |
-
-### Consul UI
-
-Service Discovery доступен по адресу:
-
-```
-http://localhost:8500
-```
-
-### Keycloak Admin Console
-
-```
-http://localhost:8180
-Логин: admin
-Пароль: admin
-Realm: bank
-```
-
----
-
-## Docker
-
-### Сборка образов
+### 2. Установка Helm-чартов
 
 ```bash
-docker-compose build
+# Установка приложения
+make k8s-deploy
+
+# Или вручную:
+helm upgrade --install bank helm/bank --timeout 5m --wait
 ```
 
-### Просмотр логов
+### 3. Проверка статуса
 
 ```bash
-# Все сервисы
-docker-compose logs -f
+# Проверка подов
+kubectl get pods -l app.kubernetes.io/part-of=bank
 
-# Конкретный сервис
-docker-compose logs -f accounts
+# Проверка сервисов
+kubectl get svc
+
+# Проверка логов
+kubectl logs -l app=frontend -f
+kubectl logs -l app=gateway -f
 ```
 
-### Пересборка конкретного сервиса
+### 4. Доступ к приложению
 
 ```bash
-docker-compose build accounts
-docker-compose up -d accounts
+# Frontend доступен через NodePort 30813
+open http://localhost:30813
+
+# Или через port-forward
+kubectl port-forward svc/frontend 8080:8080
+open http://localhost:8080
+```
+
+### 5. Управление релизом
+
+```bash
+# Просмотр статуса
+helm status bank
+
+# История релизов
+helm history bank
+
+# Откат к предыдущей версии
+make k8s-rollback
+# или: helm rollback bank
+
+# Удаление
+make k8s-delete
+# или: helm uninstall bank
 ```
 
 ---
@@ -371,118 +321,198 @@ docker-compose up -d accounts
 
 | Команда | Описание |
 |---------|----------|
-| `make up-local-infra` | Запуск всех сервисов |
-| `make down-local-infra` | Остановка всех сервисов |
 | `make build` | Сборка всех модулей |
-| `make test` | Запуск тестов |
+| `make docker-build` | Сборка Docker образов |
+| `make kind-load` | Загрузка образов в Kind кластер |
+| `make k8s-deploy` | Развёртывание в Kubernetes |
+| `make k8s-rollback` | Откат релиза |
+| `make k8s-status` | Проверка статуса подов и сервисов |
+| `make k8s-logs` | Просмотр логов |
+| `make k8s-delete` | Удаление релиза |
+| `make k8s-port-forward` | Port-forward для отладки |
+| `make helm-lint` | Helm lint всех чартов |
+| `make helm-unit-test` | Helm unit-тесты |
+| `make helm-test` | Helm lint + unit-тесты |
+| `make helm-template` | Рендеринг Helm шаблонов |
+| `make dev` | Полный цикл: build + kind-load + k8s-deploy |
+| `make test` | Запуск всех тестов |
+
+---
+
+## API Документация
+
+### Swagger UI
+
+```bash
+# Port-forward для gateway
+kubectl port-forward svc/gateway 8086:8080
+
+# Swagger UI доступен по адресу
+open http://localhost:8086/swagger-ui.html
+```
+
+### Генерация OpenAPI
+
+```bash
+./gradlew :gateway:generateOpenApiDocs
+# Файл: gateway/build/openapi.json
+```
+
+### Основные эндпоинты
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/gateway/account` | Данные аккаунта |
+| `PUT` | `/gateway/account` | Обновление аккаунта |
+| `POST` | `/gateway/cash` | Пополнить/снять деньги |
+| `POST` | `/gateway/transfer` | Перевод между аккаунтами |
+| `GET` | `/gateway/accounts` | Список аккаунтов |
+
+---
+
+## База данных
+
+### Структура БД
+
+```sql
+-- Schema: accounts
+accounts.accounts           -- Аккаунты пользователей
+accounts.outbox_messages    -- Outbox для событий
+
+-- Schema: cash
+cash.cash_transactions      -- Транзакции наличных
+
+-- Schema: transfer
+transfer.transfers          -- Переводы между аккаунтами
+
+-- Schema: notifications
+notifications.notifications -- Уведомления
+```
+
+### Инициализация
+
+```bash
+# Схема и данные создаются автоматически при старте PostgreSQL
+scripts/schema.sql   -- Схема БД
+scripts/data.sql     -- Тестовые данные
+```
+
+---
+
+## OAuth2 Аутентификация
+
+### Пользователи (Authorization Code Flow)
+
+```
+Browser → Frontend → Keycloak → Frontend (JWT в сессии)
+```
+
+**Конфигурация:**
+- Client ID: `frontend-client`
+- Client Secret: `frontend-secret`
+- Redirect URI: `http://localhost:30813/login/oauth2/code/frontend-client`
+
+### Межсервисное взаимодействие (Client Credentials)
+
+| Сервис | Client ID | Client Secret |
+|--------|-----------|---------------|
+| accounts | `accounts-client` | `accounts-secret` |
+| cash | `cash-client` | `cash-secret` |
+| transfer | `transfer-client` | `transfer-secret` |
+| gateway | `gateway-client` | `gateway-secret` |
+
+### Тестовые пользователи
+
+| Username | Password | Roles |
+|----------|----------|-------|
+| `user` | `password` | `user` |
+| `admin` | `admin` | `admin, user` |
 
 ---
 
 ## Troubleshooting
 
-### Ошибка: "No gateway instances found in Consul"
+### Ошибка: "ImagePullBackOff"
 
-**Причина:** Gateway сервис не зарегистрировался в Consul.
-
-**Решение:**
 ```bash
-docker-compose logs gateway
-docker-compose restart gateway
+# Убедитесь, что образы загружены в Kind
+make kind-load
+
+# Проверьте статус подов
+kubectl get pods
+
+# Пересоздайте поды
+kubectl rollout restart deployment accounts cash transfer notifications gateway frontend
 ```
 
 ### Ошибка: "JWT token is null"
 
-**Причина:** Пользователь не аутентифицирован.
-
-**Решение:** Перейти на `/login` и войти в систему.
+Перейти на `/login` и войти в систему через Keycloak.
 
 ### Ошибка: "Connection refused to PostgreSQL"
 
-**Причина:** PostgreSQL контейнер не запущен.
-
-**Решение:**
 ```bash
-docker-compose ps postgres
-docker-compose up -d postgres
-```
+# Проверить статус PostgreSQL
+kubectl get pods -l app=postgresql
 
-### Ошибка: "Keycloak realm not found"
-
-**Причина:** Realm не импортирован при старте.
-
-**Решение:**
-```bash
-docker-compose down -v
-docker-compose up --force-recreate -d
-```
-
-### Ошибка: "CircuitBreaker has exceeded failure rate threshold"
-
-**Причина:** Сервис-получатель недоступен или отвечает слишком медленно.
-
-**Решение:**
-```bash
-# Проверить статус сервиса
-docker-compose ps <service-name>
-
-# Проверить логи сервиса
-docker-compose logs -f <service-name>
-
-# Перезапустить сервис
-docker-compose restart <service-name>
-
-# Если проблема в сети — проверить Consul
-curl http://localhost:8500/v1/catalog/services
+# Проверить логи
+kubectl logs -l app=postgresql
 ```
 
 ### Ошибка: "CircuitBreaker is OPEN"
 
-**Причина:** CircuitBreaker открыт после серии неудачных запросов.
-
-**Решение:**
 ```bash
-# Подождать автоматического закрытия (по умолчанию 30 сек)
-# Или перезапустить gateway
-docker-compose restart gateway
+# Подождать 30 сек или перезапустить gateway
+kubectl rollout restart deployment gateway
 
-# Проверить метрики CircuitBreaker
+# Проверить метрики
+kubectl port-forward svc/gateway 8086:8080
 curl http://localhost:8086/actuator/circuitbreakerevents
-curl http://localhost:8086/actuator/circuitbreakerevents/<circuit-breaker-name>
 ```
 
 ### Ошибка: "No servers available for service: accounts-service"
 
-**Причина:** Сервис не зарегистрирован в Consul Discovery.
-
-**Решение:**
 ```bash
-# Проверить регистрацию в Consul
-curl http://localhost:8500/v1/catalog/service/accounts-service
+# Проверить статус сервиса
+kubectl get svc accounts
+kubectl get endpoints accounts
 
-# Проверить логи сервиса
-docker-compose logs accounts
-
-# Убедиться, что SPRING_CLOUD_CONSUL_HOST настроен правильно
-docker-compose exec accounts env | grep CONSUL
+# Проверить поды
+kubectl get pods -l app=accounts
 
 # Перезапустить сервис
-docker-compose restart accounts
+kubectl rollout restart deployment accounts
 ```
 
-### Ошибка: "Consul health check failed"
+### Ошибка интеграционных тестов: "Connection refused"
 
-**Причина:** Health check сервиса не проходит.
-
-**Решение:**
 ```bash
-# Проверить health check в Consul
-curl http://localhost:8500/v1/health/checks/accounts-service
+# Запустить port-forward для тестов
+kubectl port-forward svc/postgresql 5432:5432 &
+kubectl port-forward svc/keycloak 8180:8080 &
 
-# Проверить actuator health
-curl http://localhost:8082/actuator/health
+# Запустить тесты
+./gradlew :cash:test --tests "*IntegrationTest*"
+```
 
-# Перезапустить сервис
-docker-compose restart accounts
+### Ошибка: "helm: command not found"
+
+```bash
+# Установка Helm
+brew install helm  # macOS
+# или
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
+
+### Ошибка: "kind: command not found"
+
+```bash
+# Установка Kind
+brew install kind  # macOS
+# или
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
+chmod +x ./kind
+sudo mv ./kind /usr/local/bin/kind
 ```
 
 ---
@@ -496,10 +526,7 @@ docker-compose restart accounts
 > - Настроить HTTPS
 > - Использовать сложные пароли
 > - Отключить дефолтные учётные данные
-> - Установить `KC_HOSTNAME_STRICT_HTTPS=true`
-> - Использовать внешнюю базу данных (PostgreSQL) вместо `dev-file`
-> - Настроить CORS для конкретных доменов
-> - Включить audit logging событий аутентификации
+> - Использовать внешнюю базу данных вместо `dev-file`
 
 ---
 

@@ -1,13 +1,52 @@
-down-local-infra:
-	docker-compose down --remove-orphans -v
-
-up-local-infra:
-	docker-compose down --remove-orphans -v\
-    docker-compose build --no-cache\
-    docker-compose up --force-recreate --renew-anon-volumes -d
-
+# Build
 build:
 	./gradlew bootJar
+
+# Build Docker images
+docker-build:
+	docker build -t bank-accounts:latest -f Dockerfile . --build-arg SERVICE_NAME=accounts
+	docker build -t bank-cash:latest -f Dockerfile . --build-arg SERVICE_NAME=cash
+	docker build -t bank-transfer:latest -f Dockerfile . --build-arg SERVICE_NAME=transfer
+	docker build -t bank-notifications:latest -f Dockerfile . --build-arg SERVICE_NAME=notifications
+	docker build -t bank-gateway:latest -f Dockerfile . --build-arg SERVICE_NAME=gateway
+	docker build -t bank-frontend:latest -f Dockerfile . --build-arg SERVICE_NAME=frontend
+
+# Load images into Kind cluster
+kind-load: docker-build
+	kind load docker-image bank-accounts:latest
+	kind load docker-image bank-cash:latest
+	kind load docker-image bank-transfer:latest
+	kind load docker-image bank-notifications:latest
+	kind load docker-image bank-gateway:latest
+	kind load docker-image bank-frontend:latest
+
+# Kubernetes deployment
+k8s-deploy:
+	helm upgrade --install bank helm/bank --timeout 5m --wait
+
+k8s-rollback:
+	helm rollback bank
+
+k8s-status:
+	kubectl get pods -l app.kubernetes.io/part-of=bank
+	kubectl get svc
+
+k8s-logs:
+	kubectl logs -l app=accounts -f
+
+k8s-delete:
+	helm uninstall bank
+
+# Port forwarding
+k8s-port-forward:
+	@echo "Starting port-forwarding..."
+	kubectl port-forward svc/frontend 30813:8080 &
+	kubectl port-forward svc/postgresql 5432:5432 &
+	kubectl port-forward svc/keycloak 8180:8080
+	@echo "Port-forwarding started:"
+	@echo "  Frontend: http://localhost:30813"
+	@echo "  PostgreSQL: localhost:5432"
+	@echo "  Keycloak: http://localhost:8180"
 
 # Helm tests
 helm-lint:
@@ -35,10 +74,15 @@ helm-template:
 	@echo "Rendering Helm templates..."
 	helm template bank helm/bank --debug
 
-helm-upgrade:
-	@echo "Upgrading Helm release..."
-	helm upgrade bank helm/bank --timeout 5m --wait
+# Full local development cycle
+dev: build kind-load k8s-deploy
+	@echo "Development environment ready!"
+	@echo "Frontend: http://localhost:30813"
+	@echo "Keycloak Admin: http://localhost:8180 (admin/admin)"
 
-helm-rollback:
-	@echo "Rolling back Helm release..."
-	helm rollback bank
+# Test all
+test:
+	./gradlew test contractTest
+	@echo "All tests passed!"
+
+.PHONY: build docker-build kind-load k8s-deploy k8s-rollback k8s-status k8s-logs k8s-delete k8s-port-forward helm-lint helm-unit-test helm-test helm-template dev test

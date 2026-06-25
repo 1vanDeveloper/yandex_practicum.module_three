@@ -22,7 +22,7 @@ val springCloudVersion = "2025.1.0"
 dependencies {
     // 1. Подключаем платформу Spring Boot для управления версиями
     implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
-    // 2. Подключаем платформу Spring Cloud (для consul-discovery и consul-config)
+    // 2. Подключаем платформу Spring Cloud
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
 
     // Spring Boot
