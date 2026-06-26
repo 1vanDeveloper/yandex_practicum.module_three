@@ -1,0 +1,208 @@
+# Production окружение - боевое окружение
+# Все секреты должны быть в External Secrets Manager (Vault, AWS Secrets Manager, etc.)
+
+# Глобальные настройки
+global:
+  imageRegistry: "registry.example.com/bank"
+  imageTag: "${BUILD_VERSION}"  # Конкретная версия, не latest!
+  
+  postgresql:
+    host: "postgresql-production"
+    port: 5432
+    database: "bank"
+  
+  keycloak:
+    url: "https://keycloak.example.com"
+    realm: "bank"
+
+# Accounts
+accounts:
+  replicaCount: 3
+  image:
+    repository: "bank-accounts"
+    tag: "${BUILD_VERSION}"
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    initialDelaySeconds: 45
+    periodSeconds: 5
+    failureThreshold: 3
+  podDisruptionBudget:
+    minAvailable: 2
+
+# Cash
+cash:
+  replicaCount: 3
+  image:
+    repository: "bank-cash"
+    tag: "${BUILD_VERSION}"
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+# Transfer
+transfer:
+  replicaCount: 3
+  image:
+    repository: "bank-transfer"
+    tag: "${BUILD_VERSION}"
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+# Notifications
+notifications:
+  replicaCount: 3
+  image:
+    repository: "bank-notifications"
+    tag: "${BUILD_VERSION}"
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+# Gateway
+gateway:
+  replicaCount: 3
+  image:
+    repository: "bank-gateway"
+    tag: "${BUILD_VERSION}"
+  service:
+    type: "LoadBalancer"
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+      service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:..."
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  podDisruptionBudget:
+    minAvailable: 2
+
+# Frontend
+frontend:
+  replicaCount: 3
+  image:
+    repository: "bank-frontend"
+    tag: "${BUILD_VERSION}"
+  service:
+    type: "ClusterIP"
+  ingress:
+    enabled: true
+    className: "nginx"
+    host: "bank.example.com"
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    tls:
+      - secretName: "bank-tls"
+        hosts:
+          - "bank.example.com"
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  podDisruptionBudget:
+    minAvailable: 2
+
+# PostgreSQL
+postgresql:
+  replicaCount: 1  # Для HA использовать StatefulSet с репликацией
+  image:
+    repository: "postgres"
+    tag: "14"
+  persistence:
+    enabled: true
+    size: "50Gi"
+    storageClass: "gp3"
+  resources:
+    limits:
+      cpu: "4000m"
+      memory: "8192Mi"
+    requests:
+      cpu: "2000m"
+      memory: "4096Mi"
+
+# Keycloak
+keycloak:
+  replicaCount: 3
+  image:
+    repository: "quay.io/keycloak/keycloak"
+    tag: "24.0.1"
+  keycloak:
+    adminUser: "admin"
+    adminPassword: "${KEYCLOAK_ADMIN_PASSWORD}"
+    db: "postgres"
+    hostnameStrict: true
+    hostnameStrictHttps: true
+    hostnameUrl: "https://keycloak.example.com"
+  resources:
+    limits:
+      cpu: "4000m"
+      memory: "4096Mi"
+    requests:
+      cpu: "2000m"
+      memory: "2048Mi"
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0

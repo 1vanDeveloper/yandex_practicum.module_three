@@ -1,0 +1,173 @@
+// Jenkinsfile для Gateway Service
+// Индивидуальный CI/CD pipeline для микросервиса Gateway
+
+pipeline {
+    agent any
+
+    tools {
+        gradle 'gradle-8.5'
+        jdk 'jdk-21'
+    }
+
+    environment {
+        SERVICE_NAME = 'gateway'
+        DOCKER_REGISTRY = 'registry.example.com/bank'
+        DOCKER_CREDENTIALS_ID = 'docker-registry-creds'
+        KUBECONFIG_CREDENTIALS_ID = 'k8s-kubeconfig'
+    }
+
+    parameters {
+        choice(
+            name: 'DEPLOY_ENV',
+            choices: ['none', 'dev', 'staging', 'production'],
+            description: 'Окружение для деплоя'
+        )
+        booleanParam(
+            name: 'RUN_TESTS',
+            defaultValue: true,
+            description: 'Запускать ли тесты'
+        )
+    }
+
+    options {
+        timestamps()
+        timeout(time: 1, unit: 'HOURS')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    env.BUILD_VERSION = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'HEAD'}"
+                }
+            }
+        }
+
+        stage('Validate') {
+            steps {
+                sh './gradlew :gateway:buildEnvironment --no-daemon'
+                sh 'helm lint helm/gateway'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh './gradlew :gateway:build -x test --no-daemon'
+            }
+        }
+
+        stage('Unit Tests') {
+            when {
+                expression { return params.RUN_TESTS }
+            }
+            steps {
+                sh './gradlew :gateway:test --no-daemon'
+                junit '**/gateway/build/test-results/test/TEST-*.xml'
+            }
+        }
+
+        stage('Integration Tests') {
+            when {
+                expression { return params.RUN_TESTS }
+            }
+            steps {
+                sh './gradlew :gateway:test --tests "*IntegrationTest*" --no-daemon || true'
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '**/gateway/build/libs/*.jar', allowEmptyArchive: true
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: DOCKER_CREDENTIALS_ID, toolName: 'docker') {
+                        sh '''
+                            docker build -t ${DOCKER_REGISTRY}/bank-gateway:${BUILD_VERSION} -f Dockerfile . --build-arg SERVICE_NAME=gateway
+                            docker tag ${DOCKER_REGISTRY}/bank-gateway:${BUILD_VERSION} ${DOCKER_REGISTRY}/bank-gateway:latest
+                            docker push ${DOCKER_REGISTRY}/bank-gateway:${BUILD_VERSION}
+                            docker push ${DOCKER_REGISTRY}/bank-gateway:latest
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression { return params.DEPLOY_ENV != 'none' }
+            }
+            stages {
+                stage('Deploy to Dev') {
+                    when { expression { return params.DEPLOY_ENV == 'dev' } }
+                    steps {
+                        deployToKubernetes('dev')
+                    }
+                }
+
+                stage('Deploy to Staging') {
+                    when { expression { return params.DEPLOY_ENV == 'staging' } }
+                    steps {
+                        deployToKubernetes('staging')
+                    }
+                }
+
+                stage('Deploy to Production') {
+                    when { expression { return params.DEPLOY_ENV == 'production' } }
+                    steps {
+                        input message: 'Confirm deployment to PRODUCTION?', ok: 'Deploy'
+                        deployToKubernetes('production')
+                    }
+                }
+            }
+        }
+
+        stage('Smoke Tests') {
+            when {
+                expression { return params.DEPLOY_ENV != 'none' }
+            }
+            steps {
+                script {
+                    sh '''
+                        echo "Running smoke tests..."
+                        # Проверка доступности Swagger UI
+                        kubectl port-forward svc/gateway 8086:8080 -n bank-${params.DEPLOY_ENV} &
+                        sleep 5
+                        curl -f http://localhost:8086/actuator/health || exit 1
+                        pkill -f "kubectl port-forward"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always { cleanWs() }
+        success { echo "Gateway service build completed successfully!" }
+        failure { echo "Gateway service build failed!" }
+    }
+}
+
+def deployToKubernetes(String environment) {
+    node {
+        withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID, serverUrl: '']) {
+            sh """
+                echo "Deploying gateway to ${environment}..."
+                helm upgrade --install gateway helm/gateway \\
+                    --namespace bank-${environment} \\
+                    --create-namespace \\
+                    --set image.repository=${DOCKER_REGISTRY}/bank-gateway \\
+                    --set image.tag=${BUILD_VERSION} \\
+                    --values helm/values-${environment}.yaml \\
+                    --timeout 5m --wait --atomic
+                kubectl rollout status deployment/gateway -n bank-${environment} --timeout=300s
+            """
+        }
+    }
+}

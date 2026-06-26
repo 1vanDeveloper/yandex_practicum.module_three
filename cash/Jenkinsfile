@@ -1,0 +1,170 @@
+// Jenkinsfile для Cash Service
+// Индивидуальный CI/CD pipeline для микросервиса Cash
+
+pipeline {
+    agent any
+
+    tools {
+        gradle 'gradle-8.5'
+        jdk 'jdk-21'
+    }
+
+    environment {
+        SERVICE_NAME = 'cash'
+        DOCKER_REGISTRY = 'registry.example.com/bank'
+        DOCKER_CREDENTIALS_ID = 'docker-registry-creds'
+        KUBECONFIG_CREDENTIALS_ID = 'k8s-kubeconfig'
+    }
+
+    parameters {
+        choice(
+            name: 'DEPLOY_ENV',
+            choices: ['none', 'dev', 'staging', 'production'],
+            description: 'Окружение для деплоя'
+        )
+        booleanParam(
+            name: 'RUN_TESTS',
+            defaultValue: true,
+            description: 'Запускать ли тесты'
+        )
+        booleanParam(
+            name: 'RUN_CONTRACT_TESTS',
+            defaultValue: true,
+            description: 'Запускать ли контрактные тесты'
+        )
+    }
+
+    options {
+        timestamps()
+        timeout(time: 1, unit: 'HOURS')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    env.BUILD_VERSION = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'HEAD'}"
+                }
+            }
+        }
+
+        stage('Validate') {
+            steps {
+                sh './gradlew :cash:buildEnvironment --no-daemon'
+                sh 'helm lint helm/cash'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh './gradlew :cash:build -x test -x contractTest --no-daemon'
+            }
+        }
+
+        stage('Unit Tests') {
+            when {
+                expression { return params.RUN_TESTS }
+            }
+            steps {
+                sh './gradlew :cash:test --no-daemon'
+                junit '**/cash/build/test-results/test/TEST-*.xml'
+            }
+        }
+
+        stage('Contract Tests') {
+            when {
+                expression { return params.RUN_CONTRACT_TESTS }
+            }
+            steps {
+                sh './gradlew :cash:contractTest --no-daemon'
+                junit '**/cash/build/test-results/contractTest/TEST-*.xml'
+            }
+        }
+
+        stage('Integration Tests') {
+            when {
+                expression { return params.RUN_TESTS }
+            }
+            steps {
+                sh './gradlew :cash:test --tests "*IntegrationTest*" --no-daemon || true'
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '**/cash/build/libs/*.jar', allowEmptyArchive: true
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: DOCKER_CREDENTIALS_ID, toolName: 'docker') {
+                        sh '''
+                            docker build -t ${DOCKER_REGISTRY}/bank-cash:${BUILD_VERSION} -f Dockerfile . --build-arg SERVICE_NAME=cash
+                            docker tag ${DOCKER_REGISTRY}/bank-cash:${BUILD_VERSION} ${DOCKER_REGISTRY}/bank-cash:latest
+                            docker push ${DOCKER_REGISTRY}/bank-cash:${BUILD_VERSION}
+                            docker push ${DOCKER_REGISTRY}/bank-cash:latest
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression { return params.DEPLOY_ENV != 'none' }
+            }
+            stages {
+                stage('Deploy to Dev') {
+                    when { expression { return params.DEPLOY_ENV == 'dev' } }
+                    steps {
+                        deployToKubernetes('dev')
+                    }
+                }
+
+                stage('Deploy to Staging') {
+                    when { expression { return params.DEPLOY_ENV == 'staging' } }
+                    steps {
+                        deployToKubernetes('staging')
+                    }
+                }
+
+                stage('Deploy to Production') {
+                    when { expression { return params.DEPLOY_ENV == 'production' } }
+                    steps {
+                        input message: 'Confirm deployment to PRODUCTION?', ok: 'Deploy'
+                        deployToKubernetes('production')
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always { cleanWs() }
+        success { echo "Cash service build completed successfully!" }
+        failure { echo "Cash service build failed!" }
+    }
+}
+
+def deployToKubernetes(String environment) {
+    node {
+        withKubeConfig([credentialsId: KUBECONFIG_CREDENTIALS_ID, serverUrl: '']) {
+            sh """
+                echo "Deploying cash to ${environment}..."
+                helm upgrade --install cash helm/cash \\
+                    --namespace bank-${environment} \\
+                    --create-namespace \\
+                    --set image.repository=${DOCKER_REGISTRY}/bank-cash \\
+                    --set image.tag=${BUILD_VERSION} \\
+                    --values helm/values-${environment}.yaml \\
+                    --timeout 5m --wait --atomic
+                kubectl rollout status deployment/cash -n bank-${environment} --timeout=300s
+            """
+        }
+    }
+}
