@@ -7,11 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.concurrent.Executor;
 
 @Configuration
 @EnableAsync
@@ -28,28 +23,5 @@ public class WebConfiguration {
                         .contact(new Contact()
                                 .name("Yandex Practicum")
                                 .email("support@yandex.ru")));
-    }
-
-    @Bean(name = "taskExecutor")
-    public Executor taskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(50);
-        executor.setQueueCapacity(25);
-        executor.setThreadNamePrefix("accounts-async-");
-        // Передаём SecurityContext в async потоки
-        executor.setTaskDecorator(runnable -> {
-            SecurityContext context = SecurityContextHolder.getContext();
-            return () -> {
-                SecurityContextHolder.setContext(context);
-                try {
-                    runnable.run();
-                } finally {
-                    SecurityContextHolder.clearContext();
-                }
-            };
-        });
-        executor.initialize();
-        return executor;
     }
 }
