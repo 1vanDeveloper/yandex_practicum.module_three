@@ -75,10 +75,7 @@ spec:
                   name: {{ .Chart.Name }}-secrets
                   key: KEYCLOAK_JWK_SET_URI
             - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
+              value: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/token"
             - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTS_SERVICE_CLIENT_ID
               valueFrom:
                 configMapKeyRef:

@@ -10,20 +10,7 @@ data:
   GATEWAY_SERVICE_NAME: "{{ .Values.gateway.serviceName }}"
   SPRING_CLOUD_LOADBALANCER_ENABLED: "true"
 
-  # OAuth2 Client Configuration
-  # These reference secrets via environment variables
-  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI: "${KEYCLOAK_ISSUER_URI}"
-  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTHORIZATION_URI: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/auth"
-  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/token"
-  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_INFO_URI: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/userinfo"
-  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_JWK_SET_URI: "${KEYCLOAK_JWK_SET_URI}"
-  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_NAME_ATTRIBUTE: "preferred_username"
-
-  # OAuth2 Resource Server
-  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "${KEYCLOAK_ISSUER_URI}"
-  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "${KEYCLOAK_JWK_SET_URI}"
-
-  # Frontend Client Registration
+  # OAuth2 Client Configuration (non-sensitive)
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_ID: "{{ .Chart.Name }}-client"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_REDIRECT_URI: "http://localhost:8081/login/oauth2/code/{{ .Chart.Name }}-client"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_SCOPE: "openid,profile,email"

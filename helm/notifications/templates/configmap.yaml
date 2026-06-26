@@ -9,6 +9,4 @@ data:
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
   DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=notifications"
   SPRING_JPA_HIBERNATE_DDL_MODE: "{{ .Values.jpa.ddlMode }}"
-  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "${KEYCLOAK_ISSUER_URI}"
-  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "${KEYCLOAK_JWK_SET_URI}"
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS: "{{ .Values.logging.level }}"

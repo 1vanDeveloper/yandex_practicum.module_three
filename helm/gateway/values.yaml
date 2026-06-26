@@ -10,7 +10,6 @@ global:
 env:
   JAVA_OPTS: "-Xmx512m -Xms256m"
   LOGGING_LEVEL_ROOT: "INFO"
-  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus"
 
 # Секреты (чувствительные данные)
 # ⚠️ В production переопределять через -f helm/values-secret.yaml (не коммитить в git!)
