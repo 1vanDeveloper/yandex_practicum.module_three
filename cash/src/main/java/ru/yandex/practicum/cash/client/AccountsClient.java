@@ -2,6 +2,8 @@ package ru.yandex.practicum.cash.client;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import ru.yandex.practicum.cash.dto.DepositRequest;
@@ -20,9 +22,18 @@ public class AccountsClient {
 
     public AccountsClient(Executor asyncExecutor,
                           @Value("${accounts.service.url:http://accounts:8080}") String accountsServiceUrl) {
-        this.restClient = RestClient.create();
+        this.restClient = RestClient.builder()
+                .requestFactory(createRequestFactory())
+                .build();
         this.executor = asyncExecutor;
         this.accountsServiceUrl = accountsServiceUrl;
+    }
+
+    private ClientHttpRequestFactory createRequestFactory() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(5000);
+        factory.setReadTimeout(5000);
+        return factory;
     }
 
     public CompletableFuture<Void> deposit(DepositRequest request, String bearerToken) {
