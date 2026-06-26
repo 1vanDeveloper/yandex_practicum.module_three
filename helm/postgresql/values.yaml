@@ -11,9 +11,10 @@ service:
   port: 5432
 
 # Настройки PostgreSQL
+# ⚠️ В production переопределять через -f helm/values-secret.yaml (не коммитить в git!)
 postgresql:
   username: "user"
-  password: "password"
+  password: "password"  # Заменить в production или использовать values-secret.yaml
   database: "bank"
   dataDir: "/data/postgres"
 

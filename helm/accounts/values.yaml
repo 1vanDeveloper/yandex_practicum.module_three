@@ -17,22 +17,23 @@ env:
   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus"
 
 # Секреты (чувствительные данные)
-# ⚠️ В production переопределять через --set или values-secret.yaml (не коммитить в git!)
-secrets:
-  # PostgreSQL credentials (DEV default: user/password)
-  DATABASE_USERNAME: "user"
-  DATABASE_PASSWORD: "password"
-  
-  # JWT Configuration (DEV default: mySecretKeyForJWTTokenGenerationMustBeLongEnough)
-  JWT_SECRET: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
-  JWT_EXPIRATION: "86400000"
-  
-  # OAuth2 Client Credentials (DEV default: accounts-secret)
-  OAUTH2_CLIENT_SECRET: "accounts-secret"
-  
-  # Keycloak URLs (DEV default: http://keycloak:8080/realms/bank)
-  KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/bank"
-  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
+# ⚠️ В production переопределять через -f helm/values-secret.yaml (не коммитить в git!)
+# Пример: helm upgrade bank helm/bank -f helm/values-secret.yaml
+secrets: {}
+  # PostgreSQL credentials
+  # DATABASE_USERNAME: "user"
+  # DATABASE_PASSWORD: "change-me"
+
+  # JWT Configuration
+  # JWT_SECRET: "change-me-in-production"
+  # JWT_EXPIRATION: "86400000"
+
+  # OAuth2 Client Credentials
+  # OAUTH2_CLIENT_SECRET: "accounts-secret"
+
+  # Keycloak URLs
+  # KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/bank"
+  # KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
 
 # JPA настройки
 jpa:

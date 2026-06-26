@@ -16,14 +16,15 @@ env:
   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus"
 
 # Секреты (чувствительные данные)
-# ⚠️ В production переопределять через --set или values-secret.yaml (не коммитить в git!)
-secrets:
-  # OAuth2 Client Credentials (DEV default: frontend-secret)
-  OAUTH2_CLIENT_SECRET: "frontend-secret"
-  
-  # Keycloak URLs (DEV default: http://keycloak:8080/realms/bank)
-  KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/bank"
-  KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
+# ⚠️ В production переопределять через -f helm/values-secret.yaml (не коммитить в git!)
+# Пример: helm upgrade bank helm/bank -f helm/values-secret.yaml
+secrets: {}
+  # OAuth2 Client Credentials
+  # OAUTH2_CLIENT_SECRET: "frontend-secret"
+
+  # Keycloak URLs
+  # KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/bank"
+  # KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
 
 # Логирование
 logging:

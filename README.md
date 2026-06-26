@@ -526,14 +526,55 @@ brew install kubectl  # macOS
 
 ## Безопасность
 
+### Управление секретами
+
+> ⚠️ **Важно:** Секреты не должны храниться в git!
+
+**Для разработки (локально):**
+```bash
+# Использовать значения по умолчанию из values.yaml (не для production!)
+helm upgrade --install bank helm/bank
+```
+
+**Для production:**
+```bash
+# 1. Создать файл helm/values-secret.yaml (добавлен в .gitignore)
+cp helm/values-secret.yaml.example helm/values-secret.yaml
+
+# 2. Заполнить реальными секретами
+# helm/values-secret.yaml содержит примеры всех необходимых секретов
+
+# 3. Развернуть с секретами
+helm upgrade --install bank helm/bank -f helm/values-secret.yaml
+```
+
+**Структура values-secret.yaml:**
+```yaml
+accounts:
+  secrets:
+    JWT_SECRET: "your-super-secret-jwt-key"
+    DATABASE_PASSWORD: "secure-db-password"
+    OAUTH2_CLIENT_SECRET: "accounts-secret"
+
+postgresql:
+  secrets:
+    POSTGRES_PASSWORD: "secure-postgres-password"
+
+keycloak:
+  secrets:
+    KEYCLOAK_ADMIN_PASSWORD: "secure-admin-password"
+```
+
+### Keycloak конфигурация
+
 > ⚠️ **Внимание:** Текущая конфигурация Keycloak предназначена **ТОЛЬКО ДЛЯ РАЗРАБОТКИ**.
->
-> В production необходимо:
-> - Использовать `start` вместо `start-dev`
-> - Настроить HTTPS
-> - Использовать сложные пароли
-> - Отключить дефолтные учётные данные
-> - Использовать внешнюю базу данных вместо `dev-file`
+
+В production необходимо:
+- Использовать `start` вместо `start-dev`
+- Настроить HTTPS
+- Использовать сложные пароли
+- Отключить дефолтные учётные данные
+- Использовать внешнюю базу данных вместо `dev-file`
 
 ---
 
