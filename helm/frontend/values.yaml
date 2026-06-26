@@ -61,3 +61,15 @@ readinessProbe:
     port: 8080
   initialDelaySeconds: 30
   periodSeconds: 5
+
+# Ingress configuration (production)
+# For development: using NodePort (service.type: NodePort)
+# For production: enable ingress and disable NodePort
+ingress:
+  enabled: false
+  className: "nginx"
+  host: "bank.local"
+  controllerNamespace: "ingress-nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"

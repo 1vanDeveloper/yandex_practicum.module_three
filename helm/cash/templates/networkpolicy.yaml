@@ -10,13 +10,11 @@ spec:
     - Ingress
     - Egress
   ingress:
+    # Allow traffic only from gateway
     - from:
         - podSelector:
             matchLabels:
               app: gateway
-        - podSelector:
-            matchLabels:
-              app: transfer
       ports:
         - protocol: TCP
           port: 8080
@@ -27,6 +25,7 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    # Allow traffic to PostgreSQL
     - to:
         - podSelector:
             matchLabels:
@@ -34,6 +33,7 @@ spec:
       ports:
         - protocol: TCP
           port: 5432
+    # Allow traffic to Keycloak (for OAuth2)
     - to:
         - podSelector:
             matchLabels:
@@ -41,6 +41,7 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+    # Allow traffic to accounts (if needed for cross-service calls)
     - to:
         - podSelector:
             matchLabels:
@@ -48,6 +49,7 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+    # Allow traffic to notifications
     - to:
         - podSelector:
             matchLabels:

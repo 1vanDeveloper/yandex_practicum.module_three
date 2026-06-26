@@ -10,7 +10,11 @@ spec:
     - Ingress
     - Egress
   ingress:
-    - from: []
+    # Allow traffic only from frontend
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
       ports:
         - protocol: TCP
           port: 8080
@@ -21,6 +25,7 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    # Allow traffic to backend services
     - to:
         - podSelector:
             matchLabels:
@@ -49,6 +54,7 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+    # Allow traffic to Keycloak (for OAuth2)
     - to:
         - podSelector:
             matchLabels:
