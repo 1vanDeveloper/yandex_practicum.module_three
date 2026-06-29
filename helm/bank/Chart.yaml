@@ -13,8 +13,8 @@ dependencies:
     version: 0.1.0
     repository: "file://../keycloak"
   - name: kafka
-    version: 32.4.3
-    repository: "https://charts.bitnami.com/bitnami"
+    version: 13.0.9
+    repository: "https://sir5kong.github.io/kafka-helm-chart"
     condition: kafka.enabled
   - name: accounts
     version: 0.1.0

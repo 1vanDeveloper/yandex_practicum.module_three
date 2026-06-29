@@ -156,28 +156,42 @@ keycloak:
       cpu: "1000m"
       memory: "1024Mi"
 
-# Kafka (bitnami/kafka chart)
+# Kafka (sir5kong/kafka chart - KRaft mode)
 kafka:
   enabled: true
-  replicaCount: 3
   image:
-    registry: docker.io
-    repository: bitnami/kafka
-    tag: 3.6.1
+    repository: sir5kong/kafka
+    tag: "3.6.1"
     pullPolicy: IfNotPresent
-  persistence:
+  
+  controller:
     enabled: true
-    size: 20Gi
-  resources:
-    limits:
-      cpu: "2000m"
-      memory: "2048Mi"
-    requests:
-      cpu: "1000m"
-      memory: "1024Mi"
-  podDisruptionBudget:
-    enabled: true
-    minAvailable: 2
+    replicaCount: 3
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        cpu: "2000m"
+        memory: "2048Mi"
+      requests:
+        cpu: "1000m"
+        memory: "1024Mi"
+  
+  broker:
+    combinedMode:
+      enabled: false
+    replicaCount: 3
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        cpu: "2000m"
+        memory: "2048Mi"
+      requests:
+        cpu: "1000m"
+        memory: "1024Mi"
+  
   networkPolicy:
     enabled: true
-    allowExternal: false
