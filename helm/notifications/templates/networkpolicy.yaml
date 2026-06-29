@@ -14,7 +14,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: kafka
+              app.kubernetes.io/name: kafka
       ports:
         - protocol: TCP
           port: 9092

@@ -12,10 +12,10 @@ data:
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS: "{{ .Values.logging.level }}"
 
   # Kafka Configuration
-  {{- if and .Values.global .Values.global.kafka .Values.global.kafka.bootstrapServers }}
+  {{- if and .Values.global .Values.global.kafka }}
   KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.bootstrapServers }}"
   {{- else }}
-  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  KAFKA_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
   {{- end }}
   SPRING_KAFKA_CONSUMER_GROUP_ID: "{{ .Values.kafka.consumer.groupId | default "notifications-service" }}"
   SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"

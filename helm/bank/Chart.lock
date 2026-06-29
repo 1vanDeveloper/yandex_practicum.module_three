@@ -6,8 +6,8 @@ dependencies:
   repository: file://../keycloak
   version: 0.1.0
 - name: kafka
-  repository: file://../kafka
-  version: 0.1.0
+  repository: https://charts.bitnami.com/bitnami
+  version: 32.4.3
 - name: accounts
   repository: file://../accounts
   version: 0.1.0
@@ -26,5 +26,5 @@ dependencies:
 - name: transfer
   repository: file://../transfer
   version: 0.1.0
-digest: sha256:01f477d855e3960a2582cd9fbc2cf27fef7eed4f89730dc5592e923ee24b5738
-generated: "2026-06-29T16:50:45.04+03:00"
+digest: sha256:c4bc9cf85cbf41db00d48c615bf598ae5150aa0840bad45a2cb9a62f635eb847
+generated: "2026-06-29T22:10:16.586654+03:00"

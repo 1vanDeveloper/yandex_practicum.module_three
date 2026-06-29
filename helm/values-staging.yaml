@@ -156,21 +156,18 @@ keycloak:
       cpu: "1000m"
       memory: "1024Mi"
 
-# Kafka
+# Kafka (bitnami/kafka chart)
 kafka:
   enabled: true
   replicaCount: 3
   image:
-    repository: "confluentinc/cp-kafka"
-    tag: "7.5.0"
-  kafka:
-    clusterId: "bank-kafka-staging"
-    autoCreateTopicsEnable: true
-    defaultReplicationFactor: 3
-    offsetsTopicReplicationFactor: 3
-    transactionStateLogReplicationFactor: 3
-    transactionStateLogMinIsr: 2
-    controllerQuorumVoters: "0@kafka-0.kafka-headless:9093,1@kafka-1.kafka-headless:9093,2@kafka-2.kafka-headless:9093"
+    registry: docker.io
+    repository: bitnami/kafka
+    tag: 3.6.1
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    size: 20Gi
   resources:
     limits:
       cpu: "2000m"
@@ -178,9 +175,6 @@ kafka:
     requests:
       cpu: "1000m"
       memory: "1024Mi"
-  persistence:
-    enabled: true
-    size: "20Gi"
   podDisruptionBudget:
     enabled: true
     minAvailable: 2

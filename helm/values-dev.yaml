@@ -3,21 +3,21 @@
 
 # Глобальные настройки
 global:
-  imageRegistry: "registry.example.com/bank"
+  imageRegistry: ""
   imageTag: "latest"
-  
+
   postgresql:
     host: "postgresql"
     port: 5432
     database: "bank"
-  
+
   keycloak:
     url: "http://keycloak:8080"
     realm: "bank"
 
   kafka:
-    enabled: false
-    bootstrapServers: "kafka:9092"
+    enabled: true
+    bootstrapServers: "bank-kafka:9092"
 
 # Accounts
 accounts:
@@ -99,7 +99,7 @@ frontend:
     tag: "latest"
   service:
     type: "NodePort"
-    nodePort: 30144
+    nodePort: 30190
   ingress:
     enabled: false
   resources:
@@ -144,21 +144,17 @@ keycloak:
       cpu: "500m"
       memory: "512Mi"
 
-# Kafka
+# Kafka (bitnami/kafka chart)
 kafka:
-  enabled: false
+  enabled: true
   replicaCount: 1
   image:
-    repository: "confluentinc/cp-kafka"
-    tag: "7.5.0"
-  kafka:
-    clusterId: "bank-kafka-dev"
-    autoCreateTopicsEnable: true
-    defaultReplicationFactor: 1
-    offsetsTopicReplicationFactor: 1
-    transactionStateLogReplicationFactor: 1
-    transactionStateLogMinIsr: 1
-    controllerQuorumVoters: "0@kafka-0.kafka-headless:9093"
+    registry: docker.io
+    repository: bitnami/kafka
+    tag: 3.6.1
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: false
   resources:
     limits:
       cpu: "500m"
@@ -166,10 +162,5 @@ kafka:
     requests:
       cpu: "250m"
       memory: "256Mi"
-  persistence:
-    enabled: false
-  podDisruptionBudget:
-    enabled: false
   networkPolicy:
-    enabled: true
-    allowExternal: false
+    enabled: false
