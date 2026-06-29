@@ -106,6 +106,37 @@ spec:
                 secretKeyRef:
                   name: {{ .Chart.Name }}-secrets
                   key: JWT_EXPIRATION
+            # Kafka Configuration
+            - name: KAFKA_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: KAFKA_ENABLED
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: SPRING_KAFKA_PRODUCER_KEY_SERIALIZER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_KAFKA_PRODUCER_KEY_SERIALIZER
+            - name: SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER
+            - name: SPRING_KAFKA_PRODUCER_ACKS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_KAFKA_PRODUCER_ACKS
+            - name: SPRING_KAFKA_PRODUCER_RETRIES
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_KAFKA_PRODUCER_RETRIES
             - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_ACCOUNTS
               valueFrom:
                 configMapKeyRef:

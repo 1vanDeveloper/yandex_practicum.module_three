@@ -43,6 +43,12 @@ jpa:
 logging:
   level: "INFO"
 
+# Kafka настройки (Producer)
+kafka:
+  producer:
+    acks: "all"
+    retries: 3
+
 image:
   repository: "bank-accounts"
   tag: "latest"
@@ -64,12 +70,16 @@ livenessProbe:
   httpGet:
     path: "/actuator/health/liveness"
     port: 8080
-  initialDelaySeconds: 60
+  initialDelaySeconds: 120
   periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 5
 
 readinessProbe:
   httpGet:
     path: "/actuator/health/readiness"
     port: 8080
-  initialDelaySeconds: 30
+  initialDelaySeconds: 60
   periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 5

@@ -15,6 +15,9 @@ global:
     url: "https://keycloak.example.com"
     realm: "bank"
 
+  kafka:
+    bootstrapServers: "kafka-production:9092"
+
 # Accounts
 accounts:
   replicaCount: 3

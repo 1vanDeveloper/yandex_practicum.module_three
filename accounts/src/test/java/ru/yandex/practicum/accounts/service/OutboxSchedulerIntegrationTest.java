@@ -7,7 +7,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.accounts.config.TestExceptionHandlerConfig;
+import ru.yandex.practicum.accounts.config.TestKafkaConfig;
 import ru.yandex.practicum.accounts.config.TestSecurityConfig;
+import ru.yandex.practicum.accounts.service.TestOutboxConfig;
 import ru.yandex.practicum.accounts.entity.OutboxMessage;
 import ru.yandex.practicum.accounts.repository.OutboxNotificationRepository;
 
@@ -22,11 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.cloud.consul.config.enabled=false",
         "spring.task.scheduling.enabled=true",
         "outbox.scheduler.enabled=true",
-        "spring.security.enabled=false"
+        "spring.security.enabled=false",
+        "spring.kafka.bootstrap-servers=localhost:9092"
     }
 )
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class})
+@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class, TestKafkaConfig.class})
 class OutboxSchedulerIntegrationTest {
 
     @Autowired

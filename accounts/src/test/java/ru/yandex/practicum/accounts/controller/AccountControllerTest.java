@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.practicum.accounts.config.TestExceptionHandlerConfig;
+import ru.yandex.practicum.accounts.config.TestKafkaConfig;
 import ru.yandex.practicum.accounts.config.TestSecurityConfig;
 import ru.yandex.practicum.accounts.entity.Account;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
@@ -37,11 +38,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.cloud.consul.config.enabled=false",
         "spring.task.scheduling.enabled=false",
         "outbox.scheduler.enabled=false",
-        "spring.security.enabled=false"
+        "spring.security.enabled=false",
+        "spring.kafka.bootstrap-servers=localhost:9092"
     }
 )
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class})
+@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class, TestKafkaConfig.class})
 class AccountControllerTest {
 
     @Autowired

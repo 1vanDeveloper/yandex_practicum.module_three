@@ -15,6 +15,7 @@ dependencies:
   - name: kafka
     version: 0.1.0
     repository: "file://../kafka"
+    condition: kafka.enabled
   - name: accounts
     version: 0.1.0
     repository: "file://../accounts"

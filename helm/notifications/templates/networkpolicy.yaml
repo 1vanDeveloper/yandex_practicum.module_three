@@ -10,10 +10,16 @@ spec:
     - Ingress
     - Egress
   ingress:
+    # Allow traffic from Kafka (for notifications events)
     - from:
         - podSelector:
             matchLabels:
-              app: accounts
+              app: kafka
+      ports:
+        - protocol: TCP
+          port: 9092
+    # Allow traffic from cash and transfer (for REST API)
+    - from:
         - podSelector:
             matchLabels:
               app: cash

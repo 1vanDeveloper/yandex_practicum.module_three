@@ -26,5 +26,5 @@ dependencies:
 - name: transfer
   repository: file://../transfer
   version: 0.1.0
-digest: sha256:2f92de3c7ece59b2927576d451a120a6131c80464a9ec9c1aac0300d7f83ff62
-generated: "2026-06-29T11:02:49.940568+03:00"
+digest: sha256:01f477d855e3960a2582cd9fbc2cf27fef7eed4f89730dc5592e923ee24b5738
+generated: "2026-06-29T16:50:45.04+03:00"

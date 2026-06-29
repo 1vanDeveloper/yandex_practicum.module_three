@@ -49,7 +49,13 @@ public abstract class ContractVerifierBase {
         public NotificationService notificationService() {
             NotificationService mock = Mockito.mock(NotificationService.class);
             Mockito.doNothing().when(mock).logNotification(Mockito.any());
+            Mockito.doNothing().when(mock).saveNotification(Mockito.any());
             return mock;
+        }
+
+        @Bean
+        public ru.yandex.practicum.notifications.service.KafkaNotificationConsumer kafkaNotificationConsumer() {
+            return Mockito.mock(ru.yandex.practicum.notifications.service.KafkaNotificationConsumer.class);
         }
     }
 }
