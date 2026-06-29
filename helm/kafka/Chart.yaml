@@ -1,0 +1,12 @@
+apiVersion: v2
+name: kafka
+description: Apache Kafka для асинхронной коммуникации между сервисами
+type: application
+version: 0.1.0
+appVersion: "3.6.0"
+keywords:
+  - kafka
+  - messaging
+  - event-streaming
+home: https://kafka.apache.org
+icon: https://kafka.apache.org/images/logo.png
