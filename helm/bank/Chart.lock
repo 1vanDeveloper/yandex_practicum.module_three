@@ -1,0 +1,27 @@
+dependencies:
+- name: postgresql
+  repository: file://../postgresql
+  version: 0.1.0
+- name: keycloak
+  repository: file://../keycloak
+  version: 0.1.0
+- name: accounts
+  repository: file://../accounts
+  version: 0.1.0
+- name: cash
+  repository: file://../cash
+  version: 0.1.0
+- name: frontend
+  repository: file://../frontend
+  version: 0.1.0
+- name: gateway
+  repository: file://../gateway
+  version: 0.1.0
+- name: notifications
+  repository: file://../notifications
+  version: 0.1.0
+- name: transfer
+  repository: file://../transfer
+  version: 0.1.0
+digest: sha256:7b879f2a42cd0ac100be848c5985ba30f2c676a0633b2048bce04acb3639bd71
+generated: "2026-06-22T19:26:20.470068+03:00"

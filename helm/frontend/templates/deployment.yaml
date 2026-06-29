@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      {{- if and .Values.global .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.global.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            # Custom environment variables from values.yaml
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            # Standard environment variables
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: SPRING_APPLICATION_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_APPLICATION_NAME
+            - name: GATEWAY_SERVICE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: GATEWAY_SERVICE_NAME
+            - name: SPRING_CLOUD_LOADBALANCER_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_LOADBALANCER_ENABLED
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_ISSUER_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_AUTHORIZATION_URI
+              value: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/auth"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
+              value: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/token"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_INFO_URI
+              value: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/userinfo"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_JWK_SET_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_JWK_SET_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_USER_NAME_ATTRIBUTE
+              value: "preferred_username"
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_ISSUER_URI
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_JWK_SET_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: OAUTH2_CLIENT_SECRET
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_REDIRECT_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_REDIRECT_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_SCOPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_SCOPE
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_PROVIDER
+            - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

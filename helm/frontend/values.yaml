@@ -1,0 +1,76 @@
+# Настройки сервиса Frontend
+replicaCount: 1
+
+global:
+  keycloak:
+    url: "http://keycloak:8080"
+    realm: "bank"
+
+gateway:
+  serviceName: "gateway"
+
+# Переменные окружения (не чувствительные)
+env:
+  JAVA_OPTS: "-Xmx512m -Xms256m"
+  LOGGING_LEVEL_ROOT: "INFO"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus"
+
+# Секреты (чувствительные данные)
+# ⚠️ В production переопределять через -f helm/values-secret.yaml (не коммитить в git!)
+# Пример: helm upgrade bank helm/bank -f helm/values-secret.yaml
+secrets: {}
+  # OAuth2 Client Credentials
+  # OAUTH2_CLIENT_SECRET: "frontend-secret"
+
+  # Keycloak URLs
+  # KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/bank"
+  # KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
+
+# Логирование
+logging:
+  level: "INFO"
+  cloudLevel: "INFO"
+
+image:
+  repository: "bank-frontend"
+  tag: "latest"
+  pullPolicy: "IfNotPresent"
+
+service:
+  type: "NodePort"
+  port: 8080
+  nodePort: 30144
+
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+livenessProbe:
+  httpGet:
+    path: "/actuator/health/liveness"
+    port: 8080
+  initialDelaySeconds: 60
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: "/actuator/health/readiness"
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 5
+
+# Ingress configuration (production)
+# For development: using NodePort (service.type: NodePort)
+# For production: enable ingress and disable NodePort
+ingress:
+  enabled: false
+  className: "nginx"
+  host: "bank.local"
+  controllerNamespace: "ingress-nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"

@@ -1,0 +1,52 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Chart.Name }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    {{- if .Values.ingress.enabled }}
+    # Production: Allow traffic only from Ingress Controller namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: {{ .Values.ingress.controllerNamespace | default "ingress-nginx" }}
+      ports:
+        - protocol: TCP
+          port: 8080
+    {{- else }}
+    # Development (NodePort): Allow from all sources
+    # Note: NetworkPolicy cannot distinguish NodePort traffic from pod-to-pod
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 8080
+    {{- end }}
+  egress:
+    # Allow DNS resolution
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow traffic to Gateway (for API calls)
+    - to:
+        - podSelector:
+            matchLabels:
+              app: gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow traffic to Keycloak (for OAuth2)
+    - to:
+        - podSelector:
+            matchLabels:
+              app: keycloak
+      ports:
+        - protocol: TCP
+          port: 8080

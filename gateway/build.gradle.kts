@@ -23,23 +23,17 @@ dependencies {
     // Spring Cloud Gateway (WebFlux-based)
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
 
-    // Service Discovery
-    implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
-
     // Resilience4j Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j")
-    
+
     // Security
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-    
+
     // Actuator
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    
-    // Validation
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    
+
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.46")
     annotationProcessor("org.projectlombok:lombok:1.18.46")

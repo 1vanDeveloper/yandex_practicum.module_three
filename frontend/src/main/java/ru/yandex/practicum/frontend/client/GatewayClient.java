@@ -1,8 +1,7 @@
 package ru.yandex.practicum.frontend.client;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -22,34 +21,18 @@ import java.util.concurrent.Executor;
 public class GatewayClient {
 
     private final RestClient restClient;
-    private final DiscoveryClient discoveryClient;
     private final Executor executor;
     private final String gatewayServiceUrl;
 
-    public GatewayClient(DiscoveryClient discoveryClient,
-                         Executor asyncExecutor,
-                         @org.springframework.beans.factory.annotation.Value("${gateway.service.url:http://localhost:8086}") String gatewayServiceUrl) {
-        this.discoveryClient = discoveryClient;
+    public GatewayClient(Executor asyncExecutor,
+                         @Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl) {
         this.restClient = RestClient.create();
         this.executor = asyncExecutor;
         this.gatewayServiceUrl = gatewayServiceUrl;
     }
 
     private String getGatewayUrl() {
-        // Пытаемся получить URL из Consul Discovery
-        try {
-            List<ServiceInstance> instances = discoveryClient.getInstances("gateway");
-            if (instances != null && !instances.isEmpty()) {
-                String url = instances.get(0).getUri().toString();
-                log.debug("Gateway URL from Consul: {}", url);
-                return url;
-            }
-        } catch (Exception e) {
-            log.debug("Consul discovery failed, using fallback URL: {}", e.getMessage());
-        }
-        
-        // Fallback на прямой URL
-        log.debug("Using fallback gateway URL: {}", gatewayServiceUrl);
+        log.debug("Using gateway URL: {}", gatewayServiceUrl);
         return gatewayServiceUrl;
     }
 

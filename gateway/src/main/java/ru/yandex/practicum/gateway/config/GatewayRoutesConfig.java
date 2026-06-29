@@ -1,5 +1,6 @@
 package ru.yandex.practicum.gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GatewayRoutesConfig {
 
+    @Value("${accounts.service.url:http://accounts:8080}")
+    private String accountsServiceUrl;
+
+    @Value("${cash.service.url:http://cash:8080}")
+    private String cashServiceUrl;
+
+    @Value("${transfer.service.url:http://transfer:8080}")
+    private String transferServiceUrl;
+
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
@@ -32,7 +42,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("lb://accounts-service"))
+                .uri(accountsServiceUrl))
 
             .route("accounts-auth-register", r -> r
                 .path("/gateway/auth/register")
@@ -43,7 +53,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("lb://accounts-service"))
+                .uri(accountsServiceUrl))
 
             // Accounts service routes - доступ к аккаунту пользователя
             .route("accounts-account-get", r -> r
@@ -55,7 +65,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("lb://accounts-service"))
+                .uri(accountsServiceUrl))
 
             .route("accounts-account-update", r -> r
                 .path("/gateway/account")
@@ -66,7 +76,7 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("lb://accounts-service"))
+                .uri(accountsServiceUrl))
 
             // Accounts list route
             .route("accounts-list", r -> r
@@ -78,27 +88,31 @@ public class GatewayRoutesConfig {
                     .circuitBreaker(config -> config
                         .setName("accountsService")
                         .setFallbackUri("forward:/fallback/accounts")))
-                .uri("lb://accounts-service"))
+                .uri(accountsServiceUrl))
 
             // Cash service routes
             .route("cash", r -> r
                 .path("/gateway/cash")
+                .and()
+                .method(org.springframework.http.HttpMethod.POST)
                 .filters(f -> f
                     .rewritePath("/gateway/cash", "/cash")
                     .circuitBreaker(config -> config
                         .setName("cashService")
                         .setFallbackUri("forward:/fallback/cash")))
-                .uri("lb://cash-service"))
+                .uri(cashServiceUrl))
 
             // Transfer service routes
             .route("transfer", r -> r
                 .path("/gateway/transfer")
+                .and()
+                .method(org.springframework.http.HttpMethod.POST)
                 .filters(f -> f
                     .rewritePath("/gateway/transfer", "/transfer")
                     .circuitBreaker(config -> config
                         .setName("transferService")
                         .setFallbackUri("forward:/fallback/transfer")))
-                .uri("lb://transfer-service"))
+                .uri(transferServiceUrl))
 
             .build();
     }

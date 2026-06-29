@@ -1,0 +1,257 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-realm-config
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  realm-export.json: |
+    {
+      "id": "bank",
+      "realm": "bank",
+      "displayName": "Banking Platform",
+      "enabled": true,
+      "clients": [
+        {
+          "clientId": "frontend-client",
+          "name": "Frontend Client",
+          "description": "Frontend application for user authentication",
+          "rootUrl": "http://localhost:8081",
+          "adminUrl": "",
+          "baseUrl": "/",
+          "surrogateAuthRequired": false,
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "frontend-secret",
+          "redirectUris": [
+            "http://localhost:8081/*",
+            "http://localhost:8081/login/oauth2/code/frontend-client"
+          ],
+          "webOrigins": [
+            "http://localhost:8081"
+          ],
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": false,
+          "authorizationServicesEnabled": false,
+          "fullScopeAllowed": true,
+          "defaultClientScopes": [
+            "web-origins",
+            "profile",
+            "roles",
+            "email"
+          ],
+          "optionalClientScopes": [
+            "address",
+            "phone",
+            "offline_access",
+            "microprofile-jwt"
+          ]
+        },
+        {
+          "clientId": "gateway-client",
+          "name": "Gateway Service Client",
+          "description": "Gateway service for client credentials flow",
+          "adminUrl": "",
+          "baseUrl": "",
+          "surrogateAuthRequired": false,
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "gateway-secret",
+          "redirectUris": [],
+          "webOrigins": [],
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "standardFlowEnabled": false,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": true,
+          "authorizationServicesEnabled": false,
+          "fullScopeAllowed": true,
+          "defaultClientScopes": [
+            "web-origins",
+            "profile",
+            "roles",
+            "email"
+          ],
+          "optionalClientScopes": [
+            "address",
+            "phone",
+            "offline_access",
+            "microprofile-jwt"
+          ]
+        },
+        {
+          "clientId": "accounts-client",
+          "name": "Accounts Service Client",
+          "description": "Accounts service for client credentials flow",
+          "adminUrl": "",
+          "baseUrl": "",
+          "surrogateAuthRequired": false,
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "accounts-secret",
+          "redirectUris": [],
+          "webOrigins": [],
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "standardFlowEnabled": false,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": true,
+          "authorizationServicesEnabled": false,
+          "fullScopeAllowed": true,
+          "defaultClientScopes": [
+            "web-origins",
+            "profile",
+            "roles",
+            "email"
+          ],
+          "optionalClientScopes": [
+            "address",
+            "phone",
+            "offline_access",
+            "microprofile-jwt"
+          ]
+        },
+        {
+          "clientId": "cash-client",
+          "name": "Cash Service Client",
+          "description": "Cash service for client credentials flow",
+          "adminUrl": "",
+          "baseUrl": "",
+          "surrogateAuthRequired": false,
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "cash-secret",
+          "redirectUris": [],
+          "webOrigins": [],
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "standardFlowEnabled": false,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": true,
+          "authorizationServicesEnabled": false,
+          "fullScopeAllowed": true,
+          "defaultClientScopes": [
+            "web-origins",
+            "profile",
+            "roles",
+            "email"
+          ],
+          "optionalClientScopes": [
+            "address",
+            "phone",
+            "offline_access",
+            "microprofile-jwt"
+          ]
+        },
+        {
+          "clientId": "transfer-client",
+          "name": "Transfer Service Client",
+          "description": "Transfer service for client credentials flow",
+          "adminUrl": "",
+          "baseUrl": "",
+          "surrogateAuthRequired": false,
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "transfer-secret",
+          "redirectUris": [],
+          "webOrigins": [],
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "standardFlowEnabled": false,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": true,
+          "authorizationServicesEnabled": false,
+          "fullScopeAllowed": true,
+          "defaultClientScopes": [
+            "web-origins",
+            "profile",
+            "roles",
+            "email"
+          ],
+          "optionalClientScopes": [
+            "address",
+            "phone",
+            "offline_access",
+            "microprofile-jwt"
+          ]
+        }
+      ],
+      "roles": {
+        "realm": [
+          {
+            "name": "user",
+            "description": "Regular user role",
+            "composite": false,
+            "clientRole": false,
+            "containerId": "bank"
+          },
+          {
+            "name": "admin",
+            "description": "Administrator role",
+            "composite": false,
+            "clientRole": false,
+            "containerId": "bank"
+          }
+        ],
+        "client": {
+          "gateway-client": [
+            {
+              "name": "accounts:modify",
+              "description": "Modify accounts",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "gateway-client"
+            },
+            {
+              "name": "cash:modify",
+              "description": "Modify cash operations",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "gateway-client"
+            },
+            {
+              "name": "transfer:modify",
+              "description": "Modify transfers",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "gateway-client"
+            }
+          ]
+        }
+      },
+      "users": [
+        {
+          "username": "test-user",
+          "email": "test@example.com",
+          "emailVerified": true,
+          "enabled": true,
+          "firstName": "Test",
+          "lastName": "User",
+          "credentials": [
+            {
+              "type": "password",
+              "value": "password123",
+              "temporary": false
+            }
+          ],
+          "realmRoles": [
+            "user"
+          ],
+          "clientRoles": {
+            "gateway-client": [
+              "accounts:modify",
+              "cash:modify",
+              "transfer:modify"
+            ]
+          }
+        }
+      ]
+    }

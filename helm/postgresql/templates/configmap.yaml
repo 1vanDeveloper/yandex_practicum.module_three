@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-init-scripts
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  1-init.sql: |
+    -- Создание схем для каждого сервиса
+    {{- range .Values.schemas }}
+    CREATE SCHEMA IF NOT EXISTS {{ . }};
+    {{- end }}
+    
+    -- Таблица accounts.accounts
+    CREATE TABLE IF NOT EXISTS accounts.accounts (
+        id BIGSERIAL PRIMARY KEY,
+        login VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        first_name VARCHAR(255) NOT NULL,
+        last_name VARCHAR(255) NOT NULL,
+        birth_date DATE NOT NULL,
+        amount DECIMAL(19, 2) NOT NULL DEFAULT 0.00,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Таблица accounts.outbox_messages
+    CREATE TABLE IF NOT EXISTS accounts.outbox_messages (
+        id UUID PRIMARY KEY,
+        idempotency_key VARCHAR(255) NOT NULL UNIQUE,
+        version BIGINT NOT NULL DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        login VARCHAR(255) NOT NULL,
+        message VARCHAR(1000) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+        error_message TEXT,
+        retry_count INTEGER NOT NULL DEFAULT 0
+    );
+
+    -- Таблица notifications.notifications
+    CREATE TABLE IF NOT EXISTS notifications.notifications (
+        id BIGSERIAL PRIMARY KEY,
+        login VARCHAR(255) NOT NULL,
+        message VARCHAR(1000) NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Таблица cash.cash_transactions
+    CREATE TABLE IF NOT EXISTS cash.cash_transactions (
+        id BIGSERIAL PRIMARY KEY,
+        account_login VARCHAR(255) NOT NULL,
+        transaction_type VARCHAR(50) NOT NULL,
+        amount DECIMAL(19, 2) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+        error_message TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Таблица transfer.transfers
+    CREATE TABLE IF NOT EXISTS transfer.transfers (
+        id BIGSERIAL PRIMARY KEY,
+        from_account_login VARCHAR(255) NOT NULL,
+        to_account_login VARCHAR(255) NOT NULL,
+        amount DECIMAL(19, 2) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+        error_message TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );

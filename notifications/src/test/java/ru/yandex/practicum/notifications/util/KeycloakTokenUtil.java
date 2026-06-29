@@ -13,7 +13,8 @@ import java.util.Map;
 
 /**
  * Utility class for obtaining JWT tokens from Keycloak for integration tests.
- * Requires Keycloak to be running at http://localhost:8180
+ * Requires Keycloak to be running in Kubernetes with port-forward:
+ *   kubectl port-forward svc/keycloak 8180:8080
  */
 public class KeycloakTokenUtil {
 
@@ -27,7 +28,8 @@ public class KeycloakTokenUtil {
 
     /**
      * Получает access токен для пользователя через password grant type.
-     * 
+     * Использует admin-cli client для direct access grants.
+     *
      * @param username имя пользователя
      * @param password пароль пользователя
      * @return access токен
@@ -41,7 +43,8 @@ public class KeycloakTokenUtil {
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             conn.setDoOutput(true);
 
-            String body = "grant_type=password&client_id=frontend-client&client_secret=frontend-secret" +
+            // Используем admin-cli client который поддерживает direct access grants
+            String body = "grant_type=password&client_id=admin-cli" +
                 "&username=" + username + "&password=" + password;
 
             try (OutputStream os = conn.getOutputStream()) {
@@ -59,7 +62,7 @@ public class KeycloakTokenUtil {
                 while ((line = br.readLine()) != null) {
                     response.append(line);
                 }
-                
+
                 JsonNode jsonNode = objectMapper.readTree(response.toString());
                 return jsonNode.get("access_token").asText();
             }

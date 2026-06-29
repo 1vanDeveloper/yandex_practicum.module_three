@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
+
+  # Database configuration (non-sensitive)
+  DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=transfer"
+  SPRING_JPA_HIBERNATE_DDL_MODE: "{{ .Values.jpa.ddlMode }}"
+
+  # OAuth2 Client Configuration (non-sensitive)
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_CLIENT_ID: "{{ .Chart.Name }}-client"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_AUTHORIZATION_GRANT_TYPE: "client_credentials"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_PROVIDER: "keycloak"
+
+  # Logging
+  LOGGING_LEVEL_RU_YANDEX_PRACTICUM_TRANSFER: "{{ .Values.logging.level }}"

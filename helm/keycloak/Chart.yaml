@@ -1,0 +1,6 @@
+apiVersion: v2
+name: keycloak
+description: Helm-чарт для сервера авторизации Keycloak
+type: application
+version: 0.1.0
+appVersion: "24.0.1"

@@ -1,0 +1,75 @@
+# Настройки сервиса Transfer
+replicaCount: 1
+
+global:
+  postgresql:
+    host: "postgresql"
+    port: 5432
+    database: "bank"
+  keycloak:
+    url: "http://keycloak:8080"
+    realm: "bank"
+
+# Переменные окружения (не чувствительные)
+env:
+  JAVA_OPTS: "-Xmx512m -Xms256m"
+  LOGGING_LEVEL_ROOT: "INFO"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,prometheus"
+
+# Секреты (чувствительные данные)
+# ⚠️ В production переопределять через -f helm/values-secret.yaml (не коммитить в git!)
+# Пример: helm upgrade bank helm/bank -f helm/values-secret.yaml
+secrets: {}
+  # PostgreSQL credentials
+  # DATABASE_USERNAME: "user"
+  # DATABASE_PASSWORD: "change-me"
+
+  # JWT Configuration
+  # JWT_SECRET: "change-me-in-production"
+  # JWT_EXPIRATION: "86400000"
+
+  # OAuth2 Client Credentials
+  # OAUTH2_CLIENT_SECRET: "transfer-secret"
+
+  # Keycloak URLs
+  # KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/bank"
+  # KEYCLOAK_JWK_SET_URI: "http://keycloak:8080/realms/bank/protocol/openid-connect/certs"
+
+# JPA настройки
+jpa:
+  ddlMode: "validate"
+
+# Логирование
+logging:
+  level: "INFO"
+
+image:
+  repository: "bank-transfer"
+  tag: "latest"
+  pullPolicy: "IfNotPresent"
+
+service:
+  type: "ClusterIP"
+  port: 8080
+
+resources:
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+livenessProbe:
+  httpGet:
+    path: "/actuator/health/liveness"
+    port: 8080
+  initialDelaySeconds: 60
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: "/actuator/health/readiness"
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 5

@@ -1,0 +1,88 @@
+suite: Transfer Service Deployment Tests
+templates:
+  - deployment.yaml
+tests:
+  - it: should create deployment with correct name
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: transfer
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: transfer
+
+  - it: should use correct image
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "bank-transfer:latest"
+
+  - it: should configure probes
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /actuator/health/liveness
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /actuator/health/readiness
+---
+suite: Transfer Service Tests
+templates:
+  - service.yaml
+tests:
+  - it: should create service with correct name
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: transfer
+      - equal:
+          path: spec.selector.app
+          value: transfer
+---
+suite: Transfer NetworkPolicy Tests
+templates:
+  - networkpolicy.yaml
+tests:
+  - it: should create NetworkPolicy with correct name
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: transfer
+
+  - it: should allow ingress from gateway
+    asserts:
+      - contains:
+          path: spec.ingress[0].from
+          content:
+            podSelector:
+              matchLabels:
+                app: gateway
+
+  - it: should allow egress to accounts and notifications
+    asserts:
+      - contains:
+          path: spec.egress
+          content:
+            to:
+              - podSelector:
+                  matchLabels:
+                    app: accounts
+            ports:
+              - port: 8080
+                protocol: TCP
+      - contains:
+          path: spec.egress
+          content:
+            to:
+              - podSelector:
+                  matchLabels:
+                    app: notifications
+            ports:
+              - port: 8080
+                protocol: TCP

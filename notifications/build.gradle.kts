@@ -34,9 +34,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 
-    // Spring Cloud
-    implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
-    implementation("org.springframework.cloud:spring-cloud-starter-consul-config")
+    // Spring Cloud LoadBalancer
+    implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
 
     // Resilience4j Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")

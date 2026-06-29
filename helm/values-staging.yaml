@@ -1,0 +1,154 @@
+# Staging окружение - предпродакшен для финального тестирования
+# Использует реальные секреты из external Secrets Manager
+
+# Глобальные настройки
+global:
+  imageRegistry: "registry.example.com/bank"
+  imageTag: "latest"
+  
+  postgresql:
+    host: "postgresql-staging"
+    port: 5432
+    database: "bank"
+  
+  keycloak:
+    url: "https://keycloak-staging.example.com"
+    realm: "bank"
+
+# Accounts
+accounts:
+  replicaCount: 2
+  image:
+    repository: "bank-accounts"
+    tag: "latest"
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+  livenessProbe:
+    initialDelaySeconds: 45
+    periodSeconds: 10
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 5
+
+# Cash
+cash:
+  replicaCount: 2
+  image:
+    repository: "bank-cash"
+    tag: "latest"
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+
+# Transfer
+transfer:
+  replicaCount: 2
+  image:
+    repository: "bank-transfer"
+    tag: "latest"
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+
+# Notifications
+notifications:
+  replicaCount: 2
+  image:
+    repository: "bank-notifications"
+    tag: "latest"
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+
+# Gateway
+gateway:
+  replicaCount: 2
+  image:
+    repository: "bank-gateway"
+    tag: "latest"
+  service:
+    type: "LoadBalancer"
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+
+# Frontend
+frontend:
+  replicaCount: 2
+  image:
+    repository: "bank-frontend"
+    tag: "latest"
+  service:
+    type: "ClusterIP"
+  ingress:
+    enabled: true
+    className: "nginx"
+    host: "bank-staging.example.com"
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+
+# PostgreSQL
+postgresql:
+  replicaCount: 1
+  image:
+    repository: "postgres"
+    tag: "14"
+  persistence:
+    enabled: true
+    size: "10Gi"
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"
+
+# Keycloak
+keycloak:
+  replicaCount: 2
+  image:
+    repository: "quay.io/keycloak/keycloak"
+    tag: "24.0.1"
+  keycloak:
+    adminUser: "admin"
+    adminPassword: "${KEYCLOAK_ADMIN_PASSWORD}"
+    db: "postgres"
+    hostnameStrict: true
+    hostnameStrictHttps: true
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"

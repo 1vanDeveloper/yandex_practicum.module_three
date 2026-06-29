@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  SPRING_PROFILES_ACTIVE: "kubernetes"
+  SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
+  GATEWAY_SERVICE_NAME: "{{ .Values.gateway.serviceName }}"
+  SPRING_CLOUD_LOADBALANCER_ENABLED: "true"
+
+  # OAuth2 Client Configuration (non-sensitive)
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_ID: "{{ .Chart.Name }}-client"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_REDIRECT_URI: "http://localhost:8081/login/oauth2/code/{{ .Chart.Name }}-client"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_SCOPE: "openid,profile,email"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_PROVIDER: "keycloak"
+
+  # Logging
+  LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT: "{{ .Values.logging.level }}"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD: "{{ .Values.logging.cloudLevel }}"

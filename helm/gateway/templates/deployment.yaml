@@ -1,0 +1,146 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      {{- if and .Values.global .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml .Values.global.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            # Custom environment variables from values.yaml
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            # Standard environment variables
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: SPRING_APPLICATION_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_APPLICATION_NAME
+            - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED
+            - name: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER_CASE_SERVICE_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER_CASE_SERVICE_ID
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_ISSUER_URI
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: KEYCLOAK_JWK_SET_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
+              value: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/token"
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: OAUTH2_CLIENT_SECRET
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_AUTHORIZATION_GRANT_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_AUTHORIZATION_GRANT_TYPE
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_PROVIDER
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_SCOPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_SCOPE
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: JWT_SECRET
+            - name: JWT_EXPIRATION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secrets
+                  key: JWT_EXPIRATION
+            - name: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE
+            - name: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+            - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_GATEWAY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_GATEWAY
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -18,10 +18,11 @@ import java.util.concurrent.ExecutionException;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for NotificationService using PostgreSQL and Keycloak from docker-compose.
- * Перед запуском убедитесь, что сервисы запущены:
- * docker-compose up -d postgres keycloak
- * Tests verify database interactions with real PostgreSQL instance from docker-compose.
+ * Integration tests for NotificationService using PostgreSQL and Keycloak from Kubernetes.
+ * Перед запуском убедитесь, что настроен port-forward:
+ *   kubectl port-forward svc/postgresql 5432:5432 &
+ *   kubectl port-forward svc/keycloak 8180:8080 &
+ * Tests verify database interactions with real PostgreSQL instance from Kubernetes cluster.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration")

@@ -1,0 +1,32 @@
+apiVersion: v2
+name: bank
+description: Зонтичный Helm-чарт для банковской платформы
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: postgresql
+    version: 0.1.0
+    repository: "file://../postgresql"
+  - name: keycloak
+    version: 0.1.0
+    repository: "file://../keycloak"
+  - name: accounts
+    version: 0.1.0
+    repository: "file://../accounts"
+  - name: cash
+    version: 0.1.0
+    repository: "file://../cash"
+  - name: frontend
+    version: 0.1.0
+    repository: "file://../frontend"
+  - name: gateway
+    version: 0.1.0
+    repository: "file://../gateway"
+  - name: notifications
+    version: 0.1.0
+    repository: "file://../notifications"
+  - name: transfer
+    version: 0.1.0
+    repository: "file://../transfer"

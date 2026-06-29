@@ -20,12 +20,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for CashService using PostgreSQL from docker-compose.
- * 
- * Перед запуском убедитесь, что сервисы запущены:
- * docker-compose up -d postgres
- * 
- * Tests verify database interactions with real PostgreSQL instance.
+ * Integration tests for CashService using PostgreSQL from Kubernetes.
+ *
+ * Перед запуском убедитесь, что настроен port-forward:
+ *   kubectl port-forward svc/postgresql 5432:5432 &
+ *
+ * Tests verify database interactions with real PostgreSQL instance from Kubernetes cluster.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("integration")

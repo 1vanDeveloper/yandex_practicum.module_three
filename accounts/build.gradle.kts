@@ -20,9 +20,9 @@ java {
 val springCloudVersion = "2025.1.0"
 
 dependencies {
-    // 1. Подключаем платформу Spring Boot для управления версиями (замените 3.4.4 на вашу версию Boot)
+    // 1. Подключаем платформу Spring Boot для управления версиями
     implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
-    // 2. Подключаем платформу Spring Cloud (для consul-discovery и consul-config)
+    // 2. Подключаем платформу Spring Cloud (для gateway и loadbalancer)
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
 
     // Spring Boot
@@ -44,9 +44,8 @@ dependencies {
     // OAuth2 Client (для Client Credentials Flow)
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 
-    // Spring Cloud
-    implementation("org.springframework.cloud:spring-cloud-starter-consul-discovery")
-    implementation("org.springframework.cloud:spring-cloud-starter-consul-config")
+    // Spring Cloud LoadBalancer
+    implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
 
     // Resilience4j Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
@@ -68,8 +67,6 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     testImplementation("org.springframework.boot:spring-boot-test")
     testImplementation("org.mockito:mockito-core")
-    testImplementation("org.springframework:spring-tx")
-    testImplementation("org.springframework.boot:spring-boot-starter-jdbc")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Contract Test dependencies
