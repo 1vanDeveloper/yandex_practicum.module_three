@@ -152,3 +152,35 @@ keycloak:
     requests:
       cpu: "1000m"
       memory: "1024Mi"
+
+# Kafka
+kafka:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "confluentinc/cp-kafka"
+    tag: "7.5.0"
+  kafka:
+    clusterId: "bank-kafka-staging"
+    autoCreateTopicsEnable: true
+    defaultReplicationFactor: 3
+    offsetsTopicReplicationFactor: 3
+    transactionStateLogReplicationFactor: 3
+    transactionStateLogMinIsr: 2
+    controllerQuorumVoters: "0@kafka-0.kafka-headless:9093,1@kafka-1.kafka-headless:9093,2@kafka-2.kafka-headless:9093"
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "2048Mi"
+    requests:
+      cpu: "1000m"
+      memory: "1024Mi"
+  persistence:
+    enabled: true
+    size: "20Gi"
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+  networkPolicy:
+    enabled: true
+    allowExternal: false

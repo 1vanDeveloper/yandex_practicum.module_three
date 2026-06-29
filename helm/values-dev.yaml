@@ -137,3 +137,34 @@ keycloak:
     requests:
       cpu: "500m"
       memory: "512Mi"
+
+# Kafka
+kafka:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "confluentinc/cp-kafka"
+    tag: "7.5.0"
+  kafka:
+    clusterId: "bank-kafka-dev"
+    autoCreateTopicsEnable: true
+    defaultReplicationFactor: 1
+    offsetsTopicReplicationFactor: 1
+    transactionStateLogReplicationFactor: 1
+    transactionStateLogMinIsr: 1
+    controllerQuorumVoters: "0@kafka-0.kafka-headless:9093"
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+  persistence:
+    enabled: true
+    size: "5Gi"
+  podDisruptionBudget:
+    enabled: false
+  networkPolicy:
+    enabled: true
+    allowExternal: false
