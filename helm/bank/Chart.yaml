@@ -14,7 +14,7 @@ dependencies:
     repository: "file://../keycloak"
   - name: kafka
     version: 13.0.9
-    repository: "https://sir5kong.github.io/kafka-helm-chart"
+    repository: "file://charts/kafka"
     condition: kafka.enabled
   - name: accounts
     version: 0.1.0

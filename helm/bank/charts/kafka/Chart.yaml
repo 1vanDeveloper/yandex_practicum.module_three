@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: v3.4.0
+description: Helm chart for Apache Kafka.
+keywords:
+- kafka
+- streaming
+- kraft
+maintainers:
+- name: sir5kong
+  url: https://github.com/sir5kong/kafka-docker
+name: kafka
+type: application
+version: 13.0.9

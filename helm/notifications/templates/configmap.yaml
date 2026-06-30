@@ -9,7 +9,10 @@ data:
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
   DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=notifications"
   SPRING_JPA_HIBERNATE_DDL_MODE: "{{ .Values.jpa.ddlMode }}"
-  LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS: "{{ .Values.logging.level }}"
+  LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS: "{{ .Values.logging.level | default "INFO" }}"
+  LOGGING_LEVEL_ROOT: "DEBUG"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_KAFKA: "DEBUG"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE: "DEBUG"
 
   # Kafka Configuration
   {{- if and .Values.global .Values.global.kafka }}

@@ -6,7 +6,7 @@ dependencies:
   repository: file://../keycloak
   version: 0.1.0
 - name: kafka
-  repository: https://sir5kong.github.io/kafka-helm-chart
+  repository: file://charts/kafka
   version: 13.0.9
 - name: accounts
   repository: file://../accounts
@@ -26,5 +26,5 @@ dependencies:
 - name: transfer
   repository: file://../transfer
   version: 0.1.0
-digest: sha256:c9589e10fc1563560f1e6f5390551ba9a0be249b10df17e88f920a2e3b231cd9
-generated: "2026-06-29T23:29:42.803243+03:00"
+digest: sha256:b7dac0a07311fdee63c058b1522198b966e824f8da28e661a8541cdbc53e4bd9
+generated: "2026-06-30T21:29:51.067538+03:00"

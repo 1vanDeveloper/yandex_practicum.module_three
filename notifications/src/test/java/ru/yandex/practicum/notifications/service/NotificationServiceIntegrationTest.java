@@ -122,7 +122,7 @@ class NotificationServiceIntegrationTest {
     @Test
     @DisplayName("Сохранение уведомления с специальными символами в сообщении")
     void logNotification_shouldSaveNotificationWithSpecialCharacters() throws ExecutionException, InterruptedException {
-        String specialMessage = "Test with special chars: äöü ñ 中文 🚀";
+        String specialMessage = "Test with special chars: äöü ñ Привет 🚀";
         
         NotificationRequest request = NotificationRequest.builder()
             .login("test_user")

@@ -17,7 +17,7 @@ global:
 
   kafka:
     enabled: true
-    bootstrapServers: "bank-kafka:9092"
+    bootstrapServers: "bank-kafka-broker:9092"
 
 # Accounts
 accounts:
@@ -67,6 +67,10 @@ notifications:
   image:
     repository: "bank-notifications"
     tag: "latest"
+  logging:
+    root: "DEBUG"
+    kafka: "DEBUG"
+    autoconfigure: "DEBUG"
   resources:
     limits:
       cpu: "500m"
@@ -153,7 +157,17 @@ kafka:
     pullPolicy: IfNotPresent
 
   controller:
-    enabled: false
+    enabled: true
+    replicaCount: 1
+    persistence:
+      enabled: false
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
 
   broker:
     combinedMode:
@@ -161,20 +175,31 @@ kafka:
     replicaCount: 1
     persistence:
       enabled: false
-    heapOpts: "-Xms1024m -Xmx1024m"
+    heapOpts: "-Xms256m -Xmx256m"
+    # Use BROKER listener (chart default) - clients connect via service DNS
+    extraEnvs:
+      - name: KAFKA_CFG_BROKER_HEARTBEAT_INTERVAL_MS
+        value: "10000"
+      - name: KAFKA_CFG_BROKER_SESSION_TIMEOUT_MS
+        value: "60000"
     resources:
       limits:
-        cpu: "1000m"
-        memory: "1536Mi"
-      requests:
         cpu: "500m"
-        memory: "1024Mi"
+        memory: "768Mi"
+      requests:
+        cpu: "250m"
+        memory: "384Mi"
+    # Fix readiness probe timeout (default 5s too small for Kafka startup)
     readinessProbe:
       initialDelaySeconds: 30
+      timeoutSeconds: 30
       periodSeconds: 10
-      timeoutSeconds: 15
       failureThreshold: 6
-      successThreshold: 1
+    livenessProbe:
+      initialDelaySeconds: 300
+      timeoutSeconds: 10
+      periodSeconds: 30
+      failureThreshold: 5
 
   networkPolicy:
     enabled: true

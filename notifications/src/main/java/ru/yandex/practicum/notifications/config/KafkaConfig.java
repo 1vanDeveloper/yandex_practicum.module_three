@@ -6,6 +6,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
@@ -19,6 +20,7 @@ import java.util.Map;
 /**
  * Конфигурация Kafka для Notifications сервиса.
  */
+@EnableKafka
 @Configuration
 public class KafkaConfig {
 
@@ -62,11 +64,13 @@ public class KafkaConfig {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, org.springframework.kafka.support.serializer.ErrorHandlingDeserializer.class);
-        props.put("spring.json.value.deserializer.class", "org.springframework.kafka.support.serializer.JsonDeserializer");
+        props.put(org.springframework.kafka.support.serializer.ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, org.springframework.kafka.support.serializer.JsonDeserializer.class.getName());
         props.put("spring.json.trusted.packages", "*");
-        props.put("spring.json.use.type.info.headers", false);
+        props.put("spring.json.type.mapping",
+            "ru.yandex.practicum.accounts.event.NotificationEvent:ru.yandex.practicum.notifications.event.NotificationEvent");
 
-        return new DefaultKafkaConsumerFactory<>(props);
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(),
+            new org.springframework.kafka.support.serializer.JsonDeserializer<>(NotificationEvent.class));
     }
 
     /**
