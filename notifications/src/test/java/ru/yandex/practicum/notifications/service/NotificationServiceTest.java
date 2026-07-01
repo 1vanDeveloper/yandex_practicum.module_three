@@ -8,12 +8,13 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.yandex.practicum.notifications.dto.NotificationRequest;
 import ru.yandex.practicum.notifications.entity.Notification;
-import ru.yandex.practicum.notifications.mapper.NotificationMapper;
+import ru.yandex.practicum.notifications.event.NotificationEvent;
 import ru.yandex.practicum.notifications.repository.NotificationRepository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,23 +28,24 @@ class NotificationServiceTest {
     @Mock
     private NotificationRepository notificationRepository;
 
-    @Mock
-    private NotificationMapper notificationMapper;
-
     @InjectMocks
     private NotificationService notificationService;
 
     @Captor
-    private ArgumentCaptor<NotificationRequest> requestCaptor;
+    private ArgumentCaptor<Notification> notificationCaptor;
 
-    private NotificationRequest request;
+    private NotificationEvent event;
     private Notification notification;
 
     @BeforeEach
     void setUp() {
-        request = NotificationRequest.builder()
+        event = NotificationEvent.builder()
+                .id(UUID.randomUUID().toString())
+                .accountId("test_user")
                 .login("test_user")
                 .message("Test notification message")
+                .type("TEST_EVENT")
+                .timestamp(Instant.now())
                 .build();
 
         notification = Notification.builder()
@@ -55,36 +57,32 @@ class NotificationServiceTest {
     }
 
     @Test
-    void logNotification_shouldSaveAndLog() throws Exception {
-        when(notificationMapper.toEntity(any(NotificationRequest.class))).thenReturn(notification);
+    void saveNotification_shouldSaveAndLog() {
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
 
-        notificationService.logNotification(request);
+        notificationService.saveNotification(event);
 
-        verify(notificationMapper).toEntity(any(NotificationRequest.class));
         verify(notificationRepository).save(any(Notification.class));
     }
 
     @Test
-    void logNotification_shouldMapRequestToEntity() throws Exception {
-        when(notificationMapper.toEntity(any(NotificationRequest.class))).thenReturn(notification);
+    void saveNotification_shouldMapEventToEntity() {
         when(notificationRepository.save(any(Notification.class))).thenReturn(notification);
 
-        notificationService.logNotification(request);
+        notificationService.saveNotification(event);
 
-        verify(notificationMapper).toEntity(requestCaptor.capture());
-        NotificationRequest capturedRequest = requestCaptor.getValue();
+        verify(notificationRepository).save(notificationCaptor.capture());
+        Notification capturedNotification = notificationCaptor.getValue();
 
-        assertThat(capturedRequest.getLogin()).isEqualTo("test_user");
-        assertThat(capturedRequest.getMessage()).isEqualTo("Test notification message");
+        assertThat(capturedNotification.getLogin()).isEqualTo("test_user");
+        assertThat(capturedNotification.getMessage()).isEqualTo("Test notification message");
     }
 
     @Test
-    void logNotification_whenExceptionThrown_shouldCompleteExceptionally() {
-        when(notificationMapper.toEntity(any(NotificationRequest.class))).thenReturn(notification);
+    void saveNotification_whenExceptionThrown_shouldCompleteExceptionally() {
         when(notificationRepository.save(any(Notification.class))).thenThrow(new RuntimeException("Database error"));
 
-        assertThatThrownBy(() -> notificationService.logNotification(request))
+        assertThatThrownBy(() -> notificationService.saveNotification(event))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Database error");
     }
