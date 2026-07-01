@@ -142,7 +142,8 @@
 - Вызывает `NotificationService.saveNotification()` для каждого события
 
 **NotificationService.java**
-- `saveNotification(NotificationEvent)` - сохраняет уведомление в БД
+- `saveNotification(NotificationEvent)` — сохраняет уведомление в БД
+- **Важно:** REST API удалён, сервис работает только как Kafka consumer
 
 **NotificationEvent.java**
 - Аналогичен событию в accounts сервисе
@@ -266,9 +267,9 @@ class OutboxServiceIntegrationTest {
 @SpringBootTest(properties = {
     "spring.kafka.bootstrap-servers=localhost:9092"
 })
-@Import({TestKafkaConfig.class})  // Mock для KafkaNotificationConsumer
+@Import({TestKafkaConfig.class})  // Mock для Kafka consumer
 class NotificationServiceIntegrationTest {
-    // Тесты используют мок consumer
+    // Тесты проверяют сохранение уведомлений в БД из Kafka событий
 }
 ```
 
@@ -282,13 +283,7 @@ public KafkaNotificationProducer kafkaNotificationProducer() {
 }
 ```
 
-**notifications/src/contractTest/java/.../ContractVerifierBase.java:**
-```java
-@Bean
-public KafkaNotificationConsumer kafkaNotificationConsumer() {
-    return Mockito.mock(KafkaNotificationConsumer.class);
-}
-```
+**notifications:** Контрактные тесты удалены (нет REST API, только Kafka consumer)
 
 ## NetworkPolicy (Kubernetes)
 
@@ -348,6 +343,8 @@ ingress:
     ports:
       - protocol: TCP
         port: 9092
+
+# REST ingress удалён (нет REST API)
 ```
 
 **Важно:** REST доступ от accounts, cash и transfer к notifications удалён! Взаимодействие только через Kafka.
@@ -487,6 +484,24 @@ kafka:
    kubectl exec -it kafka-0 -- kafka-consumer-groups.sh \
      --bootstrap-server localhost:9092 \
      --describe --group notifications-service --verbose
+   ```
+
+### Notifications сервис не обрабатывает события
+
+1. Проверить поды notifications:
+   ```bash
+   kubectl get pods -l app=notifications
+   ```
+
+2. Проверить логи consumer:
+   ```bash
+   kubectl logs -l app=notifications | grep -i kafka
+   ```
+
+3. Проверить, что топик существует:
+   ```bash
+   kubectl exec -it kafka-0 -- kafka-topics.sh \
+     --bootstrap-server localhost:9092 --list
    ```
 
 ### Топик не создан

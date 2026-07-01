@@ -99,10 +99,10 @@ env:
 ### notifications-secrets
 - `POSTGRES_USERNAME` — пользователь БД
 - `POSTGRES_PASSWORD` — пароль БД
-- `JWT_SECRET` — секрет JWT
-- `JWT_EXPIRATION` — время жизни JWT
 - `KEYCLOAK_ISSUER_URI` — URI issuer Keycloak
 - `KEYCLOAK_JWK_SET_URI` — URI JWK Set
+
+**Примечание:** JWT секреты удалены (нет REST API, только Kafka consumer)
 
 ### postgresql-secrets
 - `POSTGRES_USER` — пользователь
