@@ -13,16 +13,17 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import ru.yandex.practicum.cash.client.AccountsClient;
-import ru.yandex.practicum.cash.client.NotificationsClient;
 import ru.yandex.practicum.cash.dto.DepositRequest;
 import ru.yandex.practicum.cash.dto.TransactionResponse;
 import ru.yandex.practicum.cash.dto.WithdrawRequest;
 import ru.yandex.practicum.cash.entity.CashTransaction;
 import ru.yandex.practicum.cash.entity.TransactionStatus;
 import ru.yandex.practicum.cash.entity.TransactionType;
+import ru.yandex.practicum.cash.event.CashNotificationEvent;
 import ru.yandex.practicum.cash.exception.InsufficientFundsException;
 import ru.yandex.practicum.cash.mapper.CashTransactionMapper;
 import ru.yandex.practicum.cash.repository.CashTransactionRepository;
+import ru.yandex.practicum.cash.service.KafkaNotificationSender;
 
 import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
@@ -46,7 +47,7 @@ class CashServiceTest {
     private AccountsClient accountsClient;
 
     @Mock
-    private NotificationsClient notificationsClient;
+    private KafkaNotificationSender kafkaNotificationSender;
 
     @Mock
     private OAuth2AuthorizedClientManager authorizedClientManager;
@@ -83,6 +84,8 @@ class CashServiceTest {
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(transactionRepository.save(any(CashTransaction.class))).thenReturn(savedTransaction);
         when(mapper.toResponse(savedTransaction)).thenReturn(expectedResponse);
+        when(kafkaNotificationSender.sendNotification(any(CashNotificationEvent.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         // When
         TransactionResponse response = cashService.deposit(request);
@@ -93,6 +96,7 @@ class CashServiceTest {
         assertEquals(TransactionStatus.COMPLETED, response.status());
         verify(accountsClient).deposit(eq(request), eq("test-token"));
         verify(transactionRepository).save(any(CashTransaction.class));
+        verify(kafkaNotificationSender).sendNotification(any(CashNotificationEvent.class));
     }
 
     @Test
@@ -110,6 +114,8 @@ class CashServiceTest {
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(transactionRepository.save(any(CashTransaction.class))).thenReturn(savedTransaction);
         when(mapper.toResponse(savedTransaction)).thenReturn(expectedResponse);
+        when(kafkaNotificationSender.sendNotification(any(CashNotificationEvent.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
 
         // When
         TransactionResponse response = cashService.withdraw(request);
@@ -120,6 +126,7 @@ class CashServiceTest {
         assertEquals(TransactionStatus.COMPLETED, response.status());
         verify(accountsClient).withdraw(eq(request), eq("test-token"));
         verify(transactionRepository).save(any(CashTransaction.class));
+        verify(kafkaNotificationSender).sendNotification(any(CashNotificationEvent.class));
     }
 
     @Test

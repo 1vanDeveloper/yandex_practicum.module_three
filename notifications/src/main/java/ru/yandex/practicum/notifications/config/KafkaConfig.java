@@ -11,6 +11,8 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
+import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import ru.yandex.practicum.notifications.event.NotificationEvent;
 import ru.yandex.practicum.notifications.exception.KafkaErrorHandler;
 
@@ -63,14 +65,13 @@ public class KafkaConfig {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, org.springframework.kafka.support.serializer.ErrorHandlingDeserializer.class);
-        props.put(org.springframework.kafka.support.serializer.ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, org.springframework.kafka.support.serializer.JsonDeserializer.class.getName());
-        props.put("spring.json.trusted.packages", "*");
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
+        props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer.class.getName());
+        props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "*");
         props.put("spring.json.type.mapping",
             "ru.yandex.practicum.accounts.event.NotificationEvent:ru.yandex.practicum.notifications.event.NotificationEvent");
 
-        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(),
-            new org.springframework.kafka.support.serializer.JsonDeserializer<>(NotificationEvent.class));
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new JacksonJsonDeserializer<>(NotificationEvent.class));
     }
 
     /**

@@ -18,11 +18,8 @@ spec:
       ports:
         - protocol: TCP
           port: 9092
-    # Allow traffic from cash and transfer (for REST API)
+    # Allow traffic from transfer (for REST API)
     - from:
-        - podSelector:
-            matchLabels:
-              app: cash
         - podSelector:
             matchLabels:
               app: transfer

@@ -1,9 +1,13 @@
-# Интеграция Accounts и Notifications через Apache Kafka
+# Интеграция микросервисов через Apache Kafka
 
 ## Обзор
 
-Микросервисы `accounts` и `notifications` взаимодействуют через Apache Kafka вместо REST API.
-Это обеспечивает асинхронную, надёжную и масштабируемую коммуникацию.
+Микросервисы банковой платформы взаимодействуют через Apache Kafka вместо REST API для асинхронной, надёжной и масштабируемой коммуникации.
+
+### Текущие интеграции
+
+1. **Accounts → Notifications** — события учётной записи
+2. **Cash → Notifications** — события транзакций (депозиты, снятия)
 
 ## Архитектура
 
@@ -16,9 +20,48 @@
 │  KafkaNotif...  │         │  notifications   │         │  KafkaNotif...      │
 │                 │         │  .events         │         │                     │
 └─────────────────┘         └──────────────────┘         └─────────────────────┘
+
+┌─────────────────┐         ┌──────────────────┐         ┌─────────────────────┐
+│   Cash          │         │   Apache Kafka   │         │   Notifications     │
+│   Service       │         │   Cluster        │         │   Service           │
+│                 │         │                  │         │                     │
+│  [Producer]     │───────▶ │  Topic:          │───────▶ │  [Consumer]         │
+│  KafkaNotif...  │         │  notifications   │         │  KafkaNotif...      │
+│  Sender         │         │  .events         │         │                     │
+└─────────────────┘         └──────────────────┘         └─────────────────────┘
 ```
 
 ## Компоненты
+
+### Cash Service (Producer)
+
+**KafkaConfig.java**
+- Создаёт `ProducerFactory` с JSON сериализацией
+- Настраивает `KafkaTemplate` для отправки событий
+- Конфигурация: `acks=all`, `retries=3`, `idempotence=true`
+
+**KafkaNotificationSender.java**
+- Отправляет события `CashNotificationEvent` в топик `notifications.events`
+- Асинхронная отправка с callback для логирования
+- Метод `sendNotificationSync()` для синхронной отправки
+- Обработка ошибок: логгирование без прерывания основного потока
+
+**CashNotificationEvent.java**
+```json
+{
+  "id": "uuid",
+  "accountId": "account-id",
+  "login": "user@example.com",
+  "message": "Deposit completed: 100.00",
+  "type": "DEPOSIT",
+  "timestamp": "2026-06-30T10:00:00Z"
+}
+```
+
+**CashService.java**
+- Вызывает `kafkaNotificationSender.sendNotification()` после успешной транзакции
+- Типы событий: `DEPOSIT`, `WITHDRAW`
+- Безопасная отправка: ошибки не прерывают основной процесс
 
 ### Accounts Service (Producer)
 
@@ -94,6 +137,42 @@ spring.kafka.consumer.properties.spring.json.use.type.headers=false
 
 ### Unit тесты с EmbeddedKafka
 
+**Cash Service:**
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@EmbeddedKafka(
+    partitions = 1,
+    topics = { "notifications.events" }
+)
+@ContextConfiguration(classes = { KafkaConfig.class, KafkaNotificationSender.class })
+class KafkaNotificationSenderTest {
+
+    @Autowired
+    private KafkaNotificationSender kafkaNotificationSender;
+
+    @Test
+    void sendNotification_shouldSendMessageToKafkaTopic() throws Exception {
+        CashNotificationEvent event = CashNotificationEvent.create(
+            "test_user",
+            "Test notification message",
+            "DEPOSIT"
+        );
+
+        // Create consumer to verify message was sent
+        Consumer<String, CashNotificationEvent> consumer = ...;
+        embeddedKafka.consumeFromAnEmbeddedTopic(consumer, "notifications.events");
+
+        kafkaNotificationSender.sendNotificationSync(event);
+
+        ConsumerRecord<String, CashNotificationEvent> record = 
+            KafkaTestUtils.getSingleRecord(consumer, "notifications.events");
+        
+        assertEquals("test_user", record.value().getLogin());
+        assertEquals("DEPOSIT", record.value().getType());
+    }
+}
+```
+
 **Accounts Service:**
 ```java
 @SpringBootTest(properties = {
@@ -136,6 +215,20 @@ public KafkaNotificationConsumer kafkaNotificationConsumer() {
 
 ## NetworkPolicy (Kubernetes)
 
+### Cash NetworkPolicy
+
+```yaml
+egress:
+  # Allow traffic to Kafka (for notifications events)
+  - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: kafka
+    ports:
+      - protocol: TCP
+        port: 9092
+```
+
 ### Accounts NetworkPolicy
 
 ```yaml
@@ -160,15 +253,35 @@ ingress:
   - from:
       - podSelector:
           matchLabels:
-            app: kafka
+            app.kubernetes.io/name: kafka
     ports:
       - protocol: TCP
         port: 9092
+  # Allow traffic from transfer (for REST API)
+  - from:
+      - podSelector:
+          matchLabels:
+            app: transfer
+    ports:
+      - protocol: TCP
+        port: 8080
 ```
 
-**Важно:** REST доступ от accounts к notifications удалён!
+**Важно:** REST доступ от accounts и cash к notifications удалён! Взаимодействие только через Kafka.
 
 ## Обработка ошибок
+
+### Cash Service
+
+**KafkaErrorHandler.java:**
+- Создаёт `DefaultErrorHandler` с повторными попытками
+- 3 попытки с интервалом 1 секунда
+- Не повторяет `IllegalArgumentException` и `NullPointerException`
+- Логгирует ошибки после всех попыток
+
+**CashService.sendNotificationSafely():**
+- Безопасная отправка: ошибки не прерывают транзакцию
+- Логгирует предупреждения при неудаче
 
 ### Accounts Service
 
