@@ -8,6 +8,7 @@
 
 1. **Accounts → Notifications** — события учётной записи
 2. **Cash → Notifications** — события транзакций (депозиты, снятия)
+3. **Transfer → Notifications** — события переводов между счетами
 
 ## Архитектура
 
@@ -23,6 +24,15 @@
 
 ┌─────────────────┐         ┌──────────────────┐         ┌─────────────────────┐
 │   Cash          │         │   Apache Kafka   │         │   Notifications     │
+│   Service       │         │   Cluster        │         │   Service           │
+│                 │         │                  │         │                     │
+│  [Producer]     │───────▶ │  Topic:          │───────▶ │  [Consumer]         │
+│  KafkaNotif...  │         │  notifications   │         │  KafkaNotif...      │
+│  Sender         │         │  .events         │         │                     │
+└─────────────────┘         └──────────────────┘         └─────────────────────┘
+
+┌─────────────────┐         ┌──────────────────┐         ┌─────────────────────┐
+│   Transfer      │         │   Apache Kafka   │         │   Notifications     │
 │   Service       │         │   Cluster        │         │   Service           │
 │                 │         │                  │         │                     │
 │  [Producer]     │───────▶ │  Topic:          │───────▶ │  [Consumer]         │
@@ -61,6 +71,37 @@
 **CashService.java**
 - Вызывает `kafkaNotificationSender.sendNotification()` после успешной транзакции
 - Типы событий: `DEPOSIT`, `WITHDRAW`
+- Безопасная отправка: ошибки не прерывают основной процесс
+
+### Transfer Service (Producer)
+
+**KafkaConfig.java**
+- Создаёт `ProducerFactory` с JSON сериализацией
+- Настраивает `KafkaTemplate` для отправки событий
+- Конфигурация: `acks=all`, `retries=3`, `idempotence=true`
+
+**KafkaNotificationSender.java**
+- Отправляет события `TransferNotificationEvent` в топик `notifications.events`
+- Асинхронная отправка с callback для логирования
+- Метод `sendNotificationSync()` для синхронной отправки
+- Обработка ошибок: логгирование без прерывания основного потока
+
+**TransferNotificationEvent.java**
+```json
+{
+  "id": "uuid",
+  "accountId": "account-id",
+  "login": "user@example.com",
+  "message": "Money transferred: 100.00 to receiver",
+  "type": "TRANSFER_SENT",
+  "timestamp": "2026-06-30T10:00:00Z"
+}
+```
+
+**TransferService.java**
+- Вызывает `kafkaNotificationSender.sendNotification()` после успешного перевода
+- Типы событий: `TRANSFER_SENT` (отправителю), `TRANSFER_RECEIVED` (получателю)
+- Отправляет два события: одному отправителю, другое получателю
 - Безопасная отправка: ошибки не прерывают основной процесс
 
 ### Accounts Service (Producer)
@@ -173,6 +214,42 @@ class KafkaNotificationSenderTest {
 }
 ```
 
+**Transfer Service:**
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@EmbeddedKafka(
+    partitions = 1,
+    topics = { "notifications.events" }
+)
+@ContextConfiguration(classes = { KafkaConfig.class, KafkaNotificationSender.class })
+class KafkaNotificationSenderTest {
+
+    @Autowired
+    private KafkaNotificationSender kafkaNotificationSender;
+
+    @Test
+    void sendNotification_shouldSendMessageToKafkaTopic() throws Exception {
+        TransferNotificationEvent event = TransferNotificationEvent.create(
+            "test_user",
+            "Money transferred: 100.00 to receiver",
+            "TRANSFER_SENT"
+        );
+
+        // Create consumer to verify message was sent
+        Consumer<String, TransferNotificationEvent> consumer = ...;
+        embeddedKafka.consumeFromAnEmbeddedTopic(consumer, "notifications.events");
+
+        kafkaNotificationSender.sendNotificationSync(event);
+
+        ConsumerRecord<String, TransferNotificationEvent> record = 
+            KafkaTestUtils.getSingleRecord(consumer, "notifications.events");
+        
+        assertEquals("test_user", record.value().getLogin());
+        assertEquals("TRANSFER_SENT", record.value().getType());
+    }
+}
+```
+
 **Accounts Service:**
 ```java
 @SpringBootTest(properties = {
@@ -214,6 +291,20 @@ public KafkaNotificationConsumer kafkaNotificationConsumer() {
 ```
 
 ## NetworkPolicy (Kubernetes)
+
+### Transfer NetworkPolicy
+
+```yaml
+egress:
+  # Allow traffic to Kafka (for notifications events)
+  - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: kafka
+    ports:
+      - protocol: TCP
+        port: 9092
+```
 
 ### Cash NetworkPolicy
 
@@ -257,17 +348,9 @@ ingress:
     ports:
       - protocol: TCP
         port: 9092
-  # Allow traffic from transfer (for REST API)
-  - from:
-      - podSelector:
-          matchLabels:
-            app: transfer
-    ports:
-      - protocol: TCP
-        port: 8080
 ```
 
-**Важно:** REST доступ от accounts и cash к notifications удалён! Взаимодействие только через Kafka.
+**Важно:** REST доступ от accounts, cash и transfer к notifications удалён! Взаимодействие только через Kafka.
 
 ## Обработка ошибок
 
@@ -281,6 +364,19 @@ ingress:
 
 **CashService.sendNotificationSafely():**
 - Безопасная отправка: ошибки не прерывают транзакцию
+- Логгирует предупреждения при неудаче
+
+### Transfer Service
+
+**KafkaErrorHandler.java:**
+- Создаёт `DefaultErrorHandler` с повторными попытками
+- 3 попытки с интервалом 1 секунда
+- Не повторяет `IllegalArgumentException` и `NullPointerException`
+- Логгирует ошибки после всех попыток
+
+**TransferService.sendNotificationsSafely():**
+- Безопасная отправка: ошибки не прерывают перевод
+- Отправляет два события: отправителю и получателю
 - Логгирует предупреждения при неудаче
 
 ### Accounts Service
