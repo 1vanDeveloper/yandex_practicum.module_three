@@ -21,7 +21,7 @@ import java.util.List;
 @EnableWebFluxSecurity
 public class GatewaySecurityConfig {
 
-    @Value("${jwt.secret:mySecretKeyForJWTTokenGenerationMustBeLongEnough}")
+    @Value("${jwt.secret:your-super-secret-jwt-key-change-in-production}")
     private String jwtSecret;
 
     @Bean
@@ -41,7 +41,7 @@ public class GatewaySecurityConfig {
                 .pathMatchers("/actuator/**").permitAll()
                 // Public endpoints for user authentication
                 .pathMatchers("/gateway/auth/login", "/gateway/auth/register").permitAll()
-                .pathMatchers("/login/**").permitAll()
+                .pathMatchers("/login/**", "/oauth2/**", "/error").permitAll()
                 .anyExchange().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2
@@ -49,7 +49,7 @@ public class GatewaySecurityConfig {
                     .jwtDecoder(jwtDecoder())
                     .jwtAuthenticationConverter(jwtToken -> {
                         List<GrantedAuthority> authorities = new ArrayList<>();
-                        
+
                         // Извлекаем привилегии из claim "privileges"
                         List<String> privileges = jwtToken.getClaimAsStringList("privileges");
                         if (privileges != null) {
@@ -57,7 +57,7 @@ public class GatewaySecurityConfig {
                                 authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(privilege));
                             }
                         }
-                        
+
                         // Создаём Authentication с извлечёнными привилегиями
                         org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken authToken =
                             new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(

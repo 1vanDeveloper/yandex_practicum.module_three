@@ -10,19 +10,14 @@ spec:
     - Ingress
     - Egress
   ingress:
+    # Allow traffic from Kafka (for notifications events)
     - from:
         - podSelector:
             matchLabels:
-              app: accounts
-        - podSelector:
-            matchLabels:
-              app: cash
-        - podSelector:
-            matchLabels:
-              app: transfer
+              app.kubernetes.io/name: kafka
       ports:
         - protocol: TCP
-          port: 8080
+          port: 9092
   egress:
     # Allow DNS resolution
     - ports:
@@ -44,3 +39,11 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+    # Allow egress to Kafka (consumer)
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: kafka
+      ports:
+        - protocol: TCP
+          port: 9092

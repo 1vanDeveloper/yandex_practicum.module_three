@@ -2,20 +2,17 @@ package ru.yandex.practicum.accounts.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import ru.yandex.practicum.accounts.client.NotificationsClient;
-import ru.yandex.practicum.accounts.dto.NotificationRequest;
 import ru.yandex.practicum.accounts.entity.OutboxMessage;
+import ru.yandex.practicum.accounts.event.NotificationEvent;
 import ru.yandex.practicum.accounts.repository.OutboxNotificationRepository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Component
@@ -23,10 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public class OutboxProcessor {
 
     private final OutboxNotificationRepository outboxRepository;
-    private final NotificationsClient notificationsClient;
-
-    @Value("${notifications.service.url:http://notifications:8080}")
-    private String notificationsServiceUrl;
+    private final KafkaNotificationProducer kafkaProducer;
 
     private static final int MAX_RETRY_COUNT = 3;
     private static final int BATCH_SIZE = 10;
@@ -44,17 +38,24 @@ public class OutboxProcessor {
     @Transactional
     public void processMessage(OutboxMessage message) {
         try {
-            sendToNotificationsService(message);
+            sendToKafka(message);
             updateMessageStatus(message.getId(), OutboxMessage.Status.SENT.getValue(), null);
         } catch (Exception e) {
             handleProcessingError(message, e);
         }
     }
 
-    @CircuitBreaker(name = "notificationsService", fallbackMethod = "sendNotificationFallback")
-    private void sendToNotificationsService(OutboxMessage message) {
-        NotificationRequest request = new NotificationRequest(message.getLogin(), message.getMessage());
-        notificationsClient.sendNotification(notificationsServiceUrl, request);
+    private void sendToKafka(OutboxMessage message) {
+        NotificationEvent event = NotificationEvent.builder()
+                .id(UUID.randomUUID().toString())
+                .accountId(message.getLogin())
+                .login(message.getLogin())
+                .message(message.getMessage())
+                .type("ACCOUNT_NOTIFICATION")
+                .timestamp(Instant.now())
+                .build();
+
+        kafkaProducer.sendNotification(event);
     }
 
     @Transactional

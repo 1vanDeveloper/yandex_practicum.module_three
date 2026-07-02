@@ -19,3 +19,15 @@ data:
 
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_TRANSFER: "{{ .Values.logging.level }}"
+
+  # Kafka Configuration (Producer)
+  {{- if and .Values.global .Values.global.kafka }}
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.bootstrapServers }}"
+  {{- else }}
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+  {{- end }}
+  SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: "org.apache.kafka.common.serialization.StringSerializer"
+  SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JacksonJsonSerializer"
+  SPRING_KAFKA_PRODUCER_ACKS: "all"
+  SPRING_KAFKA_PRODUCER_RETRIES: "3"
+  SPRING_KAFKA_PRODUCER_PROPERTIES_ENABLE_IDEMPOTENCE: "true"

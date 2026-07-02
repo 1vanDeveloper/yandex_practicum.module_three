@@ -13,15 +13,16 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import ru.yandex.practicum.transfer.client.AccountsClient;
-import ru.yandex.practicum.transfer.client.NotificationsClient;
 import ru.yandex.practicum.transfer.dto.TransferRequest;
 import ru.yandex.practicum.transfer.dto.TransferResponse;
 import ru.yandex.practicum.transfer.entity.Transfer;
 import ru.yandex.practicum.transfer.entity.TransferStatus;
+import ru.yandex.practicum.transfer.event.TransferNotificationEvent;
 import ru.yandex.practicum.transfer.exception.InsufficientFundsException;
 import ru.yandex.practicum.transfer.exception.SelfTransferException;
 import ru.yandex.practicum.transfer.mapper.TransferMapper;
 import ru.yandex.practicum.transfer.repository.TransferRepository;
+import ru.yandex.practicum.transfer.service.KafkaNotificationSender;
 
 import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
@@ -46,7 +47,7 @@ class TransferServiceTest {
     private AccountsClient accountsClient;
 
     @Mock
-    private NotificationsClient notificationsClient;
+    private KafkaNotificationSender kafkaNotificationSender;
 
     @Mock
     private OAuth2AuthorizedClientManager authorizedClientManager;
@@ -93,7 +94,7 @@ class TransferServiceTest {
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(transferRepository.save(any(Transfer.class))).thenReturn(savedTransfer);
         when(mapper.toResponse(savedTransfer)).thenReturn(expectedResponse);
-        when(notificationsClient.sendNotification(any(), eq("test-token")))
+        when(kafkaNotificationSender.sendNotification(any(TransferNotificationEvent.class)))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // When
@@ -105,6 +106,7 @@ class TransferServiceTest {
         assertEquals(TransferStatus.COMPLETED, response.status());
         verify(accountsClient).debitAccount(eq("sender"), eq(new BigDecimal("100.00")), eq("test-token"));
         verify(transferRepository).save(any(Transfer.class));
+        verify(kafkaNotificationSender, times(2)).sendNotification(any(TransferNotificationEvent.class));
     }
 
     @Test

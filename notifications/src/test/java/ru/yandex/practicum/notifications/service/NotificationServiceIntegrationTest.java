@@ -6,22 +6,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import ru.yandex.practicum.notifications.dto.NotificationRequest;
 import ru.yandex.practicum.notifications.entity.Notification;
+import ru.yandex.practicum.notifications.event.NotificationEvent;
 import ru.yandex.practicum.notifications.repository.NotificationRepository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for NotificationService using PostgreSQL and Keycloak from Kubernetes.
+ * Integration tests for NotificationService using PostgreSQL from Kubernetes.
  * Перед запуском убедитесь, что настроен port-forward:
  *   kubectl port-forward svc/postgresql 5432:5432 &
- *   kubectl port-forward svc/keycloak 8180:8080 &
  * Tests verify database interactions with real PostgreSQL instance from Kubernetes cluster.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -40,14 +39,11 @@ class NotificationServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("Сохранение уведомления в БД")
-    void logNotification_shouldSaveNotificationToDatabase() throws ExecutionException, InterruptedException {
-        NotificationRequest request = NotificationRequest.builder()
-            .login("test_user")
-            .message("Test notification message")
-            .build();
+    @DisplayName("Сохранение уведомления из Kafka события в БД")
+    void saveNotification_shouldSaveNotificationToDatabase() {
+        NotificationEvent event = createTestEvent("test_user", "Test notification message");
 
-        notificationService.logNotification(request);
+        notificationService.saveNotification(event);
 
         List<Notification> notifications = notificationRepository.findAll();
         assertEquals(1, notifications.size());
@@ -61,19 +57,12 @@ class NotificationServiceIntegrationTest {
 
     @Test
     @DisplayName("Сохранение нескольких уведомлений для разных пользователей")
-    void logNotification_shouldSaveMultipleNotifications() throws ExecutionException, InterruptedException {
-        NotificationRequest request1 = NotificationRequest.builder()
-            .login("user1")
-            .message("Message for user 1")
-            .build();
+    void saveNotification_shouldSaveMultipleNotifications() {
+        NotificationEvent event1 = createTestEvent("user1", "Message for user 1");
+        NotificationEvent event2 = createTestEvent("user2", "Message for user 2");
 
-        NotificationRequest request2 = NotificationRequest.builder()
-            .login("user2")
-            .message("Message for user 2")
-            .build();
-
-        notificationService.logNotification(request1);
-        notificationService.logNotification(request2);
+        notificationService.saveNotification(event1);
+        notificationService.saveNotification(event2);
 
         List<Notification> notifications = notificationRepository.findAll();
         assertEquals(2, notifications.size());
@@ -88,15 +77,11 @@ class NotificationServiceIntegrationTest {
 
     @Test
     @DisplayName("Сохранение уведомления с длинным сообщением")
-    void logNotification_shouldSaveNotificationWithLongMessage() throws ExecutionException, InterruptedException {
+    void saveNotification_shouldSaveNotificationWithLongMessage() {
         String longMessage = "A".repeat(1000);
-        
-        NotificationRequest request = NotificationRequest.builder()
-            .login("test_user")
-            .message(longMessage)
-            .build();
+        NotificationEvent event = createTestEvent("test_user", longMessage);
 
-        notificationService.logNotification(request);
+        notificationService.saveNotification(event);
 
         List<Notification> notifications = notificationRepository.findAll();
         assertEquals(1, notifications.size());
@@ -104,32 +89,12 @@ class NotificationServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("ID уведомления генерируется автоматически")
-    void logNotification_shouldGenerateIdAutomatically() throws ExecutionException, InterruptedException {
-        NotificationRequest request = NotificationRequest.builder()
-            .login("test_user")
-            .message("Test message")
-            .build();
-
-        notificationService.logNotification(request);
-
-        Optional<Notification> saved = notificationRepository.findAll().stream().findFirst();
-        assertTrue(saved.isPresent());
-        assertNotNull(saved.get().getId());
-        assertTrue(saved.get().getId() > 0);
-    }
-
-    @Test
     @DisplayName("Сохранение уведомления с специальными символами в сообщении")
-    void logNotification_shouldSaveNotificationWithSpecialCharacters() throws ExecutionException, InterruptedException {
-        String specialMessage = "Test with special chars: äöü ñ 中文 🚀";
-        
-        NotificationRequest request = NotificationRequest.builder()
-            .login("test_user")
-            .message(specialMessage)
-            .build();
+    void saveNotification_shouldSaveNotificationWithSpecialCharacters() {
+        String specialMessage = "Test with special chars: äöü ñ Привет 🚀";
+        NotificationEvent event = createTestEvent("test_user", specialMessage);
 
-        notificationService.logNotification(request);
+        notificationService.saveNotification(event);
 
         List<Notification> notifications = notificationRepository.findAll();
         assertEquals(1, notifications.size());
@@ -138,20 +103,27 @@ class NotificationServiceIntegrationTest {
 
     @Test
     @DisplayName("Временная метка устанавливается при сохранении")
-    void logNotification_shouldSetCreatedAtTimestamp() throws ExecutionException, InterruptedException {
+    void saveNotification_shouldSetCreatedAtTimestamp() {
         LocalDateTime before = LocalDateTime.now();
-        
-        NotificationRequest request = NotificationRequest.builder()
-            .login("test_user")
-            .message("Test message")
-            .build();
+        NotificationEvent event = createTestEvent("test_user", "Test message");
 
-        notificationService.logNotification(request);
+        notificationService.saveNotification(event);
 
         LocalDateTime after = LocalDateTime.now();
         
         Notification saved = notificationRepository.findAll().getFirst();
         assertTrue(saved.getCreatedAt().isAfter(before.minusSeconds(1)));
         assertTrue(saved.getCreatedAt().isBefore(after.plusSeconds(1)));
+    }
+
+    private NotificationEvent createTestEvent(String login, String message) {
+        return NotificationEvent.builder()
+                .id(UUID.randomUUID().toString())
+                .accountId(login)
+                .login(login)
+                .message(message)
+                .type("TEST_EVENT")
+                .timestamp(Instant.now())
+                .build();
     }
 }

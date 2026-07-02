@@ -11,11 +11,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.cash.client.AccountsClient;
-import ru.yandex.practicum.cash.client.NotificationsClient;
 import ru.yandex.practicum.cash.dto.TransactionResponse;
 import ru.yandex.practicum.cash.entity.TransactionStatus;
 import ru.yandex.practicum.cash.entity.TransactionType;
 import ru.yandex.practicum.cash.service.CashService;
+import ru.yandex.practicum.cash.service.KafkaNotificationSender;
 
 import java.math.BigDecimal;
 
@@ -80,8 +80,8 @@ public abstract class ContractVerifierBase {
         }
 
         @Bean
-        public NotificationsClient notificationsClient() {
-            return Mockito.mock(NotificationsClient.class);
+        public KafkaNotificationSender kafkaNotificationSender() {
+            return Mockito.mock(KafkaNotificationSender.class);
         }
     }
 }

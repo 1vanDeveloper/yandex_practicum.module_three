@@ -9,12 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.transfer.client.AccountsClient;
-import ru.yandex.practicum.transfer.client.NotificationsClient;
-import ru.yandex.practicum.transfer.dto.NotificationRequest;
 import ru.yandex.practicum.transfer.dto.TransferRequest;
 import ru.yandex.practicum.transfer.dto.TransferResponse;
 import ru.yandex.practicum.transfer.entity.Transfer;
 import ru.yandex.practicum.transfer.entity.TransferStatus;
+import ru.yandex.practicum.transfer.event.TransferNotificationEvent;
 import ru.yandex.practicum.transfer.exception.AccountNotFoundException;
 import ru.yandex.practicum.transfer.exception.InsufficientFundsException;
 import ru.yandex.practicum.transfer.exception.SelfTransferException;
@@ -33,7 +32,7 @@ public class TransferService {
     private final TransferRepository transferRepository;
     private final TransferMapper mapper;
     private final AccountsClient accountsClient;
-    private final NotificationsClient notificationsClient;
+    private final KafkaNotificationSender kafkaNotificationSender;
     private final OAuth2AuthorizedClientManager authorizedClientManager;
 
     private String getAccessToken() {
@@ -79,23 +78,35 @@ public class TransferService {
                 .build();
         Transfer savedTransfer = transferRepository.save(transfer);
 
-        // Send notifications (non-blocking, fire-and-forget)
-        sendNotificationsSafely(request.fromLogin(), request.toLogin(), request.amount(), token);
+        // Send notifications (non-blocking, fire-and-forget via Kafka)
+        sendNotificationsSafely(request.fromLogin(), request.toLogin(), request.amount());
 
         return mapper.toResponse(savedTransfer);
     }
 
-    private void sendNotificationsSafely(String fromLogin, String toLogin, java.math.BigDecimal amount, String token) {
+    private void sendNotificationsSafely(String fromLogin, String toLogin, java.math.BigDecimal amount) {
         try {
-            List<CompletableFuture<Void>> notifications = List.of(
-                notificationsClient.sendNotification(new NotificationRequest(fromLogin,
-                        "Money transferred: " + amount + " to " + toLogin), token),
-                notificationsClient.sendNotification(new NotificationRequest(toLogin,
-                        "Money received: " + amount + " from " + fromLogin), token)
+            // Отправляем уведомление отправителю
+            TransferNotificationEvent fromEvent = TransferNotificationEvent.create(
+                    fromLogin,
+                    "Money transferred: " + amount + " to " + toLogin,
+                    "TRANSFER_SENT"
             );
-            CompletableFuture.allOf(notifications.toArray(new CompletableFuture[0])).join();
+            kafkaNotificationSender.sendNotification(fromEvent);
+            log.debug("Событие нотификации отправлено в Kafka: login={}, message={}", fromLogin, fromEvent.getMessage());
+
+            // Отправляем уведомление получателю
+            TransferNotificationEvent toEvent = TransferNotificationEvent.create(
+                    toLogin,
+                    "Money received: " + amount + " from " + fromLogin,
+                    "TRANSFER_RECEIVED"
+            );
+            kafkaNotificationSender.sendNotification(toEvent);
+            log.debug("Событие нотификации отправлено в Kafka: login={}, message={}", toLogin, toEvent.getMessage());
         } catch (Exception e) {
-            log.warn("Failed to send notifications: {}", e.getMessage());
+            log.warn("Не удалось отправить события нотификации в Kafka: fromLogin={}, toLogin={}, error={}",
+                    fromLogin, toLogin, e.getMessage());
+            // Не пробрасываем исключение, чтобы не прерывать основной поток обработки
         }
     }
 

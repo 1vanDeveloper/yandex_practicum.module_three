@@ -9,14 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.cash.client.AccountsClient;
-import ru.yandex.practicum.cash.client.NotificationsClient;
 import ru.yandex.practicum.cash.dto.DepositRequest;
-import ru.yandex.practicum.cash.dto.NotificationRequest;
 import ru.yandex.practicum.cash.dto.TransactionResponse;
 import ru.yandex.practicum.cash.dto.WithdrawRequest;
 import ru.yandex.practicum.cash.entity.CashTransaction;
 import ru.yandex.practicum.cash.entity.TransactionStatus;
 import ru.yandex.practicum.cash.entity.TransactionType;
+import ru.yandex.practicum.cash.event.CashNotificationEvent;
 import ru.yandex.practicum.cash.exception.AccountNotFoundException;
 import ru.yandex.practicum.cash.exception.InsufficientFundsException;
 import ru.yandex.practicum.cash.exception.TransactionFailedException;
@@ -31,7 +30,7 @@ public class CashService {
     private final CashTransactionRepository transactionRepository;
     private final CashTransactionMapper mapper;
     private final AccountsClient accountsClient;
-    private final NotificationsClient notificationsClient;
+    private final KafkaNotificationSender kafkaNotificationSender;
     private final OAuth2AuthorizedClientManager authorizedClientManager;
 
     private String getAccessToken() {
@@ -69,7 +68,7 @@ public class CashService {
             CashTransaction savedTransaction = transactionRepository.save(transaction);
             log.info("Deposit transaction completed: {}", savedTransaction.getId());
 
-            sendNotificationSafely(request.login(), "Deposit completed: " + request.amount(), token);
+            sendNotificationSafely(request.login(), "Deposit completed: " + request.amount(), "DEPOSIT");
 
             return mapper.toResponse(savedTransaction);
 
@@ -126,7 +125,7 @@ public class CashService {
             CashTransaction savedTransaction = transactionRepository.save(transaction);
             log.info("Withdrawal transaction completed: {}", savedTransaction.getId());
 
-            sendNotificationSafely(request.login(), "Withdrawal completed: " + request.amount(), token);
+            sendNotificationSafely(request.login(), "Withdrawal completed: " + request.amount(), "WITHDRAW");
 
             return mapper.toResponse(savedTransaction);
 
@@ -163,11 +162,19 @@ public class CashService {
         return mapper.toResponse(pendingTransaction);
     }
 
-    private void sendNotificationSafely(String login, String message, String token) {
+    private void sendNotificationSafely(String login, String message, String transactionType) {
         try {
-            notificationsClient.sendNotification(new NotificationRequest(login, message), token).join();
+            CashNotificationEvent event = CashNotificationEvent.create(
+                    login,
+                    message,
+                    transactionType
+            );
+            kafkaNotificationSender.sendNotification(event);
+            log.debug("Событие нотификации отправлено в Kafka: login={}, message={}", login, message);
         } catch (Exception e) {
-            log.warn("Failed to send notification: {}", e.getMessage());
+            log.warn("Не удалось отправить событие нотификации в Kafka: login={}, message={}, error={}",
+                    login, message, e.getMessage());
+            // Не пробрасываем исключение, чтобы не прерывать основной поток обработки
         }
     }
 }

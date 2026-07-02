@@ -50,14 +50,23 @@ spec:
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           volumeMounts:
+            {{- if .Values.persistence.enabled }}
             - name: data
               mountPath: {{ .Values.postgresql.dataDir }}
+            {{- else }}
+            - name: data
+              mountPath: {{ .Values.postgresql.dataDir }}
+            {{- end }}
             - name: init-scripts
               mountPath: /docker-entrypoint-initdb.d
       volumes:
         - name: init-scripts
           configMap:
             name: {{ .Chart.Name }}-init-scripts
+        {{- if not .Values.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -70,6 +79,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:
     - metadata:
         name: data
@@ -82,3 +92,4 @@ spec:
         resources:
           requests:
             storage: {{ .Values.persistence.size }}
+  {{- end }}

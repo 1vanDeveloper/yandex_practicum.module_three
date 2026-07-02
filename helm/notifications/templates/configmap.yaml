@@ -9,4 +9,18 @@ data:
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
   DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=notifications"
   SPRING_JPA_HIBERNATE_DDL_MODE: "{{ .Values.jpa.ddlMode }}"
-  LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS: "{{ .Values.logging.level }}"
+  LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS: "{{ .Values.logging.level | default "INFO" }}"
+  LOGGING_LEVEL_ROOT: "DEBUG"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_KAFKA: "DEBUG"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE: "DEBUG"
+
+  # Kafka Configuration
+  {{- if and .Values.global .Values.global.kafka }}
+  KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.bootstrapServers }}"
+  {{- else }}
+  KAFKA_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+  {{- end }}
+  SPRING_KAFKA_CONSUMER_GROUP_ID: "{{ .Values.kafka.consumer.groupId | default "notifications-service" }}"
+  SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
+  SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.springframework.kafka.support.serializer.JsonDeserializer"
+  SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "{{ .Values.kafka.consumer.autoOffsetReset | default "earliest" }}"
