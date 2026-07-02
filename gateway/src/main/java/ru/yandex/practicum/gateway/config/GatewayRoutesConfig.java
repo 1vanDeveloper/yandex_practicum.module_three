@@ -90,8 +90,8 @@ public class GatewayRoutesConfig {
                         .setFallbackUri("forward:/fallback/accounts")))
                 .uri(accountsServiceUrl))
 
-            // Cash service routes
-            .route("cash", r -> r
+            // Cash service routes - must be before generic routes
+            .route("cash-post", r -> r
                 .path("/gateway/cash")
                 .and()
                 .method(org.springframework.http.HttpMethod.POST)
@@ -102,8 +102,8 @@ public class GatewayRoutesConfig {
                         .setFallbackUri("forward:/fallback/cash")))
                 .uri(cashServiceUrl))
 
-            // Transfer service routes
-            .route("transfer", r -> r
+            // Transfer service routes - must be before generic routes
+            .route("transfer-post", r -> r
                 .path("/gateway/transfer")
                 .and()
                 .method(org.springframework.http.HttpMethod.POST)

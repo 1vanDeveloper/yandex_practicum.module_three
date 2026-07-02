@@ -34,6 +34,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
 
     // Spring Kafka
     implementation("org.springframework.kafka:spring-kafka")

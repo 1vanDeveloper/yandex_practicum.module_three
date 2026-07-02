@@ -59,7 +59,7 @@ public class KafkaConfig {
      * Фабрика потребителей для Kafka listener.
      */
     @Bean
-    public ConsumerFactory<String, NotificationEvent> consumerFactory() {
+    public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -68,10 +68,10 @@ public class KafkaConfig {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer.class.getName());
         props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "*");
-        props.put("spring.json.type.mapping",
-            "ru.yandex.practicum.accounts.event.NotificationEvent:ru.yandex.practicum.notifications.event.NotificationEvent");
+        props.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.HashMap");
 
-        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new JacksonJsonDeserializer<>(NotificationEvent.class));
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new JacksonJsonDeserializer());
     }
 
     /**
