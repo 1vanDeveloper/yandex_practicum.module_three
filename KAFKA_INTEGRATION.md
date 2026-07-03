@@ -353,23 +353,11 @@ ingress:
 
 ### Cash Service
 
-**KafkaErrorHandler.java:**
-- Создаёт `DefaultErrorHandler` с повторными попытками
-- 3 попытки с интервалом 1 секунда
-- Не повторяет `IllegalArgumentException` и `NullPointerException`
-- Логгирует ошибки после всех попыток
-
 **CashService.sendNotificationSafely():**
 - Безопасная отправка: ошибки не прерывают транзакцию
 - Логгирует предупреждения при неудаче
 
 ### Transfer Service
-
-**KafkaErrorHandler.java:**
-- Создаёт `DefaultErrorHandler` с повторными попытками
-- 3 попытки с интервалом 1 секунда
-- Не повторяет `IllegalArgumentException` и `NullPointerException`
-- Логгирует ошибки после всех попыток
 
 **TransferService.sendNotificationsSafely():**
 - Безопасная отправка: ошибки не прерывают перевод
