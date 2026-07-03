@@ -57,9 +57,12 @@ public class KafkaConfig {
 
     /**
      * Фабрика потребителей для Kafka listener.
+     * Использует NotificationEvent как целевой тип для десериализации.
+     * CashNotificationEvent и TransferNotificationEvent автоматически маппятся
+     * благодаря одинаковой структуре полей.
      */
     @Bean
-    public ConsumerFactory<String, Object> consumerFactory() {
+    public ConsumerFactory<String, NotificationEvent> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -69,7 +72,7 @@ public class KafkaConfig {
         props.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer.class.getName());
         props.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "*");
         props.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-        props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, "java.util.HashMap");
+        props.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, NotificationEvent.class.getName());
 
         return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new JacksonJsonDeserializer());
     }
