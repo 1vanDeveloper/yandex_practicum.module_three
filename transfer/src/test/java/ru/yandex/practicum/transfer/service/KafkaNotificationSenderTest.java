@@ -86,11 +86,11 @@ class KafkaNotificationSenderTest {
         assertNotNull(record);
         assertEquals("test_user", record.key());
         assertNotNull(record.value());
-        assertEquals("test_user", record.value().getLogin());
-        assertEquals("Test notification message", record.value().getMessage());
-        assertEquals("TRANSFER_SENT", record.value().getType());
-        assertNotNull(record.value().getId());
-        assertNotNull(record.value().getTimestamp());
+        assertEquals("test_user", record.value().login());
+        assertEquals("Test notification message", record.value().message());
+        assertEquals("TRANSFER_SENT", record.value().type());
+        assertNotNull(record.value().id());
+        assertNotNull(record.value().timestamp());
 
         consumer.close();
     }
@@ -105,11 +105,11 @@ class KafkaNotificationSenderTest {
         );
 
         // Then
-        assertNotNull(event.getId());
-        assertEquals("user123", event.getLogin());
-        assertEquals("user123", event.getAccountId());
-        assertEquals("Money transferred: 500.00 to receiver", event.getMessage());
-        assertEquals("TRANSFER_SENT", event.getType());
-        assertNotNull(event.getTimestamp());
+        assertNotNull(event.id());
+        assertEquals("user123", event.login());
+        assertEquals("user123", event.accountId());
+        assertEquals("Money transferred: 500.00 to receiver", event.message());
+        assertEquals("TRANSFER_SENT", event.type());
+        assertNotNull(event.timestamp());
     }
 }

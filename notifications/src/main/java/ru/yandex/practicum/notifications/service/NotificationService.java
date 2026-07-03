@@ -18,10 +18,10 @@ public class NotificationService {
     @Transactional
     public void saveNotification(NotificationEvent event) {
         Notification notification = Notification.builder()
-                .login(event.getLogin())
-                .message(event.getMessage())
+                .login(event.login())
+                .message(event.message())
                 .build();
-        log.info("Notification saved from Kafka event for user {}: {}", event.getLogin(), event.getMessage());
+        log.info("Notification saved from Kafka event for user {}: {}", event.login(), event.message());
         notificationRepository.save(notification);
     }
 }

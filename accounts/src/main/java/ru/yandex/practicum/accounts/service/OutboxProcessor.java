@@ -46,14 +46,14 @@ public class OutboxProcessor {
     }
 
     private void sendToKafka(OutboxMessage message) {
-        NotificationEvent event = NotificationEvent.builder()
-                .id(UUID.randomUUID().toString())
-                .accountId(message.getLogin())
-                .login(message.getLogin())
-                .message(message.getMessage())
-                .type("ACCOUNT_NOTIFICATION")
-                .timestamp(Instant.now())
-                .build();
+        NotificationEvent event = new NotificationEvent(
+                UUID.randomUUID().toString(),
+                message.getLogin(),
+                message.getLogin(),
+                message.getMessage(),
+                "ACCOUNT_NOTIFICATION",
+                Instant.now()
+        );
 
         // Синхронная отправка с ожиданием подтверждения Kafka
         kafkaProducer.sendNotificationSync(event);

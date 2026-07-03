@@ -30,7 +30,7 @@ public class KafkaNotificationProducer {
         log.info("Синхронная отправка события в Kafka: topic={}, event={}", TOPIC, event);
         try {
             SendResult<String, NotificationEvent> result =
-                    kafkaTemplate.send(TOPIC, event.getLogin(), event).get();
+                    kafkaTemplate.send(TOPIC, event.login(), event).get();
             log.info("Событие успешно отправлено в Kafka: topic={}, partition={}, offset={}",
                     TOPIC,
                     result.getRecordMetadata().partition(),

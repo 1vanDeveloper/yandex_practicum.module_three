@@ -42,14 +42,14 @@ class KafkaNotificationConsumerTest {
     @Test
     void consumeNotification_shouldProcessEventWithCorrectLogin() {
         // Arrange
-        NotificationEvent event = NotificationEvent.builder()
-                .id(UUID.randomUUID().toString())
-                .accountId("account-123")
-                .login("user@example.com")
-                .message("Test message")
-                .type("ACCOUNT_NOTIFICATION")
-                .timestamp(Instant.now())
-                .build();
+        NotificationEvent event = new NotificationEvent(
+                UUID.randomUUID().toString(),
+                "account-123",
+                "user@example.com",
+                "Test message",
+                "ACCOUNT_NOTIFICATION",
+                Instant.now()
+        );
 
         // Act
         kafkaConsumer.consumeNotification(event);
@@ -61,14 +61,14 @@ class KafkaNotificationConsumerTest {
     @Test
     void consumeNotification_shouldProcessEventWithCorrectMessage() {
         // Arrange
-        NotificationEvent event = NotificationEvent.builder()
-                .id(UUID.randomUUID().toString())
-                .accountId("account-456")
-                .login("test@example.com")
-                .message("Another test message")
-                .type("ACCOUNT_NOTIFICATION")
-                .timestamp(Instant.now())
-                .build();
+        NotificationEvent event = new NotificationEvent(
+                UUID.randomUUID().toString(),
+                "account-456",
+                "test@example.com",
+                "Another test message",
+                "ACCOUNT_NOTIFICATION",
+                Instant.now()
+        );
 
         // Act
         kafkaConsumer.consumeNotification(event);
@@ -101,13 +101,13 @@ class KafkaNotificationConsumerTest {
     }
 
     private NotificationEvent createTestEvent() {
-        return NotificationEvent.builder()
-                .id(UUID.randomUUID().toString())
-                .accountId("account-123")
-                .login("test@example.com")
-                .message("Test notification message")
-                .type("ACCOUNT_NOTIFICATION")
-                .timestamp(Instant.now())
-                .build();
+        return new NotificationEvent(
+                UUID.randomUUID().toString(),
+                "account-123",
+                "test@example.com",
+                "Test notification message",
+                "ACCOUNT_NOTIFICATION",
+                Instant.now()
+        );
     }
 }

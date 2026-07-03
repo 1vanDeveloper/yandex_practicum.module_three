@@ -25,7 +25,7 @@ public class KafkaNotificationConsumer {
      * @param event событие для обработки
      */
     @KafkaListener(topics = "${kafka.topic.notifications:notifications.events}", groupId = "${spring.kafka.consumer.group-id}")
-    public void consumeNotification(@Payload NotificationEvent event) {
+    public void consumeNotification(NotificationEvent event) {
         log.info("Получено событие из Kafka: topic={}, event={}",
                 "notifications.events", event);
 
@@ -33,7 +33,7 @@ public class KafkaNotificationConsumer {
             // Сохраняем уведомление в базу данных
             notificationService.saveNotification(event);
             log.info("Уведомление успешно обработано: eventId={}, login={}",
-                    event.getId(), event.getLogin());
+                    event.id(), event.login());
         } catch (Exception e) {
             log.error("Ошибка при обработке уведомления: event={}", event, e);
             throw e; // Пробрасываем исключение для обработки Kafka

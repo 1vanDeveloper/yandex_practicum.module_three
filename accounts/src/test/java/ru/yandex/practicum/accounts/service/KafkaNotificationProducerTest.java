@@ -46,7 +46,7 @@ class KafkaNotificationProducerTest {
         kafkaProducer.sendNotificationSync(event);
 
         // Assert
-        verify(kafkaTemplate).send(eq("notifications.events"), eq(event.getLogin()), eq(event));
+        verify(kafkaTemplate).send(eq("notifications.events"), eq(event.login()), eq(event));
     }
 
     @Test
@@ -71,13 +71,13 @@ class KafkaNotificationProducerTest {
     }
 
     private NotificationEvent createTestEvent() {
-        return NotificationEvent.builder()
-                .id(UUID.randomUUID().toString())
-                .accountId("account-123")
-                .login("test@example.com")
-                .message("Test notification message")
-                .type("ACCOUNT_NOTIFICATION")
-                .timestamp(Instant.now())
-                .build();
+        return new NotificationEvent(
+                UUID.randomUUID().toString(),
+                "account-123",
+                "test@example.com",
+                "Test notification message",
+                "ACCOUNT_NOTIFICATION",
+                Instant.now()
+        );
     }
 }

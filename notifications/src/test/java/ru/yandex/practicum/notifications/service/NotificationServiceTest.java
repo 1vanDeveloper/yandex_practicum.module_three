@@ -39,14 +39,14 @@ class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        event = NotificationEvent.builder()
-                .id(UUID.randomUUID().toString())
-                .accountId("test_user")
-                .login("test_user")
-                .message("Test notification message")
-                .type("TEST_EVENT")
-                .timestamp(Instant.now())
-                .build();
+        event = new NotificationEvent(
+                UUID.randomUUID().toString(),
+                "test_user",
+                "test_user",
+                "Test notification message",
+                "TEST_EVENT",
+                Instant.now()
+        );
 
         notification = Notification.builder()
                 .id(1L)

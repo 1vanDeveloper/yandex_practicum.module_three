@@ -117,13 +117,13 @@ class NotificationServiceIntegrationTest {
     }
 
     private NotificationEvent createTestEvent(String login, String message) {
-        return NotificationEvent.builder()
-                .id(UUID.randomUUID().toString())
-                .accountId(login)
-                .login(login)
-                .message(message)
-                .type("TEST_EVENT")
-                .timestamp(Instant.now())
-                .build();
+        return new NotificationEvent(
+                UUID.randomUUID().toString(),
+                login,
+                login,
+                message,
+                "TEST_EVENT",
+                Instant.now()
+        );
     }
 }

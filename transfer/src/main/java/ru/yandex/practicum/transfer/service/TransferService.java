@@ -93,7 +93,7 @@ public class TransferService {
                     "TRANSFER_SENT"
             );
             kafkaNotificationSender.sendNotificationSync(fromEvent);
-            log.debug("Событие нотификации отправлено в Kafka: login={}, message={}", fromLogin, fromEvent.getMessage());
+            log.debug("Событие нотификации отправлено в Kafka: login={}, message={}", fromLogin, fromEvent.message());
 
             // Отправляем уведомление получателю
             TransferNotificationEvent toEvent = TransferNotificationEvent.create(
@@ -102,7 +102,7 @@ public class TransferService {
                     "TRANSFER_RECEIVED"
             );
             kafkaNotificationSender.sendNotificationSync(toEvent);
-            log.debug("Событие нотификации отправлено в Kafka: login={}, message={}", toLogin, toEvent.getMessage());
+            log.debug("Событие нотификации отправлено в Kafka: login={}, message={}", toLogin, toEvent.message());
         } catch (Exception e) {
             log.warn("Не удалось отправить события нотификации в Kafka: fromLogin={}, toLogin={}, error={}",
                     fromLogin, toLogin, e.getMessage());
