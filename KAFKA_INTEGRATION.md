@@ -385,9 +385,10 @@ ingress:
 ### Notifications Service
 
 **KafkaErrorHandler.java:**
-- Реализует `CommonErrorHandler`
-- Логгирует ошибки обработки сообщений
-- `isAckAfterHandle() = false` - не подтверждать сообщение при ошибке
+- Реализует `DefaultErrorHandler` с retry политикой
+- 3 повторные попытки с интервалом 1 секунда
+- После исчерпания retry: логирование и подтверждение сообщения
+- `isAckAfterHandle() = true` — подтверждаем после всех попыток
 
 ## Мониторинг
 

@@ -92,12 +92,12 @@ class KafkaNotificationConsumerTest {
     }
 
     @Test
-    void kafkaErrorHandler_isAckAfterHandle_shouldReturnFalse() {
+    void kafkaErrorHandler_isAckAfterHandle_shouldReturnTrue() {
         // Arrange
         KafkaErrorHandler errorHandler = new KafkaErrorHandler();
 
         // Act & Assert
-        org.junit.jupiter.api.Assertions.assertFalse(errorHandler.isAckAfterHandle());
+        org.junit.jupiter.api.Assertions.assertTrue(errorHandler.isAckAfterHandle());
     }
 
     private NotificationEvent createTestEvent() {
