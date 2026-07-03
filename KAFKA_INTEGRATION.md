@@ -52,9 +52,9 @@
 
 **KafkaNotificationSender.java**
 - Отправляет события `CashNotificationEvent` в топик `notifications.events`
-- Асинхронная отправка с callback для логирования
-- Метод `sendNotificationSync()` для синхронной отправки
-- Обработка ошибок: логгирование без прерывания основного потока
+- `sendNotification()` — асинхронная отправка с callback для логирования
+- `sendNotificationSync()` — синхронная отправка с блокировкой до подтверждения Kafka
+- Обработка ошибок: логгирование + выбрасывание RuntimeException при синхронной отправке
 
 **CashNotificationEvent.java**
 ```json
@@ -82,9 +82,9 @@
 
 **KafkaNotificationSender.java**
 - Отправляет события `TransferNotificationEvent` в топик `notifications.events`
-- Асинхронная отправка с callback для логирования
-- Метод `sendNotificationSync()` для синхронной отправки
-- Обработка ошибок: логгирование без прерывания основного потока
+- `sendNotification()` — асинхронная отправка с callback для логирования
+- `sendNotificationSync()` — синхронная отправка с блокировкой до подтверждения Kafka
+- Обработка ошибок: логгирование + выбрасывание RuntimeException при синхронной отправке
 
 **TransferNotificationEvent.java**
 ```json

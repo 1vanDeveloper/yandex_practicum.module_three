@@ -169,7 +169,7 @@ public class CashService {
                     message,
                     transactionType
             );
-            kafkaNotificationSender.sendNotification(event);
+            kafkaNotificationSender.sendNotification(event).get();
             log.debug("Событие нотификации отправлено в Kafka: login={}, message={}", login, message);
         } catch (Exception e) {
             log.warn("Не удалось отправить событие нотификации в Kafka: login={}, message={}, error={}",
