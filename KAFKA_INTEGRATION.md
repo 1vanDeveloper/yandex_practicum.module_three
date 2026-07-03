@@ -378,10 +378,6 @@ ingress:
 
 ### Accounts Service
 
-**KafkaExceptionHandler.java:**
-- Логгирует ошибки отправки в Kafka
-- Позволяет реализовать retry или dead letter queue
-
 **OutboxProcessor.handleProcessingError():**
 - При ошибке отправки: увеличивает retry count
 - После 3 попыток: статус FAILED
