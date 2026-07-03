@@ -108,8 +108,8 @@
 
 **KafkaNotificationProducer.java**
 - Отправляет события `NotificationEvent` в топик `notifications.events`
-- Асинхронная отправка с callback для логирования
-- Метод `sendNotificationWithExceptionHandling()` для синхронной отправки
+- `sendNotificationSync()` — синхронная отправка с блокировкой до подтверждения Kafka
+- Обработка ошибок: логгирование + выбрасывание RuntimeException
 
 **OutboxProcessor.java**
 - Читает сообщения из outbox таблицы

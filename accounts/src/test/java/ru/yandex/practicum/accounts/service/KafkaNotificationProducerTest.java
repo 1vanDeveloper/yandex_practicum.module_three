@@ -1,5 +1,6 @@
 package ru.yandex.practicum.accounts.service;
 
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -28,30 +29,42 @@ class KafkaNotificationProducerTest {
     }
 
     @Test
-    void sendNotification_shouldSendToCorrectTopic() {
+    void sendNotificationSync_shouldSendToCorrectTopic() throws Exception {
         // Arrange
         NotificationEvent event = createTestEvent();
-        @SuppressWarnings("unchecked")
-        CompletableFuture<SendResult<String, NotificationEvent>> future = CompletableFuture.completedFuture(null);
+        RecordMetadata recordMetadata = mock(RecordMetadata.class);
+        when(recordMetadata.partition()).thenReturn(0);
+        when(recordMetadata.offset()).thenReturn(1L);
+
+        SendResult<String, NotificationEvent> sendResult = mock(SendResult.class);
+        when(sendResult.getRecordMetadata()).thenReturn(recordMetadata);
+
+        CompletableFuture<SendResult<String, NotificationEvent>> future = CompletableFuture.completedFuture(sendResult);
         when(kafkaTemplate.send(eq("notifications.events"), anyString(), any())).thenReturn(future);
 
         // Act
-        kafkaProducer.sendNotification(event);
+        kafkaProducer.sendNotificationSync(event);
 
         // Assert
         verify(kafkaTemplate).send(eq("notifications.events"), eq(event.getLogin()), eq(event));
     }
 
     @Test
-    void sendNotification_shouldUseLoginAsKey() {
+    void sendNotificationSync_shouldUseLoginAsKey() throws Exception {
         // Arrange
         NotificationEvent event = createTestEvent();
-        @SuppressWarnings("unchecked")
-        CompletableFuture<SendResult<String, NotificationEvent>> future = CompletableFuture.completedFuture(null);
+        RecordMetadata recordMetadata = mock(RecordMetadata.class);
+        when(recordMetadata.partition()).thenReturn(0);
+        when(recordMetadata.offset()).thenReturn(1L);
+
+        SendResult<String, NotificationEvent> sendResult = mock(SendResult.class);
+        when(sendResult.getRecordMetadata()).thenReturn(recordMetadata);
+
+        CompletableFuture<SendResult<String, NotificationEvent>> future = CompletableFuture.completedFuture(sendResult);
         when(kafkaTemplate.send(eq("notifications.events"), anyString(), any())).thenReturn(future);
 
         // Act
-        kafkaProducer.sendNotification(event);
+        kafkaProducer.sendNotificationSync(event);
 
         // Assert
         verify(kafkaTemplate).send(eq("notifications.events"), eq("test@example.com"), any());

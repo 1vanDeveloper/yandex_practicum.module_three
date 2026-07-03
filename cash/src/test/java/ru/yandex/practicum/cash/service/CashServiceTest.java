@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -84,8 +85,7 @@ class CashServiceTest {
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(transactionRepository.save(any(CashTransaction.class))).thenReturn(savedTransaction);
         when(mapper.toResponse(savedTransaction)).thenReturn(expectedResponse);
-        when(kafkaNotificationSender.sendNotification(any(CashNotificationEvent.class)))
-                .thenReturn(CompletableFuture.completedFuture(null));
+        doNothing().when(kafkaNotificationSender).sendNotificationSync(any(CashNotificationEvent.class));
 
         // When
         TransactionResponse response = cashService.deposit(request);
@@ -96,7 +96,7 @@ class CashServiceTest {
         assertEquals(TransactionStatus.COMPLETED, response.status());
         verify(accountsClient).deposit(eq(request), eq("test-token"));
         verify(transactionRepository).save(any(CashTransaction.class));
-        verify(kafkaNotificationSender).sendNotification(any(CashNotificationEvent.class));
+        verify(kafkaNotificationSender).sendNotificationSync(any(CashNotificationEvent.class));
     }
 
     @Test
@@ -114,8 +114,7 @@ class CashServiceTest {
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(transactionRepository.save(any(CashTransaction.class))).thenReturn(savedTransaction);
         when(mapper.toResponse(savedTransaction)).thenReturn(expectedResponse);
-        when(kafkaNotificationSender.sendNotification(any(CashNotificationEvent.class)))
-                .thenReturn(CompletableFuture.completedFuture(null));
+        doNothing().when(kafkaNotificationSender).sendNotificationSync(any(CashNotificationEvent.class));
 
         // When
         TransactionResponse response = cashService.withdraw(request);
@@ -126,7 +125,7 @@ class CashServiceTest {
         assertEquals(TransactionStatus.COMPLETED, response.status());
         verify(accountsClient).withdraw(eq(request), eq("test-token"));
         verify(transactionRepository).save(any(CashTransaction.class));
-        verify(kafkaNotificationSender).sendNotification(any(CashNotificationEvent.class));
+        verify(kafkaNotificationSender).sendNotificationSync(any(CashNotificationEvent.class));
     }
 
     @Test

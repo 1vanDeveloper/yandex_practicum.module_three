@@ -55,7 +55,8 @@ public class OutboxProcessor {
                 .timestamp(Instant.now())
                 .build();
 
-        kafkaProducer.sendNotification(event);
+        // Синхронная отправка с ожиданием подтверждения Kafka
+        kafkaProducer.sendNotificationSync(event);
     }
 
     @Transactional

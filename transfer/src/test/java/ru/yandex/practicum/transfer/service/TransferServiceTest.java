@@ -31,6 +31,7 @@ import java.util.concurrent.CompletionException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -94,8 +95,7 @@ class TransferServiceTest {
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(transferRepository.save(any(Transfer.class))).thenReturn(savedTransfer);
         when(mapper.toResponse(savedTransfer)).thenReturn(expectedResponse);
-        when(kafkaNotificationSender.sendNotification(any(TransferNotificationEvent.class)))
-                .thenReturn(CompletableFuture.completedFuture(null));
+        doNothing().when(kafkaNotificationSender).sendNotificationSync(any(TransferNotificationEvent.class));
 
         // When
         TransferResponse response = transferService.createTransfer(request);
@@ -106,7 +106,7 @@ class TransferServiceTest {
         assertEquals(TransferStatus.COMPLETED, response.status());
         verify(accountsClient).debitAccount(eq("sender"), eq(new BigDecimal("100.00")), eq("test-token"));
         verify(transferRepository).save(any(Transfer.class));
-        verify(kafkaNotificationSender, times(2)).sendNotification(any(TransferNotificationEvent.class));
+        verify(kafkaNotificationSender, times(2)).sendNotificationSync(any(TransferNotificationEvent.class));
     }
 
     @Test
