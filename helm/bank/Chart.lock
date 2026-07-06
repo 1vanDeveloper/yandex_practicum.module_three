@@ -5,6 +5,9 @@ dependencies:
 - name: keycloak
   repository: file://../keycloak
   version: 0.1.0
+- name: kafka
+  repository: file://charts/kafka
+  version: 13.0.9
 - name: accounts
   repository: file://../accounts
   version: 0.1.0
@@ -23,5 +26,5 @@ dependencies:
 - name: transfer
   repository: file://../transfer
   version: 0.1.0
-digest: sha256:7b879f2a42cd0ac100be848c5985ba30f2c676a0633b2048bce04acb3639bd71
-generated: "2026-06-22T19:26:20.470068+03:00"
+digest: sha256:b7dac0a07311fdee63c058b1522198b966e824f8da28e661a8541cdbc53e4bd9
+generated: "2026-06-30T21:29:51.067538+03:00"

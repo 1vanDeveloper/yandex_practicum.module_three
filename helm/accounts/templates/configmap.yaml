@@ -20,3 +20,19 @@ data:
 
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_ACCOUNTS: "{{ .Values.logging.level }}"
+
+  # Kafka Configuration
+  {{- if and .Values.global .Values.global.kafka }}
+  KAFKA_ENABLED: "{{ .Values.global.kafka.enabled | default "true" }}"
+  {{- else }}
+  KAFKA_ENABLED: "true"
+  {{- end }}
+  {{- if and .Values.global .Values.global.kafka .Values.global.kafka.bootstrapServers }}
+  KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.bootstrapServers }}"
+  {{- else }}
+  KAFKA_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+  {{- end }}
+  SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: "org.apache.kafka.common.serialization.StringSerializer"
+  SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JsonSerializer"
+  SPRING_KAFKA_PRODUCER_ACKS: "{{ .Values.kafka.producer.acks | default "all" }}"
+  SPRING_KAFKA_PRODUCER_RETRIES: "{{ .Values.kafka.producer.retries | default 3 }}"

@@ -22,7 +22,7 @@
 | **accounts** | 8080 | Сервис аккаунтов пользователей |
 | **cash** | 8080 | Сервис операций с наличными |
 | **transfer** | 8080 | Сервис переводов между аккаунтами |
-| **notifications** | 8080 | Сервис уведомлений |
+| **notifications** | 8080 | Сервис уведомлений (Kafka consumer, нет REST API) |
 
 ### Инфраструктура
 
@@ -49,22 +49,33 @@
 │  + Outbox       │              │                 │              │                 │
 └────────┬────────┘              └────────┬────────┘              └────────┬────────┘
          │                                │                                │
+         │                                │                                │
          └────────────────────────────────┼────────────────────────────────┘
+                                          │
+                                          ▼
+                                 ┌─────────────────┐
+                                 │     Apache      │
+                                 │     Kafka       │
+                                 │  (ClusterIP)    │
+                                 └────────┬────────┘
                                           │
                                           ▼
                                  ┌─────────────────┐
                                  │  Notifications  │
                                  │  (ClusterIP)    │
                                  │  + PostgreSQL   │
+                                 │  (Kafka Only)   │
                                  └─────────────────┘
 ```
 
 **Паттерн Transactional Outbox:**
-- **accounts** → outbox_messages → notifications (уведомления о создании/изменении аккаунта)
+- **accounts** → outbox_messages → Kafka → notifications (уведомления о создании/изменении аккаунта)
 
 **Прямая отправка сообщений:**
-- **cash** → notifications (уведомления о пополнении/снятии)
-- **transfer** → notifications (уведомления о переводах)
+- **cash** → Kafka → notifications (уведомления о пополнении/снятии)
+- **transfer** → Kafka → notifications (уведомления о переводах)
+
+**Важно:** Notifications сервис не имеет REST API — взаимодействие только через Kafka.
 
 ---
 
@@ -213,7 +224,7 @@ kubectl port-forward svc/keycloak 8180:8080 &
 # Transfer
 ./gradlew :transfer:test --tests "*IntegrationTest*"
 
-# Notifications
+# Notifications (Kafka consumer, нет REST API)
 ./gradlew :notifications:test --tests "*IntegrationTest*"
 
 # Gateway
@@ -225,6 +236,15 @@ kubectl port-forward svc/keycloak 8180:8080 &
 ```bash
 ./gradlew contractTest
 ```
+
+**Сервисы с REST API:**
+- **accounts** — 7 контрактов (GET/PUT аккаунт, внутренние операции)
+- **cash** — 2 контракта (депозит, снятие)
+- **transfer** — 1 контракт (создание перевода)
+
+**Сервисы без REST API:**
+- **notifications** — контрактные тесты удалены (только Kafka consumer)
+- **gateway** — нет контрактов
 
 ### Helm-тесты
 
@@ -351,6 +371,8 @@ kubectl port-forward svc/gateway 8086:8080
 # Swagger UI доступен по адресу
 open http://localhost:8086/swagger-ui.html
 ```
+
+**Примечание:** Notifications сервис не имеет REST API и не отображается в Swagger UI.
 
 ### Генерация OpenAPI
 

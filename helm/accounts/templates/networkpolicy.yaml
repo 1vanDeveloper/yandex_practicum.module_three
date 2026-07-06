@@ -47,11 +47,11 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
-    # Allow traffic to notifications (for outbox pattern)
+    # Allow traffic to Kafka (for notifications events)
     - to:
         - podSelector:
             matchLabels:
-              app: notifications
+              app.kubernetes.io/name: kafka
       ports:
         - protocol: TCP
-          port: 8080
+          port: 9092

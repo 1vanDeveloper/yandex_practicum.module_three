@@ -72,20 +72,20 @@ class GatewayRoutesIntegrationTest {
     @Test
     void cashRouteShouldBeConfigured() {
         var routes = routeLocator.getRoutes().collectList().block();
-        
+
         boolean hasCashRoute = routes.stream()
-            .anyMatch(route -> "cash".equals(route.getId()));
-        
-        assertTrue(hasCashRoute, "Маршрут cash должен быть настроен");
+            .anyMatch(route -> "cash-post".equals(route.getId()));
+
+        assertTrue(hasCashRoute, "Маршрут cash-post должен быть настроен");
     }
 
     @Test
     void transferRouteShouldBeConfigured() {
         var routes = routeLocator.getRoutes().collectList().block();
-        
+
         boolean hasTransferRoute = routes.stream()
-            .anyMatch(route -> "transfer".equals(route.getId()));
-        
-        assertTrue(hasTransferRoute, "Маршрут transfer должен быть настроен");
+            .anyMatch(route -> "transfer-post".equals(route.getId()));
+
+        assertTrue(hasTransferRoute, "Маршрут transfer-post должен быть настроен");
     }
 }

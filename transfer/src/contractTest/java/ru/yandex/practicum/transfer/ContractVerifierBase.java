@@ -11,9 +11,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.transfer.client.AccountsClient;
-import ru.yandex.practicum.transfer.client.NotificationsClient;
 import ru.yandex.practicum.transfer.dto.TransferResponse;
 import ru.yandex.practicum.transfer.entity.TransferStatus;
+import ru.yandex.practicum.transfer.service.KafkaNotificationSender;
 import ru.yandex.practicum.transfer.service.TransferService;
 
 import java.math.BigDecimal;
@@ -68,8 +68,8 @@ public abstract class ContractVerifierBase {
         }
 
         @Bean
-        public NotificationsClient notificationsClient() {
-            return Mockito.mock(NotificationsClient.class);
+        public KafkaNotificationSender kafkaNotificationSender() {
+            return Mockito.mock(KafkaNotificationSender.class);
         }
     }
 }

@@ -79,6 +79,32 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS
+            # Kafka Configuration
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: SPRING_KAFKA_CONSUMER_GROUP_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_KAFKA_CONSUMER_GROUP_ID
+            - name: SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER
+            - name: SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER
+            - name: SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

@@ -13,13 +13,13 @@ docker-build:
 
 # Kubernetes deployment
 k8s-deploy:
-	helm upgrade --install bank helm/bank --timeout 5m --wait
+	helm upgrade --install bank helm/bank -f helm/values-dev.yaml -f helm/values-secret.yaml --timeout 5m --wait
 
 k8s-rollback:
 	helm rollback bank
 
 k8s-status:
-	kubectl get pods -l app.kubernetes.io/part-of=bank
+	kubectl get pods
 	kubectl get svc
 
 k8s-logs:

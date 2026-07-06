@@ -15,6 +15,9 @@ global:
     url: "https://keycloak-staging.example.com"
     realm: "bank"
 
+  kafka:
+    bootstrapServers: "kafka-staging:9092"
+
 # Accounts
 accounts:
   replicaCount: 2
@@ -152,3 +155,43 @@ keycloak:
     requests:
       cpu: "1000m"
       memory: "1024Mi"
+
+# Kafka (sir5kong/kafka chart - KRaft mode)
+kafka:
+  enabled: true
+  image:
+    repository: sir5kong/kafka
+    tag: "3.6.1"
+    pullPolicy: IfNotPresent
+  
+  controller:
+    enabled: true
+    replicaCount: 3
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        cpu: "2000m"
+        memory: "2048Mi"
+      requests:
+        cpu: "1000m"
+        memory: "1024Mi"
+  
+  broker:
+    combinedMode:
+      enabled: false
+    replicaCount: 3
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        cpu: "2000m"
+        memory: "2048Mi"
+      requests:
+        cpu: "1000m"
+        memory: "1024Mi"
+  
+  networkPolicy:
+    enabled: true

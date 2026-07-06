@@ -108,5 +108,10 @@ public abstract class ContractVerifierBase {
                 throw new UnsupportedOperationException("OAuth2 client not supported in contract tests");
             };
         }
+
+        @Bean
+        public ru.yandex.practicum.accounts.service.KafkaNotificationProducer kafkaNotificationProducer() {
+            return Mockito.mock(ru.yandex.practicum.accounts.service.KafkaNotificationProducer.class);
+        }
     }
 }

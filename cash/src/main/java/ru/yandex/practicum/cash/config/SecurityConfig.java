@@ -58,11 +58,29 @@ public class SecurityConfig {
         // Декодер для JWT токенов от Keycloak (RS256)
         NimbusJwtDecoder keycloakJwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
 
-        // Пробуем оба варианта
+        // Проверяем issuer токена для выбора правильного декодера
         return token -> {
             try {
-                return keycloakJwtDecoder.decode(token);
+                // Распарсиваем токен без проверки подписи для получения issuer
+                String[] parts = token.split("\\.");
+                if (parts.length != 3) {
+                    throw new org.springframework.security.oauth2.jwt.BadJwtException("Invalid JWT format");
+                }
+                
+                // Декодируем payload (вторая часть)
+                String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]), java.nio.charset.StandardCharsets.UTF_8);
+                com.fasterxml.jackson.databind.JsonNode jsonNode = new com.fasterxml.jackson.databind.ObjectMapper().readTree(payload);
+                String issuer = jsonNode.has("iss") ? jsonNode.get("iss").asText() : null;
+                
+                // Если токен от Keycloak — используем Keycloak декодер
+                if (issuer != null && (issuer.contains("keycloak") || issuer.contains("localhost:8180") || issuer.contains("8080/realms"))) {
+                    return keycloakJwtDecoder.decode(token);
+                } else {
+                    // Иначе — локальный декодер
+                    return localJwtDecoder.decode(token);
+                }
             } catch (Exception e) {
+                // Если не удалось получить issuer, пробуем локальный декодер
                 return localJwtDecoder.decode(token);
             }
         };
