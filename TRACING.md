@@ -4,33 +4,56 @@
 
 В проекте реализована система распределённой трассировки на базе **Zipkin** и **Micrometer Tracing**.
 
-Каждый микросервис отправляет трейсы в Zipkin для отслеживания запросов across сервисов.
+Каждый микросервис отправляет трейсы в Zipkin для отслеживания запросов между сервисами.
 
 ---
 
 ## Архитектура
 
+### Поток запросов и трассировки
+
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │   Browser   │ ──► │  Frontend   │ ──► │   Gateway   │
 │             │     │             │     │             │
-└─────────────┘     └──────┬──────┘     └──────┬──────┘
-                           │                   │
-                           │                   │
-                           ▼                   ▼
-                    ┌─────────────┐     ┌─────────────┐
-                    │   Accounts  │     │    Cash     │
-                    │   Service   │     │   Service   │
-                    └──────┬──────┘     └──────┬──────┘
-                           │                   │
-                           └────────┬──────────┘
-                                    │
-                                    ▼
-                           ┌─────────────────┐
-                           │     Zipkin      │
-                           │   (Tracing)     │
-                           └─────────────────┘
+└─────────────┘     └─────────────┘     └──────┬──────┘
+       │                     │                 │
+       │ trace               │ trace           │ trace
+       ▼                     ▼                 ▼
+┌─────────────────────────────────────────────────────────┐
+│                      Zipkin Server                      │
+│                   http://zipkin:9411                    │
+└─────────────────────────────────────────────────────────┘
+       ▲                     ▲                 ▲
+       │                     │                 │
+       │ trace               │ trace           │ trace
+┌──────┴──────┐       ┌──────┴──────┐   ┌─────┴─────┐
+│  Accounts   │       │    Cash     │   │ Transfer  │
+│             │       │             │   │           │
+└──────┬──────┘       └──────┬──────┘   └─────┬─────┘
+       │                     │                 │
+       │                     │                 │
+       └─────────────────────┼─────────────────┘
+                             │
+                             │ Kafka messages
+                             │ (с B3-заголовками)
+                             ▼
+                    ┌─────────────────┐
+                    │  Notifications  │
+                    │                 │
+                    └────────┬────────┘
+                             │
+                             │ trace
+                             ▼
+                    ┌─────────────────┐
+                    │   Zipkin (cont) │
+                    └─────────────────┘
 ```
+
+**Важно:**
+- Каждый сервис отправляет трейсы **напрямую в Zipkin** (HTTP POST на `/api/v2/spans`)
+- Kafka **не отправляет** трейсы — это транспорт для сообщений
+- B3-заголовки (`X-B3-TraceId`, `X-B3-SpanId`) передаются через Kafka для продолжения трейса
 
 ---
 
@@ -44,12 +67,16 @@
 |----------|----------|
 | Image | `openzipkin/zipkin:2.24.3` |
 | Port | 9411 |
-| Storage | In-memory (dev) / Elasticsearch (prod) |
+| Storage | `mem` (dev), `elasticsearch` (prod) |
 | UI | `http://localhost:9411` |
+| Health | `/health` |
 
-**Конфигурация:**
-- `STORAGE_TYPE=mem` — хранение в памяти (dev)
-- `JAVA_OPTS=-Xmx1024m` — память для Zipkin
+**Конфигурация (values.yaml):**
+```yaml
+env:
+  STORAGE_TYPE: "mem"
+  JAVA_OPTS: "-Xmx1024m -Xms512m"
+```
 
 ### Micrometer Tracing
 
@@ -74,9 +101,9 @@ management.zipkin.tracing.endpoint=http://zipkin:9411/api/v2/spans
 
 ### Frontend
 
-- **Генерирует** `trace_id` для каждого входящего запроса от браузера
+- **Генерирует** `trace_id` для каждого входящего запроса от браузера (автоматически через Micrometer Tracing)
 - Передаёт `trace_id` и `span_id` в заголовках HTTP-запросов к Gateway
-- Заголовки: `X-B3-TraceId`, `X-B3-SpanId`, `X-B3-ParentSpanId`
+- Заголовки B3: `X-B3-TraceId`, `X-B3-SpanId`, `X-B3-ParentSpanId`, `X-B3-Sampled`
 
 ### Gateway
 
@@ -84,22 +111,24 @@ management.zipkin.tracing.endpoint=http://zipkin:9411/api/v2/spans
 - Генерирует дочерние `span_id` для каждого маршрута
 - Передаёт трейсы в Zipkin
 - Пробрасывает `trace_id` и новый `span_id` в downstream-сервисы (accounts, cash, transfer)
+- **WebFlux-based:** реактивная трассировка через `spring-cloud-starter-circuitbreaker-reactor-resilience4j`
 
 ### Backend-сервисы (accounts, cash, transfer, notifications)
 
 - Принимают `trace_id` и `parent_span_id` из HTTP-заголовков
 - Генерируют собственный `span_id`
 - Отправляют трейсы в Zipkin:
-  - **HTTP-запросы** (входящие/исходящие)
-  - **Запросы к БД** (JPA/Hibernate)
-  - **Kafka-сообщения** (producer/consumer)
+  - **HTTP-запросы** (входящие/исходящие) — автоматически через Spring Web MVC
+  - **Запросы к БД** (JPA/Hibernate) — автоматически через Micrometer
+  - **Kafka-сообщения** (producer/consumer) — автоматически через Spring Kafka
 
 ### Kafka Tracing
 
-Трейсы запросов в Kafka автоматически инструментизируются:
+Трейсы запросов в Kafka автоматически инструментизируются через Spring Kafka:
 
-- **Producer:** создаёт дочерний span для каждого сообщения
-- **Consumer:** извлекает `trace_id` из заголовков Kafka-сообщения
+- **Producer:** создаёт дочерний span для каждого сообщения, добавляет B3-заголовки в Kafka record
+- **Consumer:** извлекает `trace_id` и `span_id` из заголовков Kafka-сообщения, продолжает трейс
+- **Топик:** `notifications.events`
 
 ---
 
@@ -117,7 +146,7 @@ global:
 ### Настройки трассировки в сервисах
 
 ```yaml
-# helm/<service>/values.yaml
+# helm/<service>/values.yaml (accounts, cash, transfer, notifications, gateway, frontend)
 tracing:
   enabled: true
   samplingProbability: 1.0  # 1.0 = 100% трейсов, 0.1 = 10%
@@ -153,9 +182,10 @@ open http://localhost:9411
 
 ### Поиск трейсов
 
-1. **По сервису:** Выберите сервис из dropdown (frontend, gateway, accounts, etc.)
-2. **По trace ID:** Вставьте `trace_id` из логов
-3. **По длительности:** Найдите медленные запросы
+1. **По сервису:** выберите сервис из dropdown (frontend, gateway, accounts, cash, transfer, notifications)
+2. **По trace ID:** вставьте `trace_id` из логов сервиса
+3. **По длительности:** найдите медленные запросы (Sort by Duration)
+4. **По имени span:** например, `GET /gateway/account`, `SELECT accounts`, `Kafka send`
 
 ---
 
@@ -170,13 +200,21 @@ Trace ID: abc123def456
 │     │
 │     ├─ Span 3: accounts (GET /accounts/me) — 80ms
 │     │  │
-│     │  └─ Span 4: PostgreSQL (SELECT) — 25ms
+│     │  └─ Span 4: accounts (SELECT) — 25ms
 │     │
-│     └─ Span 5: Kafka (send notification) — 15ms
+│     └─ Span 5: Kafka send (notifications.events) — 15ms
 │        │
-│        └─ Span 6: notifications (consume event) — 10ms
+│        └─ Span 6: notifications (consume) — 10ms
 │           │
-│           └─ Span 7: PostgreSQL (INSERT) — 5ms
+│           └─ Span 7: notifications (INSERT) — 5ms
+```
+
+**B3 заголовки в HTTP-запросах:**
+```
+X-B3-TraceId: abc123def456
+X-B3-SpanId: 789xyz
+X-B3-ParentSpanId: 456abc
+X-B3-Sampled: 1
 ```
 
 ---
@@ -220,37 +258,56 @@ resources:
 
 ### Трейсы не отправляются в Zipkin
 
-1. Проверьте доступность Zipkin:
+1. **Проверьте доступность Zipkin:**
    ```bash
-   kubectl get pods -l app=zipkin
-   kubectl logs -l app=zipkin
+   kubectl get pods -l app=zipkin -n bank-dev
+   kubectl logs -l app=zipkin -n bank-dev
    ```
 
-2. Проверьте переменные окружения в сервисах:
+2. **Проверьте переменные окружения в сервисах:**
    ```bash
-   kubectl exec -it <pod-name> -- env | grep TRACING
+   kubectl exec -it <pod-name> -n bank-dev -- env | grep -E "TRACING|ZIPKIN"
    ```
 
-3. Проверьте логи на ошибки отправки:
+3. **Проверьте логи на ошибки отправки:**
    ```bash
-   kubectl logs -l app=accounts | grep -i zipkin
+   kubectl logs -l app=accounts -n bank-dev | grep -iE "tracing|zipkin|brave"
+   ```
+
+4. **Проверьте NetworkPolicy:**
+   ```bash
+   kubectl get networkpolicy zipkin -n bank-dev
    ```
 
 ### Неполные трейсы
 
-- Убедитесь, что все сервисы передают заголовки трассировки
+- Убедитесь, что все сервисы передают заголовки трассировки (B3 propagation)
 - Проверьте `sampling.probability` (должен быть > 0)
 - Убедитесь, что Zipkin доступен из всех namespace'ов
+- Проверьте логи на наличие ошибок `Connection refused` к Zipkin
 
 ### Zipkin UI не открывается
 
 ```bash
 # Проверьте сервис
-kubectl get svc zipkin
+kubectl get svc zipkin -n bank-dev
 
-# Проверьте port-forward
+# Проверьте port-forward (завершите старый процесс и запустите новый)
+pkill -f "kubectl port-forward"
 kubectl port-forward svc/zipkin 9411:9411 -n bank-dev
 ```
+
+### Трейсы есть в логах, но не в Zipkin
+
+1. Проверьте endpoint Zipkin:
+   ```bash
+   kubectl exec -it <pod-name> -n bank-dev -- env | grep MANAGEMENT_ZIPKIN
+   ```
+
+2. Проверьте доступность endpoint'а из пода:
+   ```bash
+   kubectl exec -it <pod-name> -n bank-dev -- curl -v http://zipkin:9411/health
+   ```
 
 ---
 
@@ -260,15 +317,30 @@ kubectl port-forward svc/zipkin 9411:9411 -n bank-dev
 
 ```bash
 # Проверка метрик трассировки
-curl http://localhost:8080/actuator/metrics/tracing
+curl http://localhost:8080/actuator/metrics | grep -i tracing
 ```
 
-### Prometheus Metrics
+### Prometheus Metrics (если включён Prometheus)
 
 ```
+# Количество созданных span'ов
 micrometer_tracing_spans_created_total
+
+# Количество сэмплированных span'ов
 micrometer_tracing_spans_sampled_total
+
+# Количество отброшенных span'ов
 micrometer_tracing_spans_dropped_total
+```
+
+### Логи трассировки
+
+Включите debug-логирование для отладки:
+```yaml
+# helm/<service>/values.yaml
+env:
+  LOGGING_LEVEL_IO_MICROMETER: "DEBUG"
+  LOGGING_LEVEL_IO_ZIPKIN: "DEBUG"
 ```
 
 ---
@@ -278,3 +350,5 @@ micrometer_tracing_spans_dropped_total
 - [Micrometer Tracing Docs](https://docs.micrometer.io/tracing/reference/)
 - [Zipkin Documentation](https://zipkin.io/pages/quickstart.html)
 - [Brave GitHub](https://github.com/openzipkin/brave)
+- [Spring Cloud Gateway Tracing](https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway-tracing.html)
+- [B3 Propagation Format](https://github.com/openzipkin/b3-propagation)
