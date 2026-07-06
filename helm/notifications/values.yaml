@@ -46,6 +46,11 @@ kafka:
     groupId: "notifications-service"
     autoOffsetReset: "earliest"
 
+# Трассировка (Micrometer + Zipkin)
+tracing:
+  enabled: true
+  samplingProbability: 1.0
+
 image:
   repository: "bank-notifications"
   tag: "latest"

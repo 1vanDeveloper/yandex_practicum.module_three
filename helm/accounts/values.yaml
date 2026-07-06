@@ -49,6 +49,11 @@ kafka:
     acks: "all"
     retries: 3
 
+# Трассировка (Micrometer + Zipkin)
+tracing:
+  enabled: true
+  samplingProbability: 1.0
+
 image:
   repository: "bank-accounts"
   tag: "latest"

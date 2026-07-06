@@ -16,6 +16,10 @@ dependencies:
     version: 13.0.9
     repository: "file://charts/kafka"
     condition: kafka.enabled
+  - name: zipkin
+    version: 0.1.0
+    repository: "file://../zipkin"
+    condition: zipkin.enabled
   - name: accounts
     version: 0.1.0
     repository: "file://../accounts"

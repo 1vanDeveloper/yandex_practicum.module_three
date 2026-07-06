@@ -43,6 +43,11 @@ jpa:
 logging:
   level: "INFO"
 
+# Трассировка (Micrometer + Zipkin)
+tracing:
+  enabled: true
+  samplingProbability: 1.0
+
 image:
   repository: "bank-transfer"
   tag: "latest"

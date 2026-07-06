@@ -21,12 +21,16 @@ dependencies {
     // Spring Boot platform
     implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
 
-    // Spring Boot - minimal dependencies for Kafka consumer with actuator
+    // Spring Boot - минимальные зависимости для Kafka consumer с actuator
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.kafka:spring-kafka")
+
+    // Micrometer Tracing (Zipkin)
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
 
     // Database
     runtimeOnly("org.postgresql:postgresql")

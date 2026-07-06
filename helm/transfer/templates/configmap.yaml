@@ -31,3 +31,12 @@ data:
   SPRING_KAFKA_PRODUCER_ACKS: "all"
   SPRING_KAFKA_PRODUCER_RETRIES: "3"
   SPRING_KAFKA_PRODUCER_PROPERTIES_ENABLE_IDEMPOTENCE: "true"
+
+  # Micrometer Tracing (Zipkin)
+  MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
+  {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"
+  {{- else }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+  {{- end }}

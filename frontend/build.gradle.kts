@@ -29,6 +29,10 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+
+    // Micrometer Tracing (Zipkin)
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
     
     // JWT для извлечения привилегий из токена
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")

@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow tracing data from all services in the bank namespace
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: bank
+      ports:
+        - protocol: TCP
+          port: 9411

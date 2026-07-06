@@ -31,6 +31,11 @@ logging:
   level: "INFO"
   cloudLevel: "INFO"
 
+# Трассировка (Micrometer + Zipkin)
+tracing:
+  enabled: true
+  samplingProbability: 1.0
+
 image:
   repository: "bank-frontend"
   tag: "latest"

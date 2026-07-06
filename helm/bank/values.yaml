@@ -17,4 +17,8 @@ global:
     url: "http://keycloak:8080"
     realm: "bank"
 
+  # Zipkin
+  zipkin:
+    url: "http://zipkin:9411"
+
 # Настройки для каждого сервиса переопределяются в его values.yaml

@@ -42,6 +42,10 @@ dependencies {
     // Spring Cloud LoadBalancer
     implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
 
+    // Micrometer Tracing (Zipkin)
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+
     // Resilience4j Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.3.0")

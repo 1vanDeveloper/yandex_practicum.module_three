@@ -203,3 +203,18 @@ kafka:
 
   networkPolicy:
     enabled: true
+
+# Zipkin (Distributed Tracing)
+zipkin:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "openzipkin/zipkin"
+    tag: "2.24.3"
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1024Mi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
