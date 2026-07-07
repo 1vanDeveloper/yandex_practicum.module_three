@@ -1,4 +1,4 @@
-package ru.yandex.practicum.frontend.config;
+package ru.yandex.practicum.gateway.config;
 
 import brave.Tracing;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -6,7 +6,9 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.brave.bridge.BraveCurrentTraceContext;
 import io.micrometer.tracing.brave.bridge.BravePropagator;
-import io.micrometer.tracing.brave.bridge.BraveTracer;
+import io.micrometer.tracing.handler.DefaultTracingObservationHandler;
+import io.micrometer.tracing.handler.PropagatingSenderTracingObservationHandler;
+import io.micrometer.tracing.handler.PropagatingReceiverTracingObservationHandler;
 import io.micrometer.tracing.propagation.Propagator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -16,8 +18,7 @@ import zipkin2.reporter.brave.AsyncZipkinSpanHandler;
 import zipkin2.reporter.okhttp3.OkHttpSender;
 
 /**
- * Конфигурация Micrometer Tracing для frontend сервиса.
- * Создаёт базовые бины для трассировки: Tracing, Tracer, Propagator.
+ * Конфигурация Micrometer Tracing для gateway сервиса.
  */
 @Configuration
 public class TracingConfig {
@@ -42,14 +43,14 @@ public class TracingConfig {
     @Bean
     public Tracing braveTracing(AsyncZipkinSpanHandler spanHandler) {
         return brave.Tracing.newBuilder()
-            .localServiceName("frontend")
+            .localServiceName("gateway")
             .addSpanHandler(spanHandler)
             .build();
     }
 
     @Bean
     public Tracer micrometerTracer(Tracing tracing) {
-        return new BraveTracer(
+        return new io.micrometer.tracing.brave.bridge.BraveTracer(
             tracing.tracer(),
             new BraveCurrentTraceContext(tracing.currentTraceContext())
         );
@@ -58,5 +59,22 @@ public class TracingConfig {
     @Bean
     public Propagator propagator(Tracing tracing) {
         return new BravePropagator(tracing);
+    }
+
+    @Bean
+    public DefaultTracingObservationHandler defaultTracingObservationHandler(Tracer tracer) {
+        return new DefaultTracingObservationHandler(tracer);
+    }
+
+    @Bean
+    public PropagatingSenderTracingObservationHandler<?> propagatingSenderTracingObservationHandler(
+        Tracer tracer, Propagator propagator) {
+        return new PropagatingSenderTracingObservationHandler<>(tracer, propagator);
+    }
+
+    @Bean
+    public PropagatingReceiverTracingObservationHandler<?> propagatingReceiverTracingObservationHandler(
+        Tracer tracer, Propagator propagator) {
+        return new PropagatingReceiverTracingObservationHandler<>(tracer, propagator);
     }
 }

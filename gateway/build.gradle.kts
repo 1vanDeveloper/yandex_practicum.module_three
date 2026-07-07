@@ -35,8 +35,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     // Micrometer Tracing (Zipkin) - для WebFlux
+    implementation("io.micrometer:micrometer-core")
     implementation("io.micrometer:micrometer-tracing-bridge-brave")
     implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+    implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.46")

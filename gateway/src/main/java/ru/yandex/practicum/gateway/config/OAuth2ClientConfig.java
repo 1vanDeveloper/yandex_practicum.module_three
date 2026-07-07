@@ -1,9 +1,16 @@
 package ru.yandex.practicum.gateway.config;
 
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.propagation.Propagator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.reactive.function.client.ClientRequest;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 /**
  * Конфигурация OAuth2 Client для Client Credentials Flow.
@@ -14,7 +21,19 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class OAuth2ClientConfig {
 
     @Bean
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
+    public WebClient.Builder webClientBuilder(Tracer tracer, Propagator propagator) {
+        return WebClient.builder()
+            .filter(ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
+                Span span = tracer.currentSpan();
+                if (span != null) {
+                    HttpHeaders headers = new HttpHeaders();
+                    propagator.inject(span.context(), headers, (h, k, v) -> h.set(k, v));
+                    ClientRequest newRequest = ClientRequest.from(clientRequest)
+                        .headers(h -> h.addAll(headers))
+                        .build();
+                    return Mono.just(newRequest);
+                }
+                return Mono.just(clientRequest);
+            }));
     }
 }

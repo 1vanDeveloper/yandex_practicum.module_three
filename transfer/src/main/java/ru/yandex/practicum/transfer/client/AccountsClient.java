@@ -18,9 +18,10 @@ public class AccountsClient {
     private final Executor executor;
     private final String accountsServiceUrl;
 
-    public AccountsClient(Executor asyncExecutor,
+    public AccountsClient(RestClient.Builder restClientBuilder,
+                          Executor asyncExecutor,
                           @Value("${accounts.service.url:http://accounts:8080}") String accountsServiceUrl) {
-        this.restClient = RestClient.builder()
+        this.restClient = restClientBuilder
             .requestFactory(createRequestFactory())
             .build();
         this.executor = asyncExecutor;

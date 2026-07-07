@@ -6,7 +6,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.micrometer.observation.ObservationRegistry;
 import ru.yandex.practicum.frontend.dto.AccountBrief;
 import ru.yandex.practicum.frontend.dto.AccountResponse;
 import ru.yandex.practicum.frontend.dto.JwtTokenResponse;
@@ -24,11 +23,8 @@ public class GatewayClient {
     private final String gatewayServiceUrl;
 
     public GatewayClient(RestClient.Builder restClientBuilder,
-                         ObservationRegistry observationRegistry,
                          @Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl) {
-        this.restClient = restClientBuilder
-            .observationRegistry(observationRegistry)
-            .build();
+        this.restClient = restClientBuilder.build();
         this.gatewayServiceUrl = gatewayServiceUrl;
     }
 
