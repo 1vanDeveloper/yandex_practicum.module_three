@@ -4,12 +4,12 @@ build:
 
 # Build Docker images (automatically available in Colima)
 docker-build:
-	docker build -t bank-accounts:latest -f Dockerfile . --build-arg SERVICE_NAME=accounts
-	docker build -t bank-cash:latest -f Dockerfile . --build-arg SERVICE_NAME=cash
-	docker build -t bank-transfer:latest -f Dockerfile . --build-arg SERVICE_NAME=transfer
-	docker build -t bank-notifications:latest -f Dockerfile . --build-arg SERVICE_NAME=notifications
-	docker build -t bank-gateway:latest -f Dockerfile . --build-arg SERVICE_NAME=gateway
-	docker build -t bank-frontend:latest -f Dockerfile . --build-arg SERVICE_NAME=frontend
+	docker build --no-cache -t bank-accounts:latest -f Dockerfile . --build-arg SERVICE_NAME=accounts
+	docker build --no-cache -t bank-cash:latest -f Dockerfile . --build-arg SERVICE_NAME=cash
+	docker build --no-cache -t bank-transfer:latest -f Dockerfile . --build-arg SERVICE_NAME=transfer
+	docker build --no-cache -t bank-notifications:latest -f Dockerfile . --build-arg SERVICE_NAME=notifications
+	docker build --no-cache -t bank-gateway:latest -f Dockerfile . --build-arg SERVICE_NAME=gateway
+	docker build --no-cache -t bank-frontend:latest -f Dockerfile . --build-arg SERVICE_NAME=frontend
 
 # Kubernetes deployment
 k8s-deploy:
