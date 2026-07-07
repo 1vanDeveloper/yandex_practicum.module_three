@@ -31,8 +31,12 @@ dependencies {
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 
     // Micrometer Tracing (Zipkin)
+    implementation("io.micrometer:micrometer-core")
     implementation("io.micrometer:micrometer-tracing-bridge-brave")
     implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+    implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+    implementation("org.aspectj:aspectjweaver:1.9.22.1")
     
     // JWT для извлечения привилегий из токена
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")

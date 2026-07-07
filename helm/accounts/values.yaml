@@ -42,6 +42,13 @@ jpa:
 # Логирование
 logging:
   level: "INFO"
+  loggingLevelMicrometer: "DEBUG"
+  loggingLevelMicrometerTracing: "DEBUG"
+  loggingLevelBrave: "DEBUG"
+  loggingLevelZipkin2: "DEBUG"
+  loggingLevelIoZipkin: "DEBUG"
+  loggingLevelOrgSpringframeworkBootAutoconfigure: "DEBUG"
+  loggingLevelOrgSpringframeworkBootAutoconfigureTracing: "DEBUG"
 
 # Kafka настройки (Producer)
 kafka:

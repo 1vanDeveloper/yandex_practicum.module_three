@@ -3,7 +3,7 @@ replicaCount: 1
 
 image:
   repository: openzipkin/zipkin
-  tag: "2.24.3"
+  tag: "3.5"
   pullPolicy: IfNotPresent
 
 service:

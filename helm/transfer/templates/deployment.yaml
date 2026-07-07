@@ -106,6 +106,22 @@ spec:
                 secretKeyRef:
                   name: {{ .Chart.Name }}-secrets
                   key: JWT_EXPIRATION
+            # Micrometer Tracing (Zipkin)
+            - name: MANAGEMENT_TRACING_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_ENABLED
+            - name: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+            - name: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
             - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_TRANSFER
               valueFrom:
                 configMapKeyRef:

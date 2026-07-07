@@ -106,6 +106,22 @@ spec:
                 secretKeyRef:
                   name: {{ .Chart.Name }}-secrets
                   key: JWT_EXPIRATION
+            # Micrometer Tracing (Zipkin)
+            - name: MANAGEMENT_TRACING_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_ENABLED
+            - name: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+            - name: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
             # Kafka Configuration
             - name: KAFKA_ENABLED
               valueFrom:
@@ -142,6 +158,42 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_ACCOUNTS
+            # Debug logging for tracing
+            - name: LOGGING_LEVEL_IO_MICROMETER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_IO_MICROMETER
+            - name: LOGGING_LEVEL_IO_MICROMETER_TRACING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_IO_MICROMETER_TRACING
+            - name: LOGGING_LEVEL_BRAVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_BRAVE
+            - name: LOGGING_LEVEL_ZIPKIN2
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ZIPKIN2
+            - name: LOGGING_LEVEL_IO_ZIPKIN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_IO_ZIPKIN
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE_TRACING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE_TRACING
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

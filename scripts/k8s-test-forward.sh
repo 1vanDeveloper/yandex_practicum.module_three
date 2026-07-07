@@ -22,13 +22,19 @@ echo "Forwarding Keycloak: localhost:8180 -> keycloak:8080"
 kubectl port-forward svc/keycloak 8180:8080 &
 KC_PID=$!
 
+# Forward Zipkin (9411)
+echo "Forwarding Zipkin: localhost:9411 -> zipkin:9411"
+kubectl port-forward svc/zipkin 9411:9411 &
+ZK_PID=$!
+
 echo ""
 echo "Port-forwarding started:"
 echo "  PostgreSQL PID: $PG_PID"
 echo "  Keycloak PID: $KC_PID"
+echo "  Zipkin PID: $ZK_PID"
 echo ""
 echo "To stop port-forwarding, run:"
-echo "  kill $PG_PID $KC_PID"
+echo "  kill $PG_PID $KC_PID $ZK_PID"
 echo ""
 echo "Waiting for connections..."
 

@@ -11,11 +11,9 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    # Allow tracing data from all services in the bank namespace
+    # Allow tracing data from all pods in the cluster
     - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/part-of: bank
+        - podSelector: {}
       ports:
         - protocol: TCP
           port: 9411

@@ -17,6 +17,13 @@ data:
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_AUTHORIZATION_GRANT_TYPE: "client_credentials"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_PROVIDER: "keycloak"
 
+  # JWT Secret (must match accounts service)
+  {{- if and .Values.global .Values.global.jwtSecret }}
+  JWT_SECRET: "{{ .Values.global.jwtSecret }}"
+  {{- else }}
+  JWT_SECRET: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
+  {{- end }}
+
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_TRANSFER: "{{ .Values.logging.level }}"
 

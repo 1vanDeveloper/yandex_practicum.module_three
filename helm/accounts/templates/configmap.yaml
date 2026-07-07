@@ -20,6 +20,13 @@ data:
 
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_ACCOUNTS: "{{ .Values.logging.level }}"
+  LOGGING_LEVEL_IO_MICROMETER: "{{ .Values.logging.loggingLevelMicrometer | default "INFO" }}"
+  LOGGING_LEVEL_IO_MICROMETER_TRACING: "{{ .Values.logging.loggingLevelMicrometerTracing | default "INFO" }}"
+  LOGGING_LEVEL_BRAVE: "{{ .Values.logging.loggingLevelBrave | default "INFO" }}"
+  LOGGING_LEVEL_ZIPKIN2: "{{ .Values.logging.loggingLevelZipkin2 | default "INFO" }}"
+  LOGGING_LEVEL_IO_ZIPKIN: "{{ .Values.logging.loggingLevelIoZipkin | default "INFO" }}"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE: "{{ .Values.logging.loggingLevelOrgSpringframeworkBootAutoconfigure | default "INFO" }}"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE_TRACING: "{{ .Values.logging.loggingLevelOrgSpringframeworkBootAutoconfigureTracing | default "INFO" }}"
 
   # Kafka Configuration
   {{- if and .Values.global .Values.global.kafka }}

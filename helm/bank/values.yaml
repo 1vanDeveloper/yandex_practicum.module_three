@@ -21,4 +21,7 @@ global:
   zipkin:
     url: "http://zipkin:9411"
 
+  # JWT Secret (должен совпадать во всех сервисах)
+  jwtSecret: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
+
 # Настройки для каждого сервиса переопределяются в его values.yaml

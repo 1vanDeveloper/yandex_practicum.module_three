@@ -6,6 +6,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.micrometer.observation.ObservationRegistry;
 import ru.yandex.practicum.frontend.dto.AccountBrief;
 import ru.yandex.practicum.frontend.dto.AccountResponse;
 import ru.yandex.practicum.frontend.dto.JwtTokenResponse;
@@ -14,20 +15,20 @@ import ru.yandex.practicum.frontend.dto.RegisterRequest;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 @Component
 @Slf4j
 public class GatewayClient {
 
     private final RestClient restClient;
-    private final Executor executor;
     private final String gatewayServiceUrl;
 
-    public GatewayClient(Executor asyncExecutor,
+    public GatewayClient(RestClient.Builder restClientBuilder,
+                         ObservationRegistry observationRegistry,
                          @Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl) {
-        this.restClient = RestClient.create();
-        this.executor = asyncExecutor;
+        this.restClient = restClientBuilder
+            .observationRegistry(observationRegistry)
+            .build();
         this.gatewayServiceUrl = gatewayServiceUrl;
     }
 
@@ -46,8 +47,7 @@ public class GatewayClient {
                 .uri(gatewayUrl + "/gateway/auth/login")
                 .body(request)
                 .retrieve()
-                .body(JwtTokenResponse.class),
-            executor
+                .body(JwtTokenResponse.class)
         );
     }
 
@@ -68,8 +68,7 @@ public class GatewayClient {
                 .uri(gatewayUrl + "/gateway/auth/register")
                 .body(request)
                 .retrieve()
-                .toBodilessEntity(),
-            executor
+                .toBodilessEntity()
         );
     }
 
@@ -96,8 +95,7 @@ public class GatewayClient {
                 .uri(gatewayUrl + "/gateway/account")
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .body(AccountResponse.class),
-            executor
+                .body(AccountResponse.class)
         );
     }
 
@@ -129,8 +127,7 @@ public class GatewayClient {
                 .header("Authorization", "Bearer " + jwtToken)
                 .body(new UpdateAccountRequest(firstName, lastName, birthDate))
                 .retrieve()
-                .body(AccountResponse.class),
-            executor
+                .body(AccountResponse.class)
         );
     }
 
@@ -159,8 +156,7 @@ public class GatewayClient {
                 .uri(url)
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .toBodilessEntity(),
-            executor
+                .toBodilessEntity()
         );
     }
 
@@ -188,8 +184,7 @@ public class GatewayClient {
                 .uri(url)
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .toBodilessEntity(),
-            executor
+                .toBodilessEntity()
         );
     }
 
@@ -217,8 +212,7 @@ public class GatewayClient {
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {
-                }),
-            executor
+                })
         );
     }
 

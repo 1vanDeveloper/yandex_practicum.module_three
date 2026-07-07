@@ -29,8 +29,12 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka")
 
     // Micrometer Tracing (Zipkin)
+    implementation("io.micrometer:micrometer-core")
     implementation("io.micrometer:micrometer-tracing-bridge-brave")
     implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+    implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+    implementation("org.aspectj:aspectjweaver:1.9.22.1")
 
     // Database
     runtimeOnly("org.postgresql:postgresql")

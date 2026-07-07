@@ -32,6 +32,10 @@ accounts:
     requests:
       cpu: "250m"
       memory: "256Mi"
+  # Трассировка (Micrometer + Zipkin)
+  tracing:
+    enabled: true
+    samplingProbability: 1.0
 
 # Cash
 cash:
@@ -46,6 +50,10 @@ cash:
     requests:
       cpu: "250m"
       memory: "256Mi"
+  # Трассировка (Micrometer + Zipkin)
+  tracing:
+    enabled: true
+    samplingProbability: 1.0
 
 # Transfer
 transfer:
@@ -60,6 +68,10 @@ transfer:
     requests:
       cpu: "250m"
       memory: "256Mi"
+  # Трассировка (Micrometer + Zipkin)
+  tracing:
+    enabled: true
+    samplingProbability: 1.0
 
 # Notifications
 notifications:
@@ -78,6 +90,10 @@ notifications:
     requests:
       cpu: "250m"
       memory: "256Mi"
+  # Трассировка (Micrometer + Zipkin)
+  tracing:
+    enabled: true
+    samplingProbability: 1.0
 
 # Gateway
 gateway:
@@ -94,6 +110,10 @@ gateway:
     requests:
       cpu: "250m"
       memory: "256Mi"
+  # Трассировка (Micrometer + Zipkin)
+  tracing:
+    enabled: true
+    samplingProbability: 1.0
 
 # Frontend
 frontend:
@@ -113,6 +133,10 @@ frontend:
     requests:
       cpu: "250m"
       memory: "256Mi"
+  # Трассировка (Micrometer + Zipkin)
+  tracing:
+    enabled: true
+    samplingProbability: 1.0
 
 # PostgreSQL
 postgresql:

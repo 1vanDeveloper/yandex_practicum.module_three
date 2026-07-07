@@ -33,11 +33,13 @@ k8s-port-forward:
 	@echo "Starting port-forwarding..."
 	kubectl port-forward svc/frontend 32190:8080 &
 	kubectl port-forward svc/postgresql 5432:5432 &
-	kubectl port-forward svc/keycloak 8180:8080
+	kubectl port-forward svc/keycloak 8180:8080 &
+	kubectl port-forward svc/zipkin 9411:9411 &
 	@echo "Port-forwarding started:"
 	@echo "  Frontend: http://localhost:32190"
 	@echo "  PostgreSQL: localhost:5432"
 	@echo "  Keycloak: http://localhost:8180"
+	@echo "  Zipkin: http://localhost:9411"
 
 # Helm tests
 helm-lint:
