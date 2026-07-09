@@ -41,6 +41,8 @@ public class GatewaySecurityConfig {
                 .pathMatchers("/actuator/**").permitAll()
                 // Public endpoints for user authentication
                 .pathMatchers("/gateway/auth/login", "/gateway/auth/register").permitAll()
+                // Allow all /gateway/** for WebClientProxyFilter to handle
+                .pathMatchers("/gateway/**").permitAll()
                 .pathMatchers("/login/**", "/oauth2/**", "/error").permitAll()
                 .anyExchange().authenticated()
             )

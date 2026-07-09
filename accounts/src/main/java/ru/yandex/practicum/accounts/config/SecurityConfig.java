@@ -49,6 +49,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - must be before oauth2ResourceServer
+                .requestMatchers("/**").permitAll()  // TEMP: отключить security для тестирования трассировки
+                /*
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
@@ -58,6 +60,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/accounts/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/accounts/**").authenticated()
                 // All other requests - require authentication
+                */
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
