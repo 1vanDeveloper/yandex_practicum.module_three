@@ -17,6 +17,7 @@ import java.util.Map;
 
 /**
  * Конфигурация Kafka Producer для Accounts сервиса.
+ * B3 propagation обрабатывается через BraveProducerInterceptor (application.properties).
  */
 @Configuration
 @ConditionalOnProperty(name = "kafka.enabled", havingValue = "true", matchIfMissing = true)
@@ -31,6 +32,9 @@ public class KafkaConfig {
     @Value("${spring.kafka.producer.retries:3}")
     private int retries;
 
+    public KafkaConfig() {
+    }
+
     @Bean
     public ProducerFactory<String, NotificationEvent> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -38,11 +42,14 @@ public class KafkaConfig {
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.ACKS_CONFIG, acks);
         configProps.put(ProducerConfig.RETRIES_CONFIG, retries);
+        
         return new DefaultKafkaProducerFactory<>(configProps, new StringSerializer(), new JacksonJsonSerializer<>());
     }
 
     @Bean
     public KafkaTemplate<String, NotificationEvent> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+        KafkaTemplate<String, NotificationEvent> kafkaTemplate = new KafkaTemplate<>(producerFactory());
+        // B3 propagation обрабатывается через BraveProducerInterceptor (application.properties)
+        return kafkaTemplate;
     }
 }

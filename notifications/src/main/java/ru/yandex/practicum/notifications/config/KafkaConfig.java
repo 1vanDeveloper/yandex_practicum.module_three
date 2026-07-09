@@ -21,6 +21,7 @@ import java.util.Map;
 
 /**
  * Конфигурация Kafka для Notifications сервиса.
+ * B3 propagation обрабатывается через BraveConsumerInterceptor (application.properties).
  */
 @EnableKafka
 @Configuration
@@ -79,6 +80,7 @@ public class KafkaConfig {
 
     /**
      * Фабрика контейнеров для Kafka listener с обработчиком ошибок.
+     * B3 propagation обрабатывается через BraveConsumerInterceptor (application.properties).
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, NotificationEvent> kafkaListenerContainerFactory() {

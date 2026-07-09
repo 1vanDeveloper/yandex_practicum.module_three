@@ -43,10 +43,11 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
 
     // Micrometer Tracing (Zipkin)
-    implementation("io.micrometer:micrometer-core")
+    implementation("io.micrometer:micrometer-tracing")
     implementation("io.micrometer:micrometer-tracing-bridge-brave")
     implementation("io.zipkin.reporter2:zipkin-reporter-brave")
     implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
+    implementation("io.zipkin.brave:brave")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     implementation("org.aspectj:aspectjweaver:1.9.22.1")
 

@@ -44,6 +44,9 @@ data:
   SPRING_KAFKA_PRODUCER_ACKS: "{{ .Values.kafka.producer.acks | default "all" }}"
   SPRING_KAFKA_PRODUCER_RETRIES: "{{ .Values.kafka.producer.retries | default 3 }}"
 
+  # Kafka Tracing (Brave B3 Propagation)
+  SPRING_KAFKA_PRODUCER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveProducerInterceptor"
+
   # Micrometer Tracing (Zipkin)
   MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"

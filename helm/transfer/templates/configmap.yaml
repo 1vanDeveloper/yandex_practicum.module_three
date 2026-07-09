@@ -39,6 +39,9 @@ data:
   SPRING_KAFKA_PRODUCER_RETRIES: "3"
   SPRING_KAFKA_PRODUCER_PROPERTIES_ENABLE_IDEMPOTENCE: "true"
 
+  # Kafka Tracing (Brave B3 Propagation)
+  SPRING_KAFKA_PRODUCER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveProducerInterceptor"
+
   # Micrometer Tracing (Zipkin)
   MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
