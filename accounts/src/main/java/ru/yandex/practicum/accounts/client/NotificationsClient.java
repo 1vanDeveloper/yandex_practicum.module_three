@@ -1,6 +1,5 @@
 package ru.yandex.practicum.accounts.client;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -12,11 +11,16 @@ import ru.yandex.practicum.accounts.dto.NotificationRequest;
 import java.util.concurrent.CompletableFuture;
 
 @Component
-@RequiredArgsConstructor
 public class NotificationsClient {
 
     private final RestClient restClient;
     private final OAuth2AuthorizedClientManager authorizedClientManager;
+
+    public NotificationsClient(RestClient.Builder restClientBuilder,
+                               OAuth2AuthorizedClientManager authorizedClientManager) {
+        this.restClient = restClientBuilder.build();
+        this.authorizedClientManager = authorizedClientManager;
+    }
 
     private String getAccessToken() {
         OAuth2AuthorizedClient authorizedClient = authorizedClientManager.authorize(

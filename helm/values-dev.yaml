@@ -146,11 +146,11 @@ postgresql:
     tag: "14"
   resources:
     limits:
-      cpu: "1000m"
-      memory: "1024Mi"
-    requests:
       cpu: "500m"
       memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
   persistence:
     enabled: false
 
@@ -166,11 +166,11 @@ keycloak:
     db: "dev-file"
   resources:
     limits:
-      cpu: "1000m"
-      memory: "1024Mi"
-    requests:
       cpu: "500m"
       memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
 
 # Kafka (sir5kong/kafka chart - KRaft mode)
 kafka:
@@ -187,11 +187,11 @@ kafka:
       enabled: false
     resources:
       limits:
-        cpu: "500m"
-        memory: "512Mi"
+        cpu: "1000m"
+        memory: "1024Mi"
       requests:
-        cpu: "250m"
-        memory: "256Mi"
+        cpu: "1000m"
+        memory: "1024Mi"
 
   broker:
     combinedMode:
@@ -208,17 +208,17 @@ kafka:
         value: "60000"
     resources:
       limits:
-        cpu: "500m"
-        memory: "768Mi"
+        cpu: "1000m"
+        memory: "1024Mi"
       requests:
-        cpu: "250m"
-        memory: "384Mi"
+        cpu: "1000m"
+        memory: "1024Mi"
     # Fix readiness probe timeout (default 5s too small for Kafka startup)
     readinessProbe:
-      initialDelaySeconds: 30
-      timeoutSeconds: 30
+      initialDelaySeconds: 60
+      timeoutSeconds: 60
       periodSeconds: 10
-      failureThreshold: 6
+      failureThreshold: 10
     livenessProbe:
       initialDelaySeconds: 300
       timeoutSeconds: 10
@@ -237,8 +237,8 @@ zipkin:
     tag: "2.24.3"
   resources:
     limits:
-      cpu: "1000m"
-      memory: "1024Mi"
-    requests:
       cpu: "500m"
       memory: "512Mi"
+    requests:
+      cpu: "250m"
+      memory: "256Mi"

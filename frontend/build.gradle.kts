@@ -30,12 +30,12 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 
-    // Micrometer Tracing (Zipkin) - автоматический HTTP tracing
-    implementation("io.micrometer:micrometer-tracing")
+    // Micrometer Tracing (Zipkin)
     implementation("io.micrometer:micrometer-tracing-bridge-brave")
     implementation("io.zipkin.reporter2:zipkin-reporter-brave")
     implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
-    
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
     // Micrometer Observation для HTTP и Security
     implementation("io.micrometer:micrometer-observation")
     

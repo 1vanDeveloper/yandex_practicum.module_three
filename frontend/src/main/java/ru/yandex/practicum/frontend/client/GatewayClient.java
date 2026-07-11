@@ -3,6 +3,7 @@ package ru.yandex.practicum.frontend.client;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -12,8 +13,15 @@ import ru.yandex.practicum.frontend.dto.JwtTokenResponse;
 import ru.yandex.practicum.frontend.dto.LoginRequest;
 import ru.yandex.practicum.frontend.dto.RegisterRequest;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Component
 @Slf4j
@@ -21,11 +29,50 @@ public class GatewayClient {
 
     private final RestClient restClient;
     private final String gatewayServiceUrl;
+    private final Executor executor;
+    private final ThreadLocal<B3Context> b3Context = new ThreadLocal<>();
 
-    public GatewayClient(RestClient.Builder restClientBuilder,
-                         @Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl) {
-        this.restClient = restClientBuilder.build();
+    private record B3Context(String traceId, String spanId, String sampled) {}
+
+    public GatewayClient(@Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl) {
         this.gatewayServiceUrl = gatewayServiceUrl;
+        this.executor = Executors.newFixedThreadPool(10);
+        this.restClient = RestClient.builder()
+            .requestInterceptor(b3Interceptor())
+            .build();
+    }
+
+    /**
+     * Добавляет B3 заголовки используя захваченный контекст.
+     */
+    private void addB3HeadersFromContext(HttpHeaders headers) {
+        B3Context ctx = b3Context.get();
+        String traceId = ctx.traceId();
+        String newSpanId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        
+        // Если нет trace ID — генерируем новый
+        if (traceId == null || traceId.isEmpty()) {
+            traceId = UUID.randomUUID().toString().replace("-", "");
+        }
+        
+        headers.set("X-B3-TraceId", traceId);
+        headers.set("X-B3-SpanId", newSpanId);
+        if ("1".equals(ctx.sampled())) {
+            headers.set("X-B3-Sampled", "1");
+        }
+        
+        log.debug("GatewayClient: Adding B3 headers - TraceId={}, SpanId={}", traceId, newSpanId);
+        b3Context.remove(); // Очищаем после использования
+    }
+
+    /**
+     * Interceptor для добавления B3 заголовков.
+     */
+    private org.springframework.http.client.ClientHttpRequestInterceptor b3Interceptor() {
+        return (request, body, execution) -> {
+            addB3HeadersFromContext(request.getHeaders());
+            return execution.execute(request, body);
+        };
     }
 
     private String getGatewayUrl() {
@@ -35,16 +82,49 @@ public class GatewayClient {
 
     @CircuitBreaker(name = "gatewayService", fallbackMethod = "loginFallback")
     public CompletableFuture<JwtTokenResponse> login(LoginRequest request) {
+        // Захватываем B3 контекст в текущем потоке
+        B3Context capturedContext = captureB3Context();
         String gatewayUrl = getGatewayUrl();
         log.debug("GatewayClient: logging in user: {}", request.getLogin());
 
-        return CompletableFuture.supplyAsync(() ->
-            restClient.post()
-                .uri(gatewayUrl + "/gateway/auth/login")
-                .body(request)
-                .retrieve()
-                .body(JwtTokenResponse.class)
-        );
+        return CompletableFuture.supplyAsync(() -> {
+            // Устанавливаем контекст в потоке выполнения
+            b3Context.set(capturedContext);
+            try {
+                return restClient.post()
+                    .uri(gatewayUrl + "/gateway/auth/login")
+                    .body(request)
+                    .retrieve()
+                    .body(JwtTokenResponse.class);
+            } finally {
+                b3Context.remove();
+            }
+        }, executor);
+    }
+
+    /**
+     * Захватывает B3 заголовки из текущего запроса.
+     */
+    private B3Context captureB3Context() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            String traceId = request.getHeader("X-B3-TraceId");
+            String spanId = request.getHeader("X-B3-SpanId");
+            String sampled = request.getHeader("X-B3-Sampled");
+            
+            // Обрезаем traceId до 32 символов
+            if (traceId != null && traceId.length() > 32) {
+                traceId = traceId.substring(0, 32);
+            }
+            
+            B3Context ctx = new B3Context(traceId, spanId, sampled);
+            log.debug("GatewayClient: Captured B3 context - TraceId={}", traceId);
+            return ctx;
+        } else {
+            log.debug("GatewayClient: No request context available");
+            return new B3Context(null, null, null);
+        }
     }
 
     public CompletableFuture<JwtTokenResponse> loginFallback(LoginRequest request, Throwable t) {
@@ -207,8 +287,7 @@ public class GatewayClient {
                 .uri(gatewayUrl + "/gateway/accounts")
                 .header("Authorization", "Bearer " + jwtToken)
                 .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                })
+                .body(new ParameterizedTypeReference<List<AccountBrief>>() {})
         );
     }
 

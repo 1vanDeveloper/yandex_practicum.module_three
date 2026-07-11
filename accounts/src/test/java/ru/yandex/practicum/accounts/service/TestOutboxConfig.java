@@ -11,14 +11,14 @@ import ru.yandex.practicum.accounts.dto.NotificationRequest;
 public class TestOutboxConfig {
 
     @Bean
-    public RestClient restClient() {
-        return RestClient.create();
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
     }
 
     @Bean
     @Primary
-    public NotificationsClient testNotificationsClient() {
-        return new NotificationsClient(RestClient.create(), null) {
+    public NotificationsClient testNotificationsClient(RestClient.Builder restClientBuilder) {
+        return new NotificationsClient(restClientBuilder, null) {
             @Override
             public void sendNotification(String notificationsUrl, NotificationRequest request) {
                 // Mock successful notification send

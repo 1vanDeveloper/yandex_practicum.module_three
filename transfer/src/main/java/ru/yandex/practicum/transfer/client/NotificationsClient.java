@@ -17,9 +17,10 @@ public class NotificationsClient {
     private final Executor executor;
     private final String notificationsServiceUrl;
 
-    public NotificationsClient(Executor asyncExecutor,
+    public NotificationsClient(RestClient.Builder restClientBuilder,
+                               Executor asyncExecutor,
                                @Value("${notifications.service.url:http://notifications:8080}") String notificationsServiceUrl) {
-        this.restClient = RestClient.create();
+        this.restClient = restClientBuilder.build();
         this.executor = asyncExecutor;
         this.notificationsServiceUrl = notificationsServiceUrl;
     }
