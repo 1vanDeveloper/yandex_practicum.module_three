@@ -13,7 +13,6 @@ data:
   LOGGING_LEVEL_ROOT: "DEBUG"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_KAFKA: "DEBUG"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE: "DEBUG"
-
   # Kafka Configuration
   {{- if and .Values.global .Values.global.kafka }}
   KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.bootstrapServers }}"
@@ -24,14 +23,13 @@ data:
   SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
   SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.springframework.kafka.support.serializer.JsonDeserializer"
   SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "{{ .Values.kafka.consumer.autoOffsetReset | default "earliest" }}"
-
   # Kafka Tracing (Brave B3 Propagation)
   SPRING_KAFKA_CONSUMER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveConsumerInterceptor"
-
   # Micrometer Tracing (Zipkin)
   MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
   MANAGEMENT_TRACING_PROPAGATION_TYPE: "W3C"
+  MANAGEMENT_OBSERVATIONS_ENABLED: "true"
   {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"
   {{- else }}

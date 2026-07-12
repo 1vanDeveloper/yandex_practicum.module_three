@@ -7,26 +7,21 @@ metadata:
 data:
   SPRING_PROFILES_ACTIVE: "kubernetes"
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
-
   # Database configuration (non-sensitive)
   DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=transfer"
   SPRING_JPA_HIBERNATE_DDL_MODE: "{{ .Values.jpa.ddlMode }}"
-
   # OAuth2 Client Configuration (non-sensitive)
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_CLIENT_ID: "{{ .Chart.Name }}-client"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_AUTHORIZATION_GRANT_TYPE: "client_credentials"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_PROVIDER: "keycloak"
-
   # JWT Secret (must match accounts service)
   {{- if and .Values.global .Values.global.jwtSecret }}
   JWT_SECRET: "{{ .Values.global.jwtSecret }}"
   {{- else }}
   JWT_SECRET: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
   {{- end }}
-
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_TRANSFER: "{{ .Values.logging.level }}"
-
   # Kafka Configuration (Producer)
   {{- if and .Values.global .Values.global.kafka }}
   SPRING_KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.bootstrapServers }}"
@@ -40,14 +35,13 @@ data:
   SPRING_KAFKA_PRODUCER_ACKS: "all"
   SPRING_KAFKA_PRODUCER_RETRIES: "3"
   SPRING_KAFKA_PRODUCER_PROPERTIES_ENABLE_IDEMPOTENCE: "true"
-
   # Kafka Tracing (Brave B3 Propagation)
   SPRING_KAFKA_PRODUCER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveProducerInterceptor"
-
   # Micrometer Tracing (Zipkin) - W3C TraceContext
   MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
   MANAGEMENT_TRACING_PROPAGATION_TYPE: "W3C"
+  MANAGEMENT_OBSERVATIONS_ENABLED: "true"
   {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"
   {{- else }}
