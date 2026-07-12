@@ -121,6 +121,11 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+            - name: MANAGEMENT_TRACING_PROPAGATION_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_PROPAGATION_TYPE
             - name: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
               valueFrom:
                 configMapKeyRef:

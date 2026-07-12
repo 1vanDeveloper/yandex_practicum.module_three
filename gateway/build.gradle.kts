@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.springframework.boot") version "3.4.4"
+    id("org.springframework.boot") version "3.4.0"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -13,11 +13,11 @@ java {
     }
 }
 
-val springCloudVersion = "2025.0.0"
+val springCloudVersion = "2024.0.0"
 
 dependencies {
     // Spring Boot BOM
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.0"))
     // Spring Cloud BOM
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
     // Spring Cloud Gateway (WebFlux-based)
