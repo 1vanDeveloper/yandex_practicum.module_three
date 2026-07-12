@@ -30,8 +30,10 @@ data:
   # Kafka Configuration (Producer)
   {{- if and .Values.global .Values.global.kafka }}
   SPRING_KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.bootstrapServers }}"
+  {{- else if and .Values.kafka .Values.kafka.bootstrapServers }}
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.kafka.bootstrapServers }}"
   {{- else }}
-  SPRING_KAFKA_BOOTSTRAP_SERVERS: "{{ .Release.Name }}-kafka:9092"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "bank-kafka-broker:9092"
   {{- end }}
   SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: "org.apache.kafka.common.serialization.StringSerializer"
   SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JsonSerializer"
@@ -42,10 +44,10 @@ data:
   # Kafka Tracing (Brave B3 Propagation)
   SPRING_KAFKA_PRODUCER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveProducerInterceptor"
 
-  # Micrometer Tracing (Zipkin)
+  # Micrometer Tracing (Zipkin) - W3C TraceContext
   MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
-  MANAGEMENT_TRACING_PROPAGATION_TYPE: "B3"
+  MANAGEMENT_TRACING_PROPAGATION_TYPE: "W3C"
   {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"
   {{- else }}
