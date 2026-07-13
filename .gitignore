@@ -78,4 +78,4 @@ helm/values-secret.yaml
 **/values-secret.yaml
 
 .nessyignore
-.tgz
+*.tgz
