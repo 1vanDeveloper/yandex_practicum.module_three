@@ -105,15 +105,16 @@ gateway:
     type: "ClusterIP"
   resources:
     limits:
-      cpu: "500m"
+      cpu: "300m"
       memory: "512Mi"
     requests:
-      cpu: "250m"
+      cpu: "150m"
       memory: "256Mi"
   # Трассировка (Micrometer + Zipkin)
   tracing:
     enabled: true
     samplingProbability: 1.0
+    propagationType: "B3"
 
 # Frontend
 frontend:
@@ -180,6 +181,9 @@ kafka:
     tag: "v3.5.1"
     pullPolicy: IfNotPresent
 
+  # Фиксированный cluster.id для KRaft режима (решает проблему DUPLICATE_BROKER_REGISTRATION)
+  clusterId: "bank-kafka-cluster-id-abc123"
+
   controller:
     enabled: true
     replicaCount: 1
@@ -200,6 +204,8 @@ kafka:
     persistence:
       enabled: false
     heapOpts: "-Xms256m -Xmx256m"
+    # Фиксированный node.id для broker (решает проблему DUPLICATE_BROKER_REGISTRATION)
+    nodeId: 0
     # Use BROKER listener (chart default) - clients connect via service DNS
     extraEnvs:
       - name: KAFKA_CFG_BROKER_HEARTBEAT_INTERVAL_MS

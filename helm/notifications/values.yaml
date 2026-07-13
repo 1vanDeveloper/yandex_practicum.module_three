@@ -50,6 +50,7 @@ kafka:
 tracing:
   enabled: true
   samplingProbability: 1.0
+  propagationType: "B3,B3_MULTI"
 
 image:
   repository: "bank-notifications"

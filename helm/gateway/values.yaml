@@ -36,6 +36,7 @@ logging:
 tracing:
   enabled: true
   samplingProbability: 1.0
+  propagationType: "B3"
 
 image:
   repository: "bank-gateway"
