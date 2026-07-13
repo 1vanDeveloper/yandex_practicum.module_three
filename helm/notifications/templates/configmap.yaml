@@ -25,10 +25,10 @@ data:
   SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "{{ .Values.kafka.consumer.autoOffsetReset | default "earliest" }}"
   # Kafka Tracing (Brave B3 Propagation)
   SPRING_KAFKA_CONSUMER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveConsumerInterceptor"
-  # Micrometer Tracing (Zipkin)
+  # Micrometer Tracing (Zipkin) - B3 Multi Header for end-to-end tracing
   MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
-  MANAGEMENT_TRACING_PROPAGATION_TYPE: "W3C"
+  MANAGEMENT_TRACING_PROPAGATION_TYPE: "B3,B3_MULTI"
   MANAGEMENT_OBSERVATIONS_ENABLED: "true"
   {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"

@@ -17,10 +17,10 @@ data:
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT: "{{ .Values.logging.level }}"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD: "{{ .Values.logging.cloudLevel }}"
-  # Micrometer Tracing (Zipkin)
+  # Micrometer Tracing (Zipkin) - B3 Multi Header for end-to-end tracing
   MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
-  MANAGEMENT_TRACING_PROPAGATION_TYPE: "W3C"
+  MANAGEMENT_TRACING_PROPAGATION_TYPE: "B3,B3_MULTI"
   MANAGEMENT_OBSERVATIONS_ENABLED: "true"
   {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"

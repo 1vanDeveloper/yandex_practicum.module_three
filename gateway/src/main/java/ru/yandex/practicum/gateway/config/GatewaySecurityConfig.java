@@ -43,6 +43,8 @@ public class GatewaySecurityConfig {
                 .pathMatchers("/gateway/auth/login", "/gateway/auth/register").permitAll()
                 // Allow all /gateway/** for WebClientProxyFilter to handle
                 .pathMatchers("/gateway/**").permitAll()
+                // Allow service routes for routing to downstream services
+                .pathMatchers("/accounts/**", "/cash/**", "/transfer/**", "/notifications/**", "/frontend/**").permitAll()
                 .pathMatchers("/login/**", "/oauth2/**", "/error").permitAll()
                 .anyExchange().authenticated()
             )

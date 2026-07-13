@@ -7,8 +7,22 @@ metadata:
 data:
   SPRING_PROFILES_ACTIVE: "kubernetes"
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
-  SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED: "true"
-  SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWER_CASE_SERVICE_ID: "true"
+  # Explicit routes for services
+  SPRING_CLOUD_GATEWAY_ROUTES_0_ID: accounts
+  SPRING_CLOUD_GATEWAY_ROUTES_0_URI: "lb://accounts"
+  SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0: Path=/accounts/**
+  SPRING_CLOUD_GATEWAY_ROUTES_1_ID: cash
+  SPRING_CLOUD_GATEWAY_ROUTES_1_URI: "lb://cash"
+  SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0: Path=/cash/**
+  SPRING_CLOUD_GATEWAY_ROUTES_2_ID: transfer
+  SPRING_CLOUD_GATEWAY_ROUTES_2_URI: "lb://transfer"
+  SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0: Path=/transfer/**
+  SPRING_CLOUD_GATEWAY_ROUTES_3_ID: notifications
+  SPRING_CLOUD_GATEWAY_ROUTES_3_URI: "lb://notifications"
+  SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0: Path=/notifications/**
+  SPRING_CLOUD_GATEWAY_ROUTES_4_ID: frontend
+  SPRING_CLOUD_GATEWAY_ROUTES_4_URI: "lb://frontend"
+  SPRING_CLOUD_GATEWAY_ROUTES_4_PREDICATES_0: Path=/frontend/**
   # OAuth2 Client Configuration (non-sensitive)
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_CLIENT_ID: "{{ .Chart.Name }}-client"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_AUTHORIZATION_GRANT_TYPE: "client_credentials"
@@ -17,14 +31,16 @@ data:
   # Management endpoints
   MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,routes"
   MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+  # Gateway Discovery
+  SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED: "false"
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_GATEWAY: "{{ .Values.logging.level }}"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD_GATEWAY: "{{ .Values.logging.gatewayLevel }}"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: "{{ .Values.logging.securityLevel }}"
-  # Micrometer Tracing (Zipkin)
+  # Micrometer Tracing (Zipkin) - B3 Multi Header
   MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
-  MANAGEMENT_TRACING_PROPAGATION_TYPE: "W3C"
+  MANAGEMENT_TRACING_PROPAGATION_TYPE: "B3"
   MANAGEMENT_OBSERVATIONS_ENABLED: "true"
   {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
   MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"

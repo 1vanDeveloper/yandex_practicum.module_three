@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.springframework.boot") version "3.4.0"
+    id("org.springframework.boot") version "3.5.0"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -13,15 +13,18 @@ java {
     }
 }
 
-val springCloudVersion = "2024.0.0"
+val springCloudVersion = "2025.0.0"
 
 dependencies {
     // Spring Boot BOM
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.0"))
-    // Spring Cloud BOM
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.5.0"))
+    // Spring Cloud BOM - 2025.0.0 с улучшенной поддержкой tracing
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
     // Spring Cloud Gateway (WebFlux-based)
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
+
+    // Spring Cloud LoadBalancer
+    implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
 
     // Resilience4j Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j")
@@ -39,6 +42,7 @@ dependencies {
     implementation("io.zipkin.reporter2:zipkin-reporter-brave")
     implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
     implementation("io.micrometer:micrometer-observation")
+    implementation("io.micrometer:context-propagation")
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.46")
