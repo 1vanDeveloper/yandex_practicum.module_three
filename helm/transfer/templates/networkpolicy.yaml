@@ -10,10 +10,14 @@ spec:
     - Ingress
     - Egress
   ingress:
+    # Allow traffic from gateway and prometheus (for metrics scraping)
     - from:
         - podSelector:
             matchLabels:
               app: gateway
+        - podSelector:
+            matchLabels:
+              app: prometheus
       ports:
         - protocol: TCP
           port: 8080

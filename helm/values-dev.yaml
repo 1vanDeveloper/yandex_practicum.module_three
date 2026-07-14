@@ -45,7 +45,7 @@ cash:
     tag: "latest"
   resources:
     limits:
-      cpu: "500m"
+      cpu: "250m"
       memory: "512Mi"
     requests:
       cpu: "250m"
@@ -63,7 +63,7 @@ transfer:
     tag: "latest"
   resources:
     limits:
-      cpu: "500m"
+      cpu: "250m"
       memory: "512Mi"
     requests:
       cpu: "250m"
@@ -76,7 +76,7 @@ transfer:
 # Notifications
 notifications:
   replicaCount: 1
-  databaseSchema: "public"
+  databaseSchema: "notifications"
   image:
     repository: "bank-notifications"
     tag: "latest"
@@ -96,8 +96,6 @@ notifications:
     enabled: true
     samplingProbability: 1.0
     propagationType: "B3,B3_MULTI"
-  # Database schema (use 'public' if schema doesn't exist)
-  databaseSchema: "public"
 
 # Gateway
 gateway:

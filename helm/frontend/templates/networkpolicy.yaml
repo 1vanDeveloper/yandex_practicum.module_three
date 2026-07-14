@@ -27,6 +27,14 @@ spec:
         - protocol: TCP
           port: 8080
     {{- end }}
+    # Allow traffic from prometheus (for metrics scraping) - explicit rule
+    - from:
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8080
   egress:
     # Allow DNS resolution
     - ports:

@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
 spec:
   podSelector:
     matchLabels:
@@ -10,17 +12,11 @@ spec:
     - Ingress
     - Egress
   ingress:
-    # Allow traffic from frontend and prometheus (for metrics scraping)
-    - from:
-        - podSelector:
-            matchLabels:
-              app: frontend
-        - podSelector:
-            matchLabels:
-              app: prometheus
+    # Allow UI access from all pods (for debugging) and NodePort external access
+    - from: []
       ports:
         - protocol: TCP
-          port: 8080
+          port: 9090
   egress:
     # Allow DNS resolution
     - ports:
@@ -28,7 +24,7 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # Allow traffic to backend services
+    # Allow scraping all banking services
     - to:
         - podSelector:
             matchLabels:
@@ -57,7 +53,29 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
-    # Allow traffic to Keycloak (for OAuth2)
+    - to:
+        - podSelector:
+            matchLabels:
+              app: gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Allow scraping itself
+    - to:
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9090
+    # Allow scraping keycloak (if metrics enabled)
     - to:
         - podSelector:
             matchLabels:
@@ -65,11 +83,13 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
-    # Allow traffic to Zipkin (for tracing)
+        - protocol: TCP
+          port: 9000
+    # Allow scraping kafka exporter
     - to:
         - podSelector:
             matchLabels:
-              app: zipkin
+              app.kubernetes.io/name: kafka
       ports:
         - protocol: TCP
-          port: 9411
+          port: 9308

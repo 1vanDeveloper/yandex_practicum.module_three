@@ -14,7 +14,7 @@ docker-build:
 # Kubernetes deployment
 k8s-deploy:
 	#kubectl create secret generic bank-kafka-cluster-id --from-literal=clusterId="QxkqDKf5Tf6vXJZ3pLqLbw"
-	helm upgrade --install bank helm/bank -f helm/values-dev.yaml -f helm/values-secret.yaml --timeout 5m --wait
+	helm upgrade --install bank helm/bank -f helm/values-dev.yaml -f helm/values-secret.yaml --timeout 5m --wait --force
 
 k8s-rollback:
 	helm rollback bank

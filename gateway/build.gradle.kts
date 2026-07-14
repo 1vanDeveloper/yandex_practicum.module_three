@@ -36,6 +36,7 @@ dependencies {
 
     // Actuator
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 
     // Micrometer Tracing (Zipkin) - для WebFlux
     implementation("io.micrometer:micrometer-tracing-bridge-brave")
