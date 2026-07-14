@@ -1,5 +1,7 @@
 package ru.yandex.practicum.frontend.client;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -24,12 +26,15 @@ public class GatewayClient {
     private final RestClient restClient;
     private final String gatewayServiceUrl;
     private final Executor executor;
+    private final ObservationRegistry observationRegistry;
 
     public GatewayClient(
             RestClient.Builder restClientBuilder,
-            @Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl) {
+            @Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl,
+            ObservationRegistry observationRegistry) {
         this.gatewayServiceUrl = gatewayServiceUrl;
         this.executor = Executors.newFixedThreadPool(10);
+        this.observationRegistry = observationRegistry;
         // Используем Builder для поддержки трейсинга через Observation
         this.restClient = restClientBuilder.build();
     }
@@ -157,14 +162,21 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.runAsync(() -> 
-            restClient.post()
-                .uri(url)
-                .header("Authorization", "Bearer " + jwtToken)
-                .retrieve()
-                .toBodilessEntity(),
-            executor
-        );
+        // Propagate Observation context to async thread
+        return CompletableFuture.runAsync(() -> {
+            Observation observation = Observation.start("gateway.call", observationRegistry);
+            try {
+                observation.scoped(() ->
+                    restClient.post()
+                        .uri(url)
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .retrieve()
+                        .toBodilessEntity()
+                );
+            } finally {
+                observation.stop();
+            }
+        }, executor);
     }
 
     public CompletableFuture<Void> processCashFallback(Integer value, String action, String jwtToken, Throwable t) {

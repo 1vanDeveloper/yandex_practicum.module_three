@@ -77,5 +77,4 @@ replay_pid*
 helm/values-secret.yaml
 **/values-secret.yaml
 
-.nessyignore
 *.tgz
