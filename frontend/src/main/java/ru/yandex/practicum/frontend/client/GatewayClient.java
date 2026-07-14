@@ -49,15 +49,16 @@ public class GatewayClient {
         String gatewayUrl = getGatewayUrl();
         log.debug("GatewayClient: logging in user: {}", request.getLogin());
 
-        return CompletableFuture.supplyAsync(() -> 
-            Observation.createNotStarted("gateway.login", observationRegistry)
-                .observe(() -> restClient.post()
+        return CompletableFuture.supplyAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.login", observationRegistry)
+                    .start().openScope()) {
+                return restClient.post()
                     .uri(gatewayUrl + "/gateway/auth/login")
                     .body(request)
                     .retrieve()
-                    .body(JwtTokenResponse.class)),
-            executor
-        );
+                    .body(JwtTokenResponse.class);
+            }
+        }, executor);
     }
 
     public CompletableFuture<JwtTokenResponse> loginFallback(LoginRequest request, Throwable t) {
@@ -72,15 +73,16 @@ public class GatewayClient {
         String gatewayUrl = getGatewayUrl();
         log.debug("GatewayClient: registering user: {}", request.getLogin());
 
-        return CompletableFuture.runAsync(() ->
-            Observation.createNotStarted("gateway.register", observationRegistry)
-                .observe(() -> restClient.post()
+        return CompletableFuture.runAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.register", observationRegistry)
+                    .start().openScope()) {
+                restClient.post()
                     .uri(gatewayUrl + "/gateway/auth/register")
                     .body(request)
                     .retrieve()
-                    .toBodilessEntity()),
-            executor
-        );
+                    .toBodilessEntity();
+            }
+        }, executor);
     }
 
     public CompletableFuture<Void> registerFallback(RegisterRequest request, Throwable t) {
@@ -101,15 +103,16 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() ->
-            Observation.createNotStarted("gateway.getAccount", observationRegistry)
-                .observe(() -> restClient.get()
+        return CompletableFuture.supplyAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.getAccount", observationRegistry)
+                    .start().openScope()) {
+                return restClient.get()
                     .uri(gatewayUrl + "/gateway/account")
                     .header("Authorization", "Bearer " + jwtToken)
                     .retrieve()
-                    .body(AccountResponse.class)),
-            executor
-        );
+                    .body(AccountResponse.class);
+            }
+        }, executor);
     }
 
     public CompletableFuture<AccountResponse> getAccountFallback(String jwtToken, Throwable t) {
@@ -134,16 +137,17 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() ->
-            Observation.createNotStarted("gateway.updateAccount", observationRegistry)
-                .observe(() -> restClient.put()
+        return CompletableFuture.supplyAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.updateAccount", observationRegistry)
+                    .start().openScope()) {
+                return restClient.put()
                     .uri(gatewayUrl + "/gateway/account")
                     .header("Authorization", "Bearer " + jwtToken)
                     .body(new UpdateAccountRequest(firstName, lastName, birthDate))
                     .retrieve()
-                    .body(AccountResponse.class)),
-            executor
-        );
+                    .body(AccountResponse.class);
+            }
+        }, executor);
     }
 
     public CompletableFuture<AccountResponse> updateAccountFallback(String firstName, String lastName,
@@ -166,15 +170,16 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.runAsync(() ->
-            Observation.createNotStarted("gateway.processCash", observationRegistry)
-                .observe(() -> restClient.post()
+        return CompletableFuture.runAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.processCash", observationRegistry)
+                    .start().openScope()) {
+                restClient.post()
                     .uri(url)
                     .header("Authorization", "Bearer " + jwtToken)
                     .retrieve()
-                    .toBodilessEntity()),
-            executor
-        );
+                    .toBodilessEntity();
+            }
+        }, executor);
     }
 
     public CompletableFuture<Void> processCashFallback(Integer value, String action, String jwtToken, Throwable t) {
@@ -196,15 +201,16 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.runAsync(() ->
-            Observation.createNotStarted("gateway.processTransfer", observationRegistry)
-                .observe(() -> restClient.post()
+        return CompletableFuture.runAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.processTransfer", observationRegistry)
+                    .start().openScope()) {
+                restClient.post()
                     .uri(url)
                     .header("Authorization", "Bearer " + jwtToken)
                     .retrieve()
-                    .toBodilessEntity()),
-            executor
-        );
+                    .toBodilessEntity();
+            }
+        }, executor);
     }
 
     public CompletableFuture<Void> processTransferFallback(Integer value, String toLogin, String jwtToken, Throwable t) {
@@ -225,15 +231,16 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() ->
-            Observation.createNotStarted("gateway.getAccountBriefs", observationRegistry)
-                .observe(() -> restClient.get()
+        return CompletableFuture.supplyAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.getAccountBriefs", observationRegistry)
+                    .start().openScope()) {
+                return restClient.get()
                     .uri(gatewayUrl + "/gateway/accounts")
                     .header("Authorization", "Bearer " + jwtToken)
                     .retrieve()
-                    .body(new ParameterizedTypeReference<List<AccountBrief>>() {})),
-            executor
-        );
+                    .body(new ParameterizedTypeReference<List<AccountBrief>>() {});
+            }
+        }, executor);
     }
 
     public CompletableFuture<List<AccountBrief>> getAccountBriefsFallback(String jwtToken, Throwable t) {
