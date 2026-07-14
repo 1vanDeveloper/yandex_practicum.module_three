@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- if .Values.service.nodePort }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      nodePort: {{ .Values.service.nodePort }}
+  {{- else }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  {{- end }}
+  selector:
+    app: {{ .Chart.Name }}
+---
+{{- if .Values.externalService.enabled }}
+# Сервис для доступа извне кластера (NodePort)
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-external
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  type: {{ .Values.externalService.type }}
+  ports:
+    - port: 9090
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if .Values.externalService.nodePort }}
+      nodePort: {{ .Values.externalService.nodePort }}
+      {{- end }}
+  selector:
+    app: {{ .Chart.Name }}
+{{- end }}

@@ -20,6 +20,10 @@ dependencies:
     version: 0.1.0
     repository: "file://../zipkin"
     condition: zipkin.enabled
+  - name: prometheus
+    version: 0.1.0
+    repository: "file://../prometheus"
+    condition: prometheus.enabled
   - name: accounts
     version: 0.1.0
     repository: "file://../accounts"

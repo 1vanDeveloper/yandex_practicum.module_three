@@ -1,6 +1,9 @@
 # Настройки сервиса Notifications
 replicaCount: 1
 
+# Database schema (use 'public' if schema doesn't exist)
+databaseSchema: "public"
+
 global:
   postgresql:
     host: "postgresql"

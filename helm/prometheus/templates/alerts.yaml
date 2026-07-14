@@ -1,0 +1,169 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-alerts
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  banking-alerts.yml: |
+    groups:
+      - name: banking-alerts
+        interval: 30s
+        rules:
+          # ==========================================
+          # HTTP ошибки (5xx)
+          # ==========================================
+          - alert: HighHttp5xxRate
+            expr: |
+              sum(rate(http_server_requests_seconds_count{status=~"5..", service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m]))
+              /
+              sum(rate(http_server_requests_seconds_count{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m]))
+              > 0.05
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Высокий уровень HTTP 5xx ошибок"
+              description: "Уровень ошибок 5xx превышает 5% в сервисах {{ "{{" }} $labels.service {{ "}}" }}"
+
+          # ==========================================
+          # HTTP ошибки (4xx)
+          # ==========================================
+          - alert: HighHttp4xxRate
+            expr: |
+              sum(rate(http_server_requests_seconds_count{status=~"4..", service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m]))
+              /
+              sum(rate(http_server_requests_seconds_count{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m]))
+              > 0.10
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Высокий уровень HTTP 4xx ошибок"
+              description: "Уровень ошибок 4xx превышает 10% в сервисах {{ "{{" }} $labels.service {{ "}}" }}"
+
+          # ==========================================
+          # Медленные запросы (p95 > 1s)
+          # ==========================================
+          - alert: HighRequestLatencyP95
+            expr: |
+              histogram_quantile(0.95,
+                sum(rate(http_server_requests_seconds_bucket{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m]))
+                by (le, service)
+              ) > 1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Высокая задержка запросов (p95)"
+              description: "95-й перцентиль задержки превышает 1с в сервисе {{ "{{" }} $labels.service {{ "}}" }}"
+
+          # ==========================================
+          # Медленные запросы (p99 > 3s)
+          # ==========================================
+          - alert: HighRequestLatencyP99
+            expr: |
+              histogram_quantile(0.99,
+                sum(rate(http_server_requests_seconds_bucket{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m]))
+                by (le, service)
+              ) > 3
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Очень высокая задержка запросов (p99)"
+              description: "99-й перцентиль задержки превышает 3с в сервисе {{ "{{" }} $labels.service {{ "}}" }}"
+
+          # ==========================================
+          # Неуспешные попытки снятия денег
+          # ==========================================
+          - alert: HighCashWithdrawalFailures
+            expr: |
+              sum(rate(cash_withdrawal_failed_total[5m])) by (login) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Частые неудачи при снятии денег"
+              description: "Пользователь {{ "{{" }} $labels.login {{ "}}" }} имеет более 0.1 неудачных попыток снятия в секунду"
+
+          # ==========================================
+          # Неуспешные попытки перевода денег
+          # ==========================================
+          - alert: HighTransferFailures
+            expr: |
+              sum(rate(transfer_failed_total[5m])) by (from_login, to_login) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Частые неудачи при переводах"
+              description: "Перевод от {{ "{{" }} $labels.from_login {{ "}}" }} к {{ "{{" }} $labels.to_login {{ "}}" }} имеет более 0.1 неудач в секунду"
+
+          # ==========================================
+          # Невозможность отправки уведомления
+          # ==========================================
+          - alert: HighNotificationFailures
+            expr: |
+              sum(rate(notification_send_failed_total[5m])) by (login) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Частые неудачи при отправке уведомлений"
+              description: "Не удалось отправить уведомление пользователю {{ "{{" }} $labels.login {{ "}}" }} более 0.1 раз в секунду"
+
+          # ==========================================
+          # Использование памяти JVM (>90%)
+          # ==========================================
+          - alert: HighJvmMemoryUsage
+            expr: |
+              (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) > 0.9
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Высокое использование памяти JVM"
+              description: "JVM использует более 90% кучи в сервисе {{ "{{" }} $labels.service {{ "}}" }}"
+
+          # ==========================================
+          # CPU usage (>80%)
+          # ==========================================
+          - alert: HighCpuUsage
+            expr: |
+              sum(rate(process_cpu_seconds_total{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m])) by (service)
+              /
+              count(count(process_cpu_seconds_total{service=~"accounts|cash|transfer|notifications|gateway|frontend"}) by (service, instance))
+              > 0.8
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Высокое использование CPU"
+              description: "Сервис {{ "{{" }} $labels.service {{ "}}" }} использует более 80% CPU"
+
+          # ==========================================
+          # Сервис недоступен (down)
+          # ==========================================
+          - alert: ServiceDown
+            expr: |
+              up{job="banking-services"} == 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Сервис недоступен"
+              description: "Сервис {{ "{{" }} $labels.service {{ "}}" }} (pod {{ "{{" }} $labels.pod {{ "}}" }}) не отвечает более 2 минут"
+
+          # ==========================================
+          # RPS упал ниже порога (возможно сервис деградирует)
+          # ==========================================
+          - alert: LowRps
+            expr: |
+              sum(rate(http_server_requests_seconds_count{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m])) by (service) < 0.1
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Низкий RPS"
+              description: "Сервис {{ "{{" }} $labels.service {{ "}}" }} имеет менее 0.1 запросов в секунду в течение 10 минут"

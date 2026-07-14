@@ -14,10 +14,6 @@ spec:
     metadata:
       labels:
         app: {{ .Chart.Name }}
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
-        prometheus.io/path: "/actuator/prometheus"
     spec:
       {{- if and .Values.global .Values.global.imagePullSecrets }}
       imagePullSecrets:
@@ -78,38 +74,6 @@ spec:
                 secretKeyRef:
                   name: {{ .Chart.Name }}-secrets
                   key: KEYCLOAK_JWK_SET_URI
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
-              value: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/token"
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_ID
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_ID
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Chart.Name }}-secrets
-                  key: OAUTH2_CLIENT_SECRET
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_AUTHORIZATION_GRANT_TYPE
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_AUTHORIZATION_GRANT_TYPE
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_PROVIDER
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_PROVIDER
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Chart.Name }}-secrets
-                  key: JWT_SECRET
-            - name: JWT_EXPIRATION
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Chart.Name }}-secrets
-                  key: JWT_EXPIRATION
             # Micrometer Tracing (Zipkin)
             - name: MANAGEMENT_TRACING_ENABLED
               valueFrom:
@@ -131,42 +95,37 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
-            - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_CASH
+            - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_CASH
+                  key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS
             # Kafka Configuration
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_KAFKA_BOOTSTRAP_SERVERS
-            - name: SPRING_KAFKA_PRODUCER_KEY_SERIALIZER
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: SPRING_KAFKA_CONSUMER_GROUP_ID
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_KAFKA_PRODUCER_KEY_SERIALIZER
-            - name: SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER
+                  key: SPRING_KAFKA_CONSUMER_GROUP_ID
+            - name: SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER
-            - name: SPRING_KAFKA_PRODUCER_ACKS
+                  key: SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER
+            - name: SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_KAFKA_PRODUCER_ACKS
-            - name: SPRING_KAFKA_PRODUCER_RETRIES
+                  key: SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER
+            - name: SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_KAFKA_PRODUCER_RETRIES
-            - name: SPRING_KAFKA_PRODUCER_PROPERTIES_ENABLE_IDEMPOTENCE
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ .Chart.Name }}-config
-                  key: SPRING_KAFKA_PRODUCER_PROPERTIES_ENABLE_IDEMPOTENCE
+                  key: SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

@@ -11,6 +11,9 @@ dependencies:
 - name: zipkin
   repository: file://../zipkin
   version: 0.1.0
+- name: prometheus
+  repository: file://../prometheus
+  version: 0.1.0
 - name: accounts
   repository: file://../accounts
   version: 0.1.0
@@ -29,5 +32,5 @@ dependencies:
 - name: transfer
   repository: file://../transfer
   version: 0.1.0
-digest: sha256:977a9d5c9148cb669b0f5fd28481add9631eae2e394540cc7d5768a9575fd4b5
-generated: "2026-07-06T13:49:25.367098+03:00"
+digest: sha256:c1b47c36c49f0498c6fc03656f31ce97d7da1dce45a988874ae7141150c6f9f6
+generated: "2026-07-15T01:12:12.485463+03:00"

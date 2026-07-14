@@ -14,10 +14,6 @@ spec:
     metadata:
       labels:
         app: {{ .Chart.Name }}
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
-        prometheus.io/path: "/actuator/prometheus"
     spec:
       {{- if and .Values.global .Values.global.imagePullSecrets }}
       imagePullSecrets:
@@ -80,26 +76,26 @@ spec:
                   key: KEYCLOAK_JWK_SET_URI
             - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_TOKEN_URI
               value: "{{ .Values.secrets.KEYCLOAK_ISSUER_URI | default "http://keycloak:8080/realms/bank" }}/protocol/openid-connect/token"
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_CLIENT_ID
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_ID
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_CLIENT_SECRET
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ .Chart.Name }}-secrets
                   key: OAUTH2_CLIENT_SECRET
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_AUTHORIZATION_GRANT_TYPE
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_AUTHORIZATION_GRANT_TYPE
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_AUTHORIZATION_GRANT_TYPE
-            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_PROVIDER
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_AUTHORIZATION_GRANT_TYPE
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_PROVIDER
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CASH_SERVICE_PROVIDER
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_TRANSFER_SERVICE_PROVIDER
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -131,11 +127,11 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
-            - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_CASH
+            - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_TRANSFER
               valueFrom:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
-                  key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_CASH
+                  key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_TRANSFER
             # Kafka Configuration
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
