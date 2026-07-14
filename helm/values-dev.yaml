@@ -94,6 +94,9 @@ notifications:
   tracing:
     enabled: true
     samplingProbability: 1.0
+    propagationType: "B3,B3_MULTI"
+  # Database schema (use 'public' if schema doesn't exist)
+  databaseSchema: "public"
 
 # Gateway
 gateway:
@@ -206,6 +209,31 @@ kafka:
     heapOpts: "-Xms256m -Xmx256m"
     # Фиксированный node.id для broker (решает проблему DUPLICATE_BROKER_REGISTRATION)
     nodeId: 0
+    # Init containers для форматирования хранилища KRaft
+    initContainers:
+      # Форматирование хранилища при отсутствии meta.properties
+      - name: format-storage
+        image: sir5kong/kafka:v3.4.0
+        command:
+          - sh
+          - -c
+          - |
+            if [ ! -f /opt/kafka/data/meta.properties ]; then
+              echo "Formatting Kafka storage with cluster.id: $KAFKA_CLUSTER_ID"
+              /opt/kafka/bin/kafka-storage.sh format -t $KAFKA_CLUSTER_ID --ignore-formatted -c /opt/kafka/config/kraft/server.properties
+              echo "Storage formatted successfully"
+            else
+              echo "Storage already formatted, skipping"
+            fi
+        env:
+          - name: KAFKA_CLUSTER_ID
+            valueFrom:
+              secretKeyRef:
+                name: bank-kafka-cluster-id
+                key: clusterId
+        volumeMounts:
+          - name: data
+            mountPath: /opt/kafka/data
     # Use BROKER listener (chart default) - clients connect via service DNS
     extraEnvs:
       - name: KAFKA_CFG_BROKER_HEARTBEAT_INTERVAL_MS
