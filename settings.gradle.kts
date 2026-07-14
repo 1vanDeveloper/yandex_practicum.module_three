@@ -2,11 +2,6 @@ rootProject.name = "bank"
 
 pluginManagement {
     repositories {
-        maven {
-            url = uri("https://artifactory.tcsbank.ru/artifactory/maven-all")
-            isAllowInsecureProtocol = true
-            name = "maven-all"
-        }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -14,11 +9,6 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        maven {
-            url = uri("https://artifactory.tcsbank.ru/artifactory/maven-all")
-            isAllowInsecureProtocol = true
-            name = "maven-all"
-        }
         mavenCentral()
     }
 }
