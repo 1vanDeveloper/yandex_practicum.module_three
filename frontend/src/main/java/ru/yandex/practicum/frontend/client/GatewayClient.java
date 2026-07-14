@@ -50,11 +50,12 @@ public class GatewayClient {
         log.debug("GatewayClient: logging in user: {}", request.getLogin());
 
         return CompletableFuture.supplyAsync(() -> 
-            restClient.post()
-                .uri(gatewayUrl + "/gateway/auth/login")
-                .body(request)
-                .retrieve()
-                .body(JwtTokenResponse.class),
+            Observation.createNotStarted("gateway.login", observationRegistry)
+                .observe(() -> restClient.post()
+                    .uri(gatewayUrl + "/gateway/auth/login")
+                    .body(request)
+                    .retrieve()
+                    .body(JwtTokenResponse.class)),
             executor
         );
     }
@@ -71,12 +72,13 @@ public class GatewayClient {
         String gatewayUrl = getGatewayUrl();
         log.debug("GatewayClient: registering user: {}", request.getLogin());
 
-        return CompletableFuture.runAsync(() -> 
-            restClient.post()
-                .uri(gatewayUrl + "/gateway/auth/register")
-                .body(request)
-                .retrieve()
-                .toBodilessEntity(),
+        return CompletableFuture.runAsync(() ->
+            Observation.createNotStarted("gateway.register", observationRegistry)
+                .observe(() -> restClient.post()
+                    .uri(gatewayUrl + "/gateway/auth/register")
+                    .body(request)
+                    .retrieve()
+                    .toBodilessEntity()),
             executor
         );
     }
@@ -99,12 +101,13 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() -> 
-            restClient.get()
-                .uri(gatewayUrl + "/gateway/account")
-                .header("Authorization", "Bearer " + jwtToken)
-                .retrieve()
-                .body(AccountResponse.class),
+        return CompletableFuture.supplyAsync(() ->
+            Observation.createNotStarted("gateway.getAccount", observationRegistry)
+                .observe(() -> restClient.get()
+                    .uri(gatewayUrl + "/gateway/account")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .retrieve()
+                    .body(AccountResponse.class)),
             executor
         );
     }
@@ -131,13 +134,14 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() -> 
-            restClient.put()
-                .uri(gatewayUrl + "/gateway/account")
-                .header("Authorization", "Bearer " + jwtToken)
-                .body(new UpdateAccountRequest(firstName, lastName, birthDate))
-                .retrieve()
-                .body(AccountResponse.class),
+        return CompletableFuture.supplyAsync(() ->
+            Observation.createNotStarted("gateway.updateAccount", observationRegistry)
+                .observe(() -> restClient.put()
+                    .uri(gatewayUrl + "/gateway/account")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .body(new UpdateAccountRequest(firstName, lastName, birthDate))
+                    .retrieve()
+                    .body(AccountResponse.class)),
             executor
         );
     }
@@ -162,21 +166,15 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        // Propagate Observation context to async thread
-        return CompletableFuture.runAsync(() -> {
-            Observation observation = Observation.start("gateway.call", observationRegistry);
-            try {
-                observation.scoped(() ->
-                    restClient.post()
-                        .uri(url)
-                        .header("Authorization", "Bearer " + jwtToken)
-                        .retrieve()
-                        .toBodilessEntity()
-                );
-            } finally {
-                observation.stop();
-            }
-        }, executor);
+        return CompletableFuture.runAsync(() ->
+            Observation.createNotStarted("gateway.processCash", observationRegistry)
+                .observe(() -> restClient.post()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .retrieve()
+                    .toBodilessEntity()),
+            executor
+        );
     }
 
     public CompletableFuture<Void> processCashFallback(Integer value, String action, String jwtToken, Throwable t) {
@@ -198,12 +196,13 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.runAsync(() -> 
-            restClient.post()
-                .uri(url)
-                .header("Authorization", "Bearer " + jwtToken)
-                .retrieve()
-                .toBodilessEntity(),
+        return CompletableFuture.runAsync(() ->
+            Observation.createNotStarted("gateway.processTransfer", observationRegistry)
+                .observe(() -> restClient.post()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .retrieve()
+                    .toBodilessEntity()),
             executor
         );
     }
@@ -226,12 +225,13 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() -> 
-            restClient.get()
-                .uri(gatewayUrl + "/gateway/accounts")
-                .header("Authorization", "Bearer " + jwtToken)
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<AccountBrief>>() {}),
+        return CompletableFuture.supplyAsync(() ->
+            Observation.createNotStarted("gateway.getAccountBriefs", observationRegistry)
+                .observe(() -> restClient.get()
+                    .uri(gatewayUrl + "/gateway/accounts")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<AccountBrief>>() {})),
             executor
         );
     }
