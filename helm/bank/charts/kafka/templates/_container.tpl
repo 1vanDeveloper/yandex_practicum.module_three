@@ -35,5 +35,4 @@
   volumeMounts:
   - mountPath: /opt/kafka/data
     name: data
-    readOnly: true
 {{- end }}

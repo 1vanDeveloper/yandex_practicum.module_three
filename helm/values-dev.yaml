@@ -185,7 +185,7 @@ kafka:
     pullPolicy: IfNotPresent
 
   # Фиксированный cluster.id для KRaft режима (решает проблему DUPLICATE_BROKER_REGISTRATION)
-  clusterId: "bank-kafka-cluster-id-abc123"
+  clusterId: "QxkqDKf5Tf6vXJZ3pLqLbw"
 
   controller:
     enabled: true
