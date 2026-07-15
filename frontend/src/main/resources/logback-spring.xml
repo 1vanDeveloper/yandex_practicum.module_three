@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds">
     <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name" defaultValue="unknown"/>
-    <springProperty scope="context" name="LOGSTASH_HOST" source="elk.logstash.host" defaultValue="logstash"/>
-    <springProperty scope="context" name="LOGSTASH_PORT" source="elk.logstash.port" defaultValue="5000"/>
+    <springProperty scope="context" name="LOGSTASH_HOST" source="elk.logstash.host" defaultValue="${ELK_LOGSTASH_HOST:-logstash}"/>
+    <springProperty scope="context" name="LOGSTASH_PORT" source="elk.logstash.port" defaultValue="${ELK_LOGSTASH_PORT:-5000}"/>
 
     <!-- Unified log pattern: Microservice Chassis format -->
     <!-- Format: TIMESTAMP LEVEL SERVICE TRACE_ID SPAN_ID CLASS MESSAGE -->

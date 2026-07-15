@@ -37,3 +37,14 @@ env:
     value: "kibana"
   - name: SERVER_HOST
     value: "0.0.0.0"
+
+# Kibana configuration for automatic Data Views
+kibanaConfig:
+  kibana.yml: |
+    elasticsearch.hosts: ["http://elasticsearch:9200"]
+    xpack.security.enabled: false
+    xpack.security.enrollment.enabled: false
+    xpack.fleet.enabled: false
+    xpack.encryptedSavedObjects.encryptionKey: "this-is-a-32-character-key!!!"
+    xpack.reporting.encryptionKey: "this-is-another-32-char-key!!"
+    xpack.savedObjects.encryptionKey: "and-another-32-character-key!!"

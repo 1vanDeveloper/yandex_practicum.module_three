@@ -21,6 +21,12 @@ global:
   zipkin:
     url: "http://zipkin:9411"
 
+  # ELK Stack (Logstash для централизованного логирования)
+  elk:
+    logstash:
+      host: "logstash"
+      port: 5000
+
   # JWT Secret (должен совпадать во всех сервисах)
   jwtSecret: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
 

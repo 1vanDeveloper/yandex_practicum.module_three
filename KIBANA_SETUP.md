@@ -1,15 +1,24 @@
 # Kibana преднастройка логов
 
+## Автоматическая настройка
+
+Kibana автоматически настраивается при деплое через Helm Job:
+- **Data View:** `bank-logs-*` (Logstash пишет в `bank-logs-%{+YYYY.MM.dd}`)
+- **Saved Searches:** All Logs, Errors Only, Logs with Trace ID, по одному на сервис
+- **Job:** Запускается после деплоя Kibana, создаёт объекты через Saved Objects API
+
+При успешной настройке Job автоматически удаляется (hook-delete-policy: hook-succeeded).
+
 ## Доступ
 - **URL:** http://localhost:30561
 - **Логин:** admin
 - **Пароль:** admin
 
-## Data View
-- **Name:** Bank Logs
-- **Index Pattern:** `bank-logs-*`
-- **Time Field:** @timestamp
-- **ID:** b56f3975-dd67-4c2d-a213-19ae5db97765
+## Data View (автоматически создаётся)
+
+| Name | Index Pattern | Time Field | Описание |
+|------|---------------|------------|----------|
+| Bank Logs | `bank-logs-*` | @timestamp | Основной Data View для логов приложений |
 
 ## Saved Searches
 
@@ -88,3 +97,39 @@ service: cash and level: ERROR and traceId: *
 - Grafana: http://localhost:30030 (метрики + алерты)
 - Kibana: http://localhost:30561 (логи + трейсинг)
 - Zipkin: http://localhost:9411/zipkin/ (трейсы)
+
+## Troubleshooting
+
+### Проверка статуса инициализации
+```bash
+# Статус Job
+kubectl get job kibana-init
+
+# Логи инициализации
+kubectl logs -l app=kibana-init
+
+# Если Job не запустился — проверить под Kibana
+kubectl get pods -l app=kibana
+kubectl logs -l app=kibana
+```
+
+### Ручной запуск инициализации
+```bash
+# Удалить старый Job
+kubectl delete job kibana-init
+
+# Запустить Helm upgrade для пересоздания Job
+helm upgrade --install bank helm/bank -f helm/values-dev.yaml -f helm/values-secret.yaml
+```
+
+### Проверка Data Views через API
+```bash
+# Port-forward Kibana
+kubectl port-forward svc/kibana 5601:5601 &
+
+# Список Data Views
+curl http://localhost:5601/api/saved_objects/_find?type=data-view
+
+# Список Saved Searches
+curl http://localhost:5601/api/saved_objects/_find?type=search
+```

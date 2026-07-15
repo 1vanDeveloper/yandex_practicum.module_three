@@ -23,6 +23,10 @@ spec:
             - name: {{ .name }}
               value: {{ .value | quote }}
             {{- end }}
+          volumeMounts:
+            - name: kibana-config
+              mountPath: /usr/share/kibana/config/kibana.yml
+              subPath: kibana.yml
           ports:
             - containerPort: 5601
               name: http
@@ -40,6 +44,11 @@ spec:
               port: 5601
             initialDelaySeconds: 30
             periodSeconds: 5
+      volumes:
+        - name: kibana-config
+          configMap:
+            name: {{ .Chart.Name }}-config
       securityContext:
-        fsGroup: 1000
-        runAsUser: 1000
+        fsGroup: 0
+        runAsUser: 0
+        runAsGroup: 0

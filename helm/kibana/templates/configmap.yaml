@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  kibana.yml: |
+    elasticsearch.hosts: ["http://elasticsearch:9200"]
+    xpack.security.enabled: false
+    xpack.security.enrollment.enabled: false
+    xpack.fleet.enabled: false
+    xpack.encryptedSavedObjects.encryptionKey: "this-is-a-32-character-key!!!"
+    xpack.reporting.encryptionKey: "this-is-another-32-char-key!!"
+    xpack.savedObjects.encryptionKey: "and-another-32-character-key!!"

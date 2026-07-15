@@ -167,6 +167,17 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: SPRING_KAFKA_PRODUCER_PROPERTIES_ENABLE_IDEMPOTENCE
+            # ELK Stack - Logstash configuration
+            - name: ELK_LOGSTASH_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: ELK_LOGSTASH_HOST
+            - name: ELK_LOGSTASH_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: ELK_LOGSTASH_PORT
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
