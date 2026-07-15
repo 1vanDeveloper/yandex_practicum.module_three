@@ -17,6 +17,15 @@ dependencies:
 - name: grafana
   repository: file://../grafana
   version: 0.1.0
+- name: elasticsearch
+  repository: file://../elasticsearch
+  version: 0.1.0
+- name: logstash
+  repository: file://../logstash
+  version: 0.1.0
+- name: kibana
+  repository: file://../kibana
+  version: 0.1.0
 - name: accounts
   repository: file://../accounts
   version: 0.1.0
@@ -35,5 +44,5 @@ dependencies:
 - name: transfer
   repository: file://../transfer
   version: 0.1.0
-digest: sha256:f444b998d5709f26acca1e42e51d5c63fe8fe49d591497d64faedcaf78948adb
-generated: "2026-07-15T13:54:42.558981+03:00"
+digest: sha256:ff47429e4a14ab6572c5ecb52699f8ee891a1bcfd065f9e97dd932f2cfd3d0a7
+generated: "2026-07-15T15:52:04.683472+03:00"

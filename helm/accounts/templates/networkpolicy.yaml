@@ -66,3 +66,13 @@ spec:
       ports:
         - protocol: TCP
           port: 9411
+    # Allow traffic to Logstash (for centralized logging)
+    - to:
+        - podSelector:
+            matchLabels:
+              app: logstash
+      ports:
+        - protocol: TCP
+          port: 5000
+        - protocol: TCP
+          port: 5044

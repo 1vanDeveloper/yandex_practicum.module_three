@@ -44,6 +44,10 @@ dependencies {
     implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
     implementation("io.micrometer:micrometer-observation")
     implementation("io.micrometer:context-propagation")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
+    // Logstash TCP appender for centralized logging
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.46")

@@ -28,6 +28,18 @@ dependencies:
     version: 0.1.0
     repository: "file://../grafana"
     condition: grafana.enabled
+  - name: elasticsearch
+    version: 0.1.0
+    repository: "file://../elasticsearch"
+    condition: elasticsearch.enabled
+  - name: logstash
+    version: 0.1.0
+    repository: "file://../logstash"
+    condition: logstash.enabled
+  - name: kibana
+    version: 0.1.0
+    repository: "file://../kibana"
+    condition: kibana.enabled
   - name: accounts
     version: 0.1.0
     repository: "file://../accounts"

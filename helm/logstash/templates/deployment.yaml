@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+        - name: logstash
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 5044
+              name: beats
+            - containerPort: 5000
+              name: tcp
+            - containerPort: 9600
+              name: api
+          env:
+            - name: LS_JAVA_OPTS
+              value: "-Xmx256m -Xms256m"
+            - name: PIPELINE_WORKERS
+              value: "{{ .Values.pipeline.workers }}"
+            - name: PIPELINE_BATCH_SIZE
+              value: "{{ .Values.pipeline.batch_size }}"
+            - name: PIPELINE_BATCH_DELAY
+              value: "{{ .Values.pipeline.batch_delay }}"
+            - name: xpack.monitoring.enabled
+              value: "false"
+            - name: node.name
+              value: logstash
+          args:
+            - "-e"
+            - |
+              input {
+                beats { port => 5044 }
+                tcp { port => 5000 codec => json_lines }
+              }
+              filter {
+                if [message] =~ /^\{.*\}$/ {
+                  json { source => "message" target => "parsed" }
+                }
+                if [parsed][trace_id] { mutate { add_field => { "trace_id" => "%{[parsed][trace_id]}" } } }
+                if [parsed][span_id] { mutate { add_field => { "span_id" => "%{[parsed][span_id]}" } } }
+                if [message] =~ /[0-9]{16,}/ { mutate { gsub => ["message", "[0-9]{16,}", "[MASKED_ACCOUNT]"] } }
+              }
+              output {
+                elasticsearch { hosts => ["http://elasticsearch:9200"] index => "bank-logs-%{+YYYY.MM.dd}" }
+                stdout { codec => rubydebug }
+              }
+          volumeMounts:
+            - name: pipeline
+              mountPath: /usr/share/logstash/pipeline
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /_node/stats
+              port: 9600
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /_node/stats
+              port: 9600
+            initialDelaySeconds: 30
+            periodSeconds: 5
+      volumes:
+        - name: pipeline
+          configMap:
+            name: {{ .Chart.Name }}-pipeline

@@ -36,6 +36,9 @@ dependencies {
     implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 
+    // Logstash TCP appender for centralized logging
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+
     // Micrometer Observation для HTTP и Security
     implementation("io.micrometer:micrometer-observation")
     

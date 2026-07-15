@@ -180,7 +180,7 @@ kafka:
   enabled: true
   image:
     repository: sir5kong/kafka
-    tag: "v3.5.1"
+    tag: "v3.4.0"
     pullPolicy: IfNotPresent
 
   # Фиксированный cluster.id для KRaft режима (решает проблему DUPLICATE_BROKER_REGISTRATION)

@@ -47,6 +47,9 @@ dependencies {
     implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 
+    // Logstash TCP appender for centralized logging
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+
     // Resilience4j Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.3.0")

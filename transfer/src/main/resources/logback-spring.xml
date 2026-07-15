@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+    <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name" defaultValue="unknown"/>
+    <springProperty scope="context" name="LOGSTASH_HOST" source="elk.logstash.host" defaultValue="logstash"/>
+    <springProperty scope="context" name="LOGSTASH_PORT" source="elk.logstash.port" defaultValue="5000"/>
+
+    <!-- Unified log pattern: Microservice Chassis format -->
+    <!-- Format: TIMESTAMP LEVEL SERVICE TRACE_ID SPAN_ID CLASS MESSAGE -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5level ${SERVICE_NAME:-} %X{traceId:-} %X{spanId:-} [%thread] %logger{36} - %msg%n"/>
+
+    <!-- Console appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Logstash TCP JSON appender for centralized logging -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>${LOGSTASH_HOST}:${LOGSTASH_PORT}</destination>
+        <reconnectionDelay>5000</reconnectionDelay>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service":"${SERVICE_NAME}"}</customFields>
+            <includeMdc>true</includeMdc>
+            <includeContext>true</includeContext>
+            <includeCallerData>true</includeCallerData>
+        </encoder>
+    </appender>
+
+    <!-- Async appender for non-blocking logging -->
+    <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="LOGSTASH"/>
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+    </appender>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ASYNC_LOGSTASH"/>
+    </root>
+
+    <!-- Application loggers -->
+    <logger name="ru.yandex.practicum" level="DEBUG"/>
+
+    <!-- Spring framework loggers -->
+    <logger name="org.springframework" level="INFO"/>
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+
+    <!-- Hibernate loggers -->
+    <logger name="org.hibernate" level="INFO"/>
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+
+    <!-- Kafka loggers -->
+    <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="org.springframework.kafka" level="INFO"/>
+
+    <!-- HikariCP loggers -->
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+
+    <!-- Micrometer tracing loggers -->
+    <logger name="io.micrometer.tracing" level="DEBUG"/>
+    <logger name="brave" level="DEBUG"/>
+</configuration>

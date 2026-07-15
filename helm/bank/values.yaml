@@ -39,4 +39,13 @@ zipkin:
 kafka:
   enabled: true
 
+elasticsearch:
+  enabled: true
+
+logstash:
+  enabled: true
+
+kibana:
+  enabled: true
+
 # Настройки для каждого сервиса переопределяются в его values.yaml

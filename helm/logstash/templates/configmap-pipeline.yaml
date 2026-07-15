@@ -1,0 +1,111 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-pipeline
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+        codec => json_lines
+      }
+      tcp {
+        port => 5000
+        codec => json_lines
+      }
+    }
+
+    filter {
+      # Parse JSON log message if needed
+      if [message] =~ /^\{.*\}$/ {
+        json {
+          source => "message"
+          target => "parsed"
+        }
+      }
+
+      # Extract trace and span IDs for distributed tracing correlation
+      if [parsed] {
+        if [parsed][trace_id] {
+          mutate {
+            add_field => { "trace_id" => "%{[parsed][trace_id]}" }
+          }
+        }
+        if [parsed][span_id] {
+          mutate {
+            add_field => { "span_id" => "%{[parsed][span_id]}" }
+          }
+        }
+        if [parsed][service_name] {
+          mutate {
+            add_field => { "service" => "%{[parsed][service_name]}" }
+          }
+        }
+      }
+
+      # Mask sensitive data - account numbers (16+ digits)
+      if [message] =~ /[0-9]{16,}/ {
+        mutate {
+          gsub => ["message", "[0-9]{16,}", "[MASKED_ACCOUNT]"]
+        }
+      }
+
+      # Mask credit card numbers (XXXX-XXXX-XXXX-XXXX pattern)
+      if [message] =~ /[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}/ {
+        mutate {
+          gsub => ["message", "[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}", "[MASKED_CARD]"]
+        }
+      }
+
+      # Mask email addresses
+      if [message] =~ /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/ {
+        mutate {
+          gsub => ["message", "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}", "[MASKED_EMAIL]"]
+        }
+      }
+
+      # Extract log level
+      if [parsed][level] {
+        mutate {
+          add_field => { "log_level" => "%{[parsed][level]}" }
+        }
+      } else if [level] {
+        mutate {
+          add_field => { "log_level" => "%{[level]}" }
+        }
+      }
+
+      # Extract timestamp if present
+      if [parsed][timestamp] {
+        date {
+          match => ["[parsed][timestamp]", "ISO8601", "yyyy-MM-dd HH:mm:ss.SSS"]
+          target => "@timestamp"
+        }
+      }
+
+      # Add environment metadata
+      mutate {
+        add_field => {
+          "environment" => "development"
+          "cluster" => "bank-platform"
+        }
+      }
+    }
+
+    output {
+      elasticsearch {
+        hosts => ["http://elasticsearch:9200"]
+        index => "bank-logs-%{+YYYY.MM.dd}"
+        template => "bank-logs-template"
+        template_overwrite => true
+        template_name => "bank-logs-template"
+        manage_template => true
+      }
+
+      # Debug output to stdout
+      stdout {
+        codec => rubydebug
+      }
+    }
