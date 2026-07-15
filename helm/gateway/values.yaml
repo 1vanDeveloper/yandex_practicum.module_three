@@ -41,7 +41,7 @@ tracing:
 image:
   repository: "bank-gateway"
   tag: "latest"
-  pullPolicy: "IfNotPresent"
+  pullPolicy: "Never"
 
 service:
   type: "LoadBalancer"
