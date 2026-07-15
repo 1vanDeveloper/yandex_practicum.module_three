@@ -1,0 +1,265 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-dashboards
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  http-metrics-dashboard.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 80}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "id": 1,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(rate(http_server_requests_seconds_count{service=~\"accounts|cash|transfer|notifications|gateway|frontend\"}[1m])) by (service)", "legendFormat": "{{ "{{" }}service{{ "}}" }}", "refId": "A"}
+          ],
+          "title": "RPS by Service",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "id": 2,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(rate(http_server_requests_seconds_count{service=~\"accounts|cash|transfer|notifications|gateway|frontend\",status=~\"4..\"}[1m])) by (service)", "legendFormat": "{{ "{{" }}service{{ "}}" }} 4xx", "refId": "A"},
+            {"expr": "sum(rate(http_server_requests_seconds_count{service=~\"accounts|cash|transfer|notifications|gateway|frontend\",status=~\"5..\"}[1m])) by (service)", "legendFormat": "{{ "{{" }}service{{ "}}" }} 5xx", "refId": "B"}
+          ],
+          "title": "HTTP Errors (4xx/5xx)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.5}, {"color": "red", "value": 1}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+          "id": 3,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{service=~\"accounts|cash|transfer|notifications|gateway|frontend\"}[1m])) by (le, service))", "legendFormat": "{{ "{{" }}service{{ "}}" }} p50", "refId": "A"},
+            {"expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{service=~\"accounts|cash|transfer|notifications|gateway|frontend\"}[1m])) by (le, service))", "legendFormat": "{{ "{{" }}service{{ "}}" }} p95", "refId": "B"},
+            {"expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{service=~\"accounts|cash|transfer|notifications|gateway|frontend\"}[1m])) by (le, service))", "legendFormat": "{{ "{{" }}service{{ "}}" }} p99", "refId": "C"}
+          ],
+          "title": "HTTP Latency Percentiles",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["http", "spring-boot"],
+      "templating": {"list": []},
+      "time": {"from": "now-1h", "to": "now"},
+      "timepicker": {},
+      "timezone": "",
+      "title": "HTTP Metrics",
+      "uid": "http-metrics",
+      "version": 1,
+      "weekStart": ""
+    }
+  jvm-metrics-dashboard.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 80}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "id": 1,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(jvm_memory_used_bytes{area=\"heap\"}) by (service)", "legendFormat": "{{ "{{" }}service{{ "}}" }} Heap Used", "refId": "A"},
+            {"expr": "sum(jvm_memory_max_bytes{area=\"heap\"}) by (service)", "legendFormat": "{{ "{{" }}service{{ "}}" }} Heap Max", "refId": "B"}
+          ],
+          "title": "JVM Heap Memory",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 80}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "id": 2,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(jvm_memory_used_bytes{area=\"nonheap\"}) by (service)", "legendFormat": "{{ "{{" }}service{{ "}}" }} Non-Heap Used", "refId": "A"}
+          ],
+          "title": "JVM Non-Heap Memory",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "id": 3,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(rate(process_cpu_seconds_total{service=~\"accounts|cash|transfer|notifications|gateway|frontend\"}[1m])) by (service) * 100", "legendFormat": "{{ "{{" }}service{{ "}}" }} CPU %", "refId": "A"}
+          ],
+          "title": "CPU Usage",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 10}, {"color": "red", "value": 50}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "id": 4,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(jvm_threads_live_threads{}) by (service)", "legendFormat": "{{ "{{" }}service{{ "}}" }} Live Threads", "refId": "A"},
+            {"expr": "sum(jvm_threads_daemon_threads{}) by (service)", "legendFormat": "{{ "{{" }}service{{ "}}" }} Daemon Threads", "refId": "B"}
+          ],
+          "title": "Thread Count",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 5}, {"color": "red", "value": 15}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+          "id": 5,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "rate(jvm_gc_pause_seconds_count{service=~\"accounts|cash|transfer|notifications|gateway|frontend\"}[1m])", "legendFormat": "{{ "{{" }}service{{ "}}" }} {{ "{{" }}action{{ "}}" }}", "refId": "A"}
+          ],
+          "title": "GC Pause Rate",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["jvm", "spring-boot"],
+      "templating": {"list": []},
+      "time": {"from": "now-1h", "to": "now"},
+      "timepicker": {},
+      "timezone": "",
+      "title": "JVM Metrics",
+      "uid": "jvm-metrics",
+      "version": 1,
+      "weekStart": ""
+    }
+  business-metrics-dashboard.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 5}, {"color": "red", "value": 10}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "id": 1,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(rate(cash_operation_failed_total{operation=\"withdrawal\"}[1m])) by (service)", "legendFormat": "Failed Withdrawals", "refId": "A"}
+          ],
+          "title": "Failed Withdrawal Attempts",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 5}, {"color": "red", "value": 10}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "id": 2,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(rate(transfer_failed_total[1m])) by (service)", "legendFormat": "Failed Transfers", "refId": "A"}
+          ],
+          "title": "Failed Transfer Attempts",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 3}, {"color": "red", "value": 5}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "id": 3,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(rate(notification_send_failed_total[1m])) by (service)", "legendFormat": "Failed Notifications", "refId": "A"}
+          ],
+          "title": "Failed Notification Sends",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {
+            "defaults": {"color": {"mode": "palette-classic"}, "mappings": [], "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "blue", "value": 0}]}},
+            "overrides": []
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "id": 4,
+          "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "single"}},
+          "targets": [
+            {"expr": "sum(rate(cash_operation_total{operation=\"withdrawal\"}[1m])) by (service, status)", "legendFormat": "Withdrawals {{ "{{" }}status{{ "}}" }}", "refId": "A"},
+            {"expr": "sum(rate(transfer_total[1m])) by (service, status)", "legendFormat": "Transfers {{ "{{" }}status{{ "}}" }}", "refId": "B"}
+          ],
+          "title": "Operation Success/Failure Rate",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["business", "banking"],
+      "templating": {"list": []},
+      "time": {"from": "now-1h", "to": "now"},
+      "timepicker": {},
+      "timezone": "",
+      "title": "Business Metrics",
+      "uid": "business-metrics",
+      "version": 1,
+      "weekStart": ""
+    }

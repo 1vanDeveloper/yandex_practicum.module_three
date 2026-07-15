@@ -24,4 +24,19 @@ global:
   # JWT Secret (должен совпадать во всех сервисах)
   jwtSecret: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
 
+# Включение/выключение сервисов
+prometheus:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminUser: admin
+  adminPassword: admin
+
+zipkin:
+  enabled: true
+
+kafka:
+  enabled: true
+
 # Настройки для каждого сервиса переопределяются в его values.yaml

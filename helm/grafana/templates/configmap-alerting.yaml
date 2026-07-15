@@ -1,0 +1,121 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-alerting
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  alerting-rules.yaml: |
+    groups:
+      - name: Banking Platform Alerts
+        interval: 30s
+        rules:
+          # HTTP 5xx errors > 5% of requests
+          - alert: HighHTTP5xxRate
+            expr: sum(rate(http_server_requests_seconds_count{status=~"5..",service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m])) / sum(rate(http_server_requests_seconds_count{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m])) > 0.05
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High HTTP 5xx error rate"
+              description: "HTTP 5xx error rate is {{ "{{" }} $value | humanizePercentage {{ "}}" }} (threshold: 5%)"
+
+          # HTTP 4xx errors > 10% of requests
+          - alert: HighHTTP4xxRate
+            expr: sum(rate(http_server_requests_seconds_count{status=~"4..",service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m])) / sum(rate(http_server_requests_seconds_count{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m])) > 0.10
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High HTTP 4xx error rate"
+              description: "HTTP 4xx error rate is {{ "{{" }} $value | humanizePercentage {{ "}}" }} (threshold: 10%)"
+
+          # High latency p99 > 1s
+          - alert: HighLatencyP99
+            expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m])) by (le, service)) > 1
+            for: 3m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High p99 latency for {{ "{{" }} $labels.service {{ "}}" }}"
+              description: "Service {{ "{{" }} $labels.service {{ "}}" }} p99 latency is {{ "{{" }} $value {{ "}}" }}s (threshold: 1s)"
+
+          # JVM Heap usage > 85%
+          - alert: HighJVMHeapUsage
+            expr: sum(jvm_memory_used_bytes{area="heap"}) by (service) / sum(jvm_memory_max_bytes{area="heap"}) by (service) > 0.85
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High JVM heap usage for {{ "{{" }} $labels.service {{ "}}" }}"
+              description: "Service {{ "{{" }} $labels.service {{ "}}" }} heap usage is {{ "{{" }} $value | humanizePercentage {{ "}}" }} (threshold: 85%)"
+
+          # JVM Heap usage > 95%
+          - alert: CriticalJVMHeapUsage
+            expr: sum(jvm_memory_used_bytes{area="heap"}) by (service) / sum(jvm_memory_max_bytes{area="heap"}) by (service) > 0.95
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Critical JVM heap usage for {{ "{{" }} $labels.service {{ "}}" }}"
+              description: "Service {{ "{{" }} $labels.service {{ "}}" }} heap usage is {{ "{{" }} $value | humanizePercentage {{ "}}" }} (threshold: 95%)"
+
+          # High CPU usage > 80%
+          - alert: HighCPUUsage
+            expr: sum(rate(process_cpu_seconds_total{service=~"accounts|cash|transfer|notifications|gateway|frontend"}[5m])) by (service) * 100 > 80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage for {{ "{{" }} $labels.service {{ "}}" }}"
+              description: "Service {{ "{{" }} $labels.service {{ "}}" }} CPU usage is {{ "{{" }} $value {{ "}}" }}% (threshold: 80%)"
+
+          # Failed withdrawal attempts > 10/min
+          - alert: HighFailedWithdrawals
+            expr: sum(rate(cash_operation_failed_total{operation="withdrawal"}[5m])) > 0.16
+            for: 3m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High rate of failed withdrawal attempts"
+              description: "Failed withdrawal rate is {{ "{{" }} $value | humanize {{ "}}" }} per second (threshold: 10/min)"
+
+          # Failed transfer attempts > 10/min
+          - alert: HighFailedTransfers
+            expr: sum(rate(transfer_failed_total[5m])) > 0.16
+            for: 3m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High rate of failed transfer attempts"
+              description: "Failed transfer rate is {{ "{{" }} $value | humanize {{ "}}" }} per second (threshold: 10/min)"
+
+          # Failed notification sends > 5/min
+          - alert: HighFailedNotifications
+            expr: sum(rate(notification_send_failed_total[5m])) > 0.08
+            for: 3m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High rate of failed notification sends"
+              description: "Failed notification rate is {{ "{{" }} $value | humanize {{ "}}" }} per second (threshold: 5/min)"
+
+          # Service down (no metrics for 2m)
+          - alert: ServiceDown
+            expr: up{service=~"accounts|cash|transfer|notifications|gateway|frontend"} == 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Service {{ "{{" }} $labels.service {{ "}}" }} is down"
+              description: "Service {{ "{{" }} $labels.service {{ "}}" }} has been down for more than 2 minutes"
+
+          # Prometheus target down
+          - alert: PrometheusTargetDown
+            expr: up{job="banking-services"} == 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Prometheus target {{ "{{" }} $labels.instance {{ "}}" }} is down"
+              description: "Prometheus target {{ "{{" }} $labels.instance {{ "}}" }} ({{ "{{" }} $labels.service {{ "}}" }}) has been down for more than 2 minutes"
