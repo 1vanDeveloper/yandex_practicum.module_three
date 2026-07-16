@@ -36,19 +36,20 @@ spec:
             httpGet:
               path: /api/status
               port: 5601
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /api/status
               port: 5601
-            initialDelaySeconds: 30
-            periodSeconds: 5
+            initialDelaySeconds: 60
+            periodSeconds: 10
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
       volumes:
         - name: kibana-config
           configMap:
             name: {{ .Chart.Name }}-config
-      securityContext:
-        fsGroup: 0
-        runAsUser: 0
-        runAsGroup: 0

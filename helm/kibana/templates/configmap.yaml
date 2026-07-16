@@ -8,8 +8,6 @@ data:
   kibana.yml: |
     elasticsearch.hosts: ["http://elasticsearch:9200"]
     xpack.security.enabled: false
-    xpack.security.enrollment.enabled: false
     xpack.fleet.enabled: false
-    xpack.encryptedSavedObjects.encryptionKey: "this-is-a-32-character-key!!!"
-    xpack.reporting.encryptionKey: "this-is-another-32-char-key!!"
-    xpack.savedObjects.encryptionKey: "and-another-32-character-key!!"
+    xpack.encryptedSavedObjects.encryptionKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    xpack.reporting.encryptionKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
