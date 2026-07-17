@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.frontend.dto.AccountBrief;
 import ru.yandex.practicum.frontend.dto.AccountResponse;
@@ -162,7 +163,6 @@ public class GatewayClient {
     @CircuitBreaker(name = "gatewayService", fallbackMethod = "processCashFallback")
     public CompletableFuture<Void> processCash(BigDecimal value, String action, String jwtToken) {
         String gatewayUrl = getGatewayUrl();
-        String url = gatewayUrl + "/gateway/cash?value=" + value + "&action=" + action;
         log.debug("GatewayClient: processing cash action: {} with provided token", action);
 
         if (jwtToken == null) {
@@ -170,6 +170,13 @@ public class GatewayClient {
             failedFuture.completeExceptionally(new IllegalStateException("JWT token is null"));
             return failedFuture;
         }
+
+        String url = UriComponentsBuilder.fromHttpUrl(gatewayUrl)
+                .path("/gateway/cash")
+                .queryParam("value", value)
+                .queryParam("action", action)
+                .build()
+                .toUriString();
 
         return CompletableFuture.runAsync(() -> {
             try (Observation.Scope scope = Observation.createNotStarted("gateway.processCash", observationRegistry)
@@ -193,7 +200,6 @@ public class GatewayClient {
     @CircuitBreaker(name = "gatewayService", fallbackMethod = "processTransferFallback")
     public CompletableFuture<Void> processTransfer(BigDecimal value, String toLogin, String jwtToken) {
         String gatewayUrl = getGatewayUrl();
-        String url = gatewayUrl + "/gateway/transfer?value=" + value + "&login=" + toLogin;
         log.debug("GatewayClient: processing transfer to: {} with provided token", toLogin);
 
         if (jwtToken == null) {
@@ -201,6 +207,13 @@ public class GatewayClient {
             failedFuture.completeExceptionally(new IllegalStateException("JWT token is null"));
             return failedFuture;
         }
+
+        String url = UriComponentsBuilder.fromHttpUrl(gatewayUrl)
+                .path("/gateway/transfer")
+                .queryParam("value", value)
+                .queryParam("login", toLogin)
+                .build()
+                .toUriString();
 
         return CompletableFuture.runAsync(() -> {
             try (Observation.Scope scope = Observation.createNotStarted("gateway.processTransfer", observationRegistry)
