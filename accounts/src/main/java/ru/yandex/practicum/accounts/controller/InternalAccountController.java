@@ -24,28 +24,32 @@ public class InternalAccountController {
     @PostMapping("/deposit")
     @ResponseStatus(HttpStatus.OK)
     public CompletableFuture<Void> deposit(@Valid @RequestBody InternalBalanceRequest request) {
-        log.info("Internal deposit: login={}, amount={}", request.getLogin(), request.getAmount());
-        return CompletableFuture.supplyAsync(() -> accountService.deposit(request.getLogin(), request.getAmount()));
+        log.info("Internal deposit request: login={}, amount={}, operationId={}, source={}",
+                request.getLogin(), request.getAmount(), request.getOperationId(), request.getSourceService());
+        return CompletableFuture.supplyAsync(() -> accountService.deposit(request));
     }
 
     @PostMapping("/withdraw")
     @ResponseStatus(HttpStatus.OK)
     public CompletableFuture<Void> withdraw(@Valid @RequestBody InternalBalanceRequest request) {
-        log.info("Internal withdraw: login={}, amount={}", request.getLogin(), request.getAmount());
-        return CompletableFuture.supplyAsync(() -> accountService.withdraw(request.getLogin(), request.getAmount()));
+        log.info("Internal withdraw request: login={}, amount={}, operationId={}, source={}",
+                request.getLogin(), request.getAmount(), request.getOperationId(), request.getSourceService());
+        return CompletableFuture.supplyAsync(() -> accountService.withdraw(request));
     }
 
     @PostMapping("/debit")
     @ResponseStatus(HttpStatus.OK)
     public CompletableFuture<Void> debit(@Valid @RequestBody InternalBalanceRequest request) {
-        log.info("Internal debit: login={}, amount={}", request.getLogin(), request.getAmount());
-        return CompletableFuture.supplyAsync(() -> accountService.debit(request.getLogin(), request.getAmount()));
+        log.info("Internal debit request: login={}, amount={}, operationId={}, source={}",
+                request.getLogin(), request.getAmount(), request.getOperationId(), request.getSourceService());
+        return CompletableFuture.supplyAsync(() -> accountService.debit(request));
     }
 
     @PostMapping("/credit")
     @ResponseStatus(HttpStatus.OK)
     public CompletableFuture<Void> credit(@Valid @RequestBody InternalBalanceRequest request) {
-        log.info("Internal credit: login={}, amount={}", request.getLogin(), request.getAmount());
-        return CompletableFuture.supplyAsync(() -> accountService.credit(request.getLogin(), request.getAmount()));
+        log.info("Internal credit request: login={}, amount={}, operationId={}, source={}",
+                request.getLogin(), request.getAmount(), request.getOperationId(), request.getSourceService());
+        return CompletableFuture.supplyAsync(() -> accountService.credit(request));
     }
 }
