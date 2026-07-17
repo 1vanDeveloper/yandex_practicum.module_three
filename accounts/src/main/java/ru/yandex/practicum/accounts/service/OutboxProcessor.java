@@ -3,6 +3,7 @@ package ru.yandex.practicum.accounts.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.accounts.entity.OutboxMessage;
@@ -27,12 +28,12 @@ public class OutboxProcessor {
 
     @Transactional
     public void processPendingMessages() {
-        List<OutboxMessage> messages = outboxRepository.findPendingMessagesForUpdate(BATCH_SIZE);
+        List<OutboxMessage> messages = outboxRepository.findPendingMessagesForUpdate(PageRequest.of(0, BATCH_SIZE));
         if (messages.isEmpty()) {
             return;
         }
 
-        messages.stream().limit(BATCH_SIZE).forEach(this::processMessage);
+        messages.forEach(this::processMessage);
     }
 
     @Transactional

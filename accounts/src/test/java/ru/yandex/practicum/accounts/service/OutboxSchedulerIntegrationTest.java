@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.accounts.config.TestExceptionHandlerConfig;
 import ru.yandex.practicum.accounts.config.TestKafkaConfig;
@@ -58,7 +59,7 @@ class OutboxSchedulerIntegrationTest {
         Thread.sleep(500);
 
         // Verify no pending messages remain
-        var messages = outboxRepository.findPendingMessages(10);
+        var messages = outboxRepository.findPendingMessages(PageRequest.of(0, 10));
         assertThat(messages).isEmpty();
     }
 

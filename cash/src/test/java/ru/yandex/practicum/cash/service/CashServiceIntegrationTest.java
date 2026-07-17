@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.cash.config.IntegrationTestConfig;
 import ru.yandex.practicum.cash.entity.CashTransaction;
 import ru.yandex.practicum.cash.entity.TransactionStatus;
@@ -101,6 +103,7 @@ class CashServiceIntegrationTest {
     }
 
     @Test
+    @Transactional
     @DisplayName("Поиск транзакций по статусу PENDING")
     void findPendingTransactions_shouldReturnPendingTransactions() {
         CashTransaction pending1 = CashTransaction.builder()
@@ -128,7 +131,7 @@ class CashServiceIntegrationTest {
         transactionRepository.save(pending2);
         transactionRepository.save(completed);
 
-        List<CashTransaction> pendingTransactions = transactionRepository.findPendingTransactions(TransactionStatus.PENDING, 10);
+        List<CashTransaction> pendingTransactions = transactionRepository.findPendingTransactions(TransactionStatus.PENDING, PageRequest.of(0, 10));
 
         assertEquals(2, pendingTransactions.size());
         assertTrue(pendingTransactions.stream().allMatch(t -> t.getStatus() == TransactionStatus.PENDING));
