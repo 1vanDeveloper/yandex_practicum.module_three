@@ -39,6 +39,12 @@ public class KafkaConfig {
     @Value("${kafka.topic.notifications:notifications.events}")
     private String notificationsTopic;
 
+    @Value("${kafka.topic.notifications.partitions:1}")
+    private int topicPartitions;
+
+    @Value("${kafka.topic.notifications.replicas:1}")
+    private int topicReplicas;
+
     private final KafkaErrorHandler kafkaErrorHandler;
 
     public KafkaConfig(KafkaErrorHandler kafkaErrorHandler) {
@@ -51,8 +57,8 @@ public class KafkaConfig {
     @Bean
     public NewTopic notificationsTopic() {
         return TopicBuilder.name(notificationsTopic)
-                .partitions(3)
-                .replicas(1)
+                .partitions(topicPartitions)
+                .replicas(topicReplicas)
                 .build();
     }
 

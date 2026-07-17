@@ -48,6 +48,10 @@ kafka:
   consumer:
     groupId: "notifications-service"
     autoOffsetReset: "earliest"
+  topic:
+    name: "notifications.events"
+    partitions: 1
+    replicas: 1
 
 # Трассировка (Micrometer + Zipkin)
 tracing:

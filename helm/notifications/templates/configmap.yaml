@@ -23,6 +23,12 @@ data:
   SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
   SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.springframework.kafka.support.serializer.JsonDeserializer"
   SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "{{ .Values.kafka.consumer.autoOffsetReset | default "earliest" }}"
+  
+  # Kafka topic configuration
+  KAFKA_TOPIC_NOTIFICATIONS: "{{ .Values.kafka.topic.name | default "notifications.events" }}"
+  KAFKA_TOPIC_PARTITIONS: "{{ .Values.kafka.topic.partitions | default "3" }}"
+  KAFKA_TOPIC_REPLICAS: "{{ .Values.kafka.topic.replicas | default "1" }}"
+  
   # Kafka Tracing (Brave B3 Propagation)
   SPRING_KAFKA_CONSUMER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveConsumerInterceptor"
   # Micrometer Tracing (Zipkin) - B3 Multi Header for end-to-end tracing
