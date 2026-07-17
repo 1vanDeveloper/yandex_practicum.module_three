@@ -10,6 +10,7 @@ import ru.yandex.practicum.frontend.dto.JwtTokenResponse;
 import ru.yandex.practicum.frontend.dto.LoginRequest;
 import ru.yandex.practicum.frontend.dto.RegisterRequest;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -44,12 +45,12 @@ public class GatewayService {
         return gatewayClient.updateAccount(firstName, lastName, birthDate, jwtToken);
     }
 
-    public CompletableFuture<Void> processCash(Integer value, String action, String jwtToken) {
+    public CompletableFuture<Void> processCash(BigDecimal value, String action, String jwtToken) {
         log.info("Frontend: processing cash action: {} with provided token", action);
         return gatewayClient.processCash(value, action, jwtToken);
     }
 
-    public CompletableFuture<Void> processTransfer(Integer value, String toLogin, String jwtToken) {
+    public CompletableFuture<Void> processTransfer(BigDecimal value, String toLogin, String jwtToken) {
         log.info("Frontend: processing transfer to {} with provided token", toLogin);
         return gatewayClient.processTransfer(value, toLogin, jwtToken);
     }

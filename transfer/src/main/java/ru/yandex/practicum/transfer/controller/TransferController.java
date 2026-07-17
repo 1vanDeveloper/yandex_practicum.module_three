@@ -28,14 +28,14 @@ public class TransferController {
      */
     @PostMapping
     public ResponseEntity<TransferResponse> processTransfer(
-            @RequestParam(required = false) Integer value,
+            @RequestParam(required = false) BigDecimal value,
             @RequestParam(required = false) String login,
             @Valid @RequestBody(required = false) TransferRequest requestBody,
             @AuthenticationPrincipal Jwt jwt) {
 
         String fromLogin = jwt.getSubject();
         String toLogin = login != null ? login : (requestBody != null ? requestBody.toLogin() : null);
-        BigDecimal amount = value != null ? BigDecimal.valueOf(value) : (requestBody != null ? requestBody.amount() : null);
+        BigDecimal amount = value != null ? value : (requestBody != null ? requestBody.amount() : null);
 
         if (toLogin == null || amount == null) {
             throw new IllegalArgumentException("Missing required parameters: value and login (query) or request body");

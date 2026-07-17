@@ -28,7 +28,7 @@ public class CashController {
      */
     @PostMapping
     public ResponseEntity<TransactionResponse> processCash(
-            @RequestParam Integer value,
+            @RequestParam BigDecimal value,
             @RequestParam String action,
             @RequestParam(required = false) String login,
             @AuthenticationPrincipal Jwt jwt) {
@@ -37,11 +37,11 @@ public class CashController {
         log.info("POST /cash received for login: {}, action: {}, value: {}", userLogin, action, value);
 
         if ("PUT".equalsIgnoreCase(action)) {
-            DepositRequest request = new DepositRequest(userLogin, BigDecimal.valueOf(value));
+            DepositRequest request = new DepositRequest(userLogin, value);
             TransactionResponse response = cashService.deposit(request);
             return ResponseEntity.ok(response);
         } else if ("GET".equalsIgnoreCase(action)) {
-            WithdrawRequest request = new WithdrawRequest(userLogin, BigDecimal.valueOf(value));
+            WithdrawRequest request = new WithdrawRequest(userLogin, value);
             TransactionResponse response = cashService.withdraw(request);
             return ResponseEntity.ok(response);
         } else {

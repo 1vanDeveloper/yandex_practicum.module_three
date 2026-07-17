@@ -14,6 +14,7 @@ import ru.yandex.practicum.frontend.dto.JwtTokenResponse;
 import ru.yandex.practicum.frontend.dto.LoginRequest;
 import ru.yandex.practicum.frontend.dto.RegisterRequest;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -159,7 +160,7 @@ public class GatewayClient {
     }
 
     @CircuitBreaker(name = "gatewayService", fallbackMethod = "processCashFallback")
-    public CompletableFuture<Void> processCash(Integer value, String action, String jwtToken) {
+    public CompletableFuture<Void> processCash(BigDecimal value, String action, String jwtToken) {
         String gatewayUrl = getGatewayUrl();
         String url = gatewayUrl + "/gateway/cash?value=" + value + "&action=" + action;
         log.debug("GatewayClient: processing cash action: {} with provided token", action);
@@ -182,7 +183,7 @@ public class GatewayClient {
         }, executor);
     }
 
-    public CompletableFuture<Void> processCashFallback(Integer value, String action, String jwtToken, Throwable t) {
+    public CompletableFuture<Void> processCashFallback(BigDecimal value, String action, String jwtToken, Throwable t) {
         log.error("Circuit breaker opened for gateway service (cash): {}", t.getMessage());
         CompletableFuture<Void> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new RuntimeException("Cash service unavailable, please try again later", t));
@@ -190,7 +191,7 @@ public class GatewayClient {
     }
 
     @CircuitBreaker(name = "gatewayService", fallbackMethod = "processTransferFallback")
-    public CompletableFuture<Void> processTransfer(Integer value, String toLogin, String jwtToken) {
+    public CompletableFuture<Void> processTransfer(BigDecimal value, String toLogin, String jwtToken) {
         String gatewayUrl = getGatewayUrl();
         String url = gatewayUrl + "/gateway/transfer?value=" + value + "&login=" + toLogin;
         log.debug("GatewayClient: processing transfer to: {} with provided token", toLogin);
@@ -213,7 +214,7 @@ public class GatewayClient {
         }, executor);
     }
 
-    public CompletableFuture<Void> processTransferFallback(Integer value, String toLogin, String jwtToken, Throwable t) {
+    public CompletableFuture<Void> processTransferFallback(BigDecimal value, String toLogin, String jwtToken, Throwable t) {
         log.error("Circuit breaker opened for gateway service (transfer): {}", t.getMessage());
         CompletableFuture<Void> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new RuntimeException("Transfer service unavailable, please try again later", t));

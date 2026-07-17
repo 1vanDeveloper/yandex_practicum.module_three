@@ -16,6 +16,7 @@ import ru.yandex.practicum.frontend.dto.AccountBrief;
 import ru.yandex.practicum.frontend.dto.AccountResponse;
 import ru.yandex.practicum.frontend.service.GatewayService;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -139,7 +140,7 @@ public class MainController {
     @PostMapping("/cash")
     public CompletableFuture<String> editCash(
             Model model,
-            @RequestParam("value") int value,
+            @RequestParam("value") BigDecimal value,
             @RequestParam("action") CashAction action,
             HttpServletRequest request) {
 
@@ -182,7 +183,7 @@ public class MainController {
     @PostMapping("/transfer")
     public CompletableFuture<String> transfer(
             Model model,
-            @RequestParam("value") int value,
+            @RequestParam("value") BigDecimal value,
             @RequestParam("login") String toLogin,
             HttpServletRequest request) {
 
