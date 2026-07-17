@@ -3,13 +3,15 @@ package ru.yandex.practicum.accounts.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -49,6 +51,17 @@ public class OutboxMessage {
 
     @Column(name = "retry_count", nullable = false)
     private Integer retryCount;
+
+    @Override
+    public String toString() {
+        return "OutboxMessage{" +
+                "id=" + id +
+                ", idempotencyKey='" + idempotencyKey + '\'' +
+                ", login='" + login + '\'' +
+                ", message='" + message + '\'' +
+                ", status='" + status + '\'' +
+                '}';
+    }
 
     public enum Status {
         PENDING("PENDING"),
