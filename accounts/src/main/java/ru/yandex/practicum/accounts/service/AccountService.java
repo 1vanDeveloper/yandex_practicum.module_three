@@ -39,9 +39,9 @@ public class AccountService {
         Account account = accountMapper.toEntity(request);
         account.setPassword(passwordEncoder.encode(account.getPassword()));
         Account savedAccount = accountRepository.save(account);
-        
-        outboxService.saveMessage(savedAccount.getLogin(), "Account created: " + savedAccount.getLogin());
-        
+
+        outboxService.saveMessage(savedAccount.getLogin(), "Account created: " + savedAccount.getLogin(), "account-created", savedAccount.getLogin());
+
         return new AccountIdResponse(savedAccount.getId());
     }
 
@@ -60,9 +60,9 @@ public class AccountService {
                     "Account with login '" + login + "' not found"));
         accountMapper.updateEntityFromRequest(request, account);
         Account updatedAccount = accountRepository.save(account);
-        
-        outboxService.saveMessage(updatedAccount.getLogin(), "Account updated: " + updatedAccount.getLogin());
-        
+
+        outboxService.saveMessage(updatedAccount.getLogin(), "Account updated: " + updatedAccount.getLogin(), "account-updated", updatedAccount.getLogin());
+
         return accountMapper.toResponse(updatedAccount);
     }
 

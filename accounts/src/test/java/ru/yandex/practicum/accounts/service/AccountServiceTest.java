@@ -95,7 +95,7 @@ class AccountServiceTest {
         when(accountMapper.toEntity(createRequest)).thenReturn(mappedAccount);
         when(passwordEncoder.encode("plain_password")).thenReturn("hashed_password");
         when(accountRepository.save(any(Account.class))).thenReturn(testAccount);
-        when(outboxService.saveMessage(anyString(), anyString()))
+        when(outboxService.saveMessage(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(
                         ru.yandex.practicum.accounts.entity.OutboxMessage.builder()
                                 .id(java.util.UUID.randomUUID())
@@ -110,7 +110,7 @@ class AccountServiceTest {
 
         verify(accountRepository).existsByLogin("test_user");
         verify(accountRepository).save(any(Account.class));
-        verify(outboxService).saveMessage("test_user", "Account created: test_user");
+        verify(outboxService).saveMessage("test_user", "Account created: test_user", "account-created", "test_user");
     }
 
     @Test
@@ -177,7 +177,7 @@ class AccountServiceTest {
         when(accountRepository.findByLogin("test_user")).thenReturn(java.util.Optional.of(testAccount));
         when(accountRepository.save(any(Account.class))).thenReturn(updatedAccount);
         when(accountMapper.toResponse(updatedAccount)).thenReturn(response);
-        when(outboxService.saveMessage(anyString(), anyString()))
+        when(outboxService.saveMessage(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(
                         ru.yandex.practicum.accounts.entity.OutboxMessage.builder()
                                 .id(java.util.UUID.randomUUID())

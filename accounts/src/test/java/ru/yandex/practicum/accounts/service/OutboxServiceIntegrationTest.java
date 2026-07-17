@@ -49,11 +49,12 @@ class OutboxServiceIntegrationTest {
         String message = "Test notification message";
 
         // Save message and verify it returns correct data
-        OutboxMessage savedMessage = outboxService.saveMessage(login, message);
+        OutboxMessage savedMessage = outboxService.saveMessage(login, message, "test-event", login);
 
         assertThat(savedMessage.getId()).isNotNull();
         assertThat(savedMessage.getLogin()).isEqualTo(login);
         assertThat(savedMessage.getMessage()).isEqualTo(message);
+        assertThat(savedMessage.getIdempotencyKey()).isEqualTo("test-event:" + login);
         assertThat(savedMessage.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());
         assertThat(savedMessage.getRetryCount()).isEqualTo(0);
         assertThat(savedMessage.getCreatedAt()).isNotNull();
@@ -62,7 +63,7 @@ class OutboxServiceIntegrationTest {
 
     @Test
     void saveMessage_shouldSetCorrectTimestamps() {
-        OutboxMessage savedMessage = outboxService.saveMessage("user", "message");
+        OutboxMessage savedMessage = outboxService.saveMessage("user", "message", "test-event", "user");
 
         assertThat(savedMessage.getCreatedAt()).isNotNull();
         assertThat(savedMessage.getUpdatedAt()).isNotNull();
@@ -71,8 +72,8 @@ class OutboxServiceIntegrationTest {
     @Test
     void findPendingMessages_shouldReturnOnlyPendingMessages() {
         // Save two messages and verify findPendingMessages returns them correctly
-        outboxService.saveMessage("user1", "message1");
-        outboxService.saveMessage("user2", "message2");
+        outboxService.saveMessage("user1", "message1", "account-created", "user1");
+        outboxService.saveMessage("user2", "message2", "account-updated", "user2");
 
         var messages = outboxRepository.findPendingMessages(PageRequest.of(0, 10));
 

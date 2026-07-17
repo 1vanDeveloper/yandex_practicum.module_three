@@ -48,7 +48,7 @@ class OutboxProcessorIntegrationTest {
 
     @Test
     void processPendingMessages_shouldProcessPendingMessages() {
-        outboxService.saveMessage("test_user", "Test message");
+        outboxService.saveMessage("test_user", "Test message", "test-event", "test_user");
         outboxProcessor.processPendingMessages();
         var messages = outboxRepository.findPendingMessages(PageRequest.of(0, 10));
         assertThat(messages).isEmpty();
@@ -56,7 +56,7 @@ class OutboxProcessorIntegrationTest {
 
     @Test
     void processPendingMessages_shouldUpdateMessageStatusToSent() {
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message", "test-event", "test_user");
         assertThat(saved.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());
         outboxProcessor.processPendingMessages();
         OutboxMessage updated = outboxRepository.findById(saved.getId()).orElseThrow();
@@ -65,7 +65,7 @@ class OutboxProcessorIntegrationTest {
 
     @Test
     void processPendingMessages_shouldNotProcessAlreadySentMessages() {
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message", "test-event", "test_user");
         outboxProcessor.processPendingMessages();
         OutboxMessage first = outboxRepository.findById(saved.getId()).orElseThrow();
         assertThat(first.getStatus()).isEqualTo(OutboxMessage.Status.SENT.getValue());

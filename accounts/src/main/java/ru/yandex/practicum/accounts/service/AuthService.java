@@ -62,7 +62,7 @@ public class AuthService {
         log.info("User registered successfully: {}", saved.getLogin());
 
         // Отправляем нотификацию через outbox
-        outboxService.saveMessage(saved.getLogin(), "Account created: " + saved.getLogin());
+        outboxService.saveMessage(saved.getLogin(), "Account created: " + saved.getLogin(), "account-created", saved.getLogin());
 
         return saved;
     }
