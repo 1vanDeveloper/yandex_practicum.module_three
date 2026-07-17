@@ -8,10 +8,13 @@ tests:
           of: Deployment
       - equal:
           path: metadata.name
+          value: RELEASE-NAME-gateway
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
           value: gateway
       - equal:
-          path: spec.selector.matchLabels.app
-          value: gateway
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
 
   - it: should use correct image
     asserts:
@@ -44,10 +47,13 @@ tests:
           of: Service
       - equal:
           path: metadata.name
+          value: RELEASE-NAME-gateway
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
           value: gateway
       - equal:
-          path: spec.selector.app
-          value: gateway
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
 ---
 suite: Gateway NetworkPolicy Tests
 templates:
@@ -59,7 +65,17 @@ tests:
           of: NetworkPolicy
       - equal:
           path: metadata.name
-          value: gateway
+          value: RELEASE-NAME-gateway
+
+  - it: should allow ingress from frontend
+    asserts:
+      - contains:
+          path: spec.ingress[0].from
+          content:
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: frontend
+                app.kubernetes.io/instance: RELEASE-NAME
 
   - it: should allow egress to all backend services
     asserts:
@@ -69,7 +85,8 @@ tests:
             to:
               - podSelector:
                   matchLabels:
-                    app: accounts
+                    app.kubernetes.io/name: accounts
+                    app.kubernetes.io/instance: RELEASE-NAME
             ports:
               - port: 8080
                 protocol: TCP
@@ -79,7 +96,8 @@ tests:
             to:
               - podSelector:
                   matchLabels:
-                    app: cash
+                    app.kubernetes.io/name: cash
+                    app.kubernetes.io/instance: RELEASE-NAME
             ports:
               - port: 8080
                 protocol: TCP
@@ -89,7 +107,8 @@ tests:
             to:
               - podSelector:
                   matchLabels:
-                    app: transfer
+                    app.kubernetes.io/name: transfer
+                    app.kubernetes.io/instance: RELEASE-NAME
             ports:
               - port: 8080
                 protocol: TCP
@@ -99,17 +118,8 @@ tests:
             to:
               - podSelector:
                   matchLabels:
-                    app: notifications
-            ports:
-              - port: 8080
-                protocol: TCP
-      - contains:
-          path: spec.egress
-          content:
-            to:
-              - podSelector:
-                  matchLabels:
-                    app: keycloak
+                    app.kubernetes.io/name: notifications
+                    app.kubernetes.io/instance: RELEASE-NAME
             ports:
               - port: 8080
                 protocol: TCP

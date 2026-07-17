@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "prometheus.fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
+    {{- include "prometheus.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   {{- if .Values.service.nodePort }}
@@ -21,16 +21,16 @@ spec:
       name: http
   {{- end }}
   selector:
-    app: {{ .Chart.Name }}
+    {{- include "prometheus.selectorLabels" . | nindent 4 }}
 ---
 {{- if .Values.externalService.enabled }}
 # Сервис для доступа извне кластера (NodePort)
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Chart.Name }}-external
+  name: {{ include "prometheus.fullname" . }}-external
   labels:
-    app: {{ .Chart.Name }}
+    {{- include "prometheus.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.externalService.type }}
   ports:
@@ -42,5 +42,5 @@ spec:
       nodePort: {{ .Values.externalService.nodePort }}
       {{- end }}
   selector:
-    app: {{ .Chart.Name }}
+    {{- include "prometheus.selectorLabels" . | nindent 4 }}
 {{- end }}

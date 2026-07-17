@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "accounts.fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
+    {{- include "accounts.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: {{ .Chart.Name }}
+    {{- include "accounts.selectorLabels" . | nindent 4 }}

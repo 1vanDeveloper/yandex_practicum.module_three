@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "logstash.fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
+    {{- include "logstash.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -20,4 +20,4 @@ spec:
       protocol: TCP
       name: api
   selector:
-    app: {{ .Chart.Name }}
+    {{- include "logstash.selectorLabels" . | nindent 4 }}

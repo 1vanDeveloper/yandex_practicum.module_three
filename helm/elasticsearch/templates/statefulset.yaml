@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "elasticsearch.fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
+    {{- include "elasticsearch.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ .Chart.Name }}
+  serviceName: {{ include "elasticsearch.fullname" . }}
   replicas: 1
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      {{- include "elasticsearch.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
+        {{- include "elasticsearch.selectorLabels" . | nindent 8 }}
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9200"

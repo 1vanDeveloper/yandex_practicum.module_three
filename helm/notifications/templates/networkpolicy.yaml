@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "notifications.fullname" . }}
 spec:
   podSelector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      {{- include "notifications.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
     - Egress
@@ -15,6 +15,8 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: kafka
+              app.kubernetes.io/instance: {{ .Release.Name }}
+            component: broker
       ports:
         - protocol: TCP
           port: 9092
@@ -22,7 +24,8 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: prometheus
+              app.kubernetes.io/name: prometheus
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 8080
@@ -36,14 +39,16 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: postgresql
+              app.kubernetes.io/name: postgresql
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 5432
     - to:
         - podSelector:
             matchLabels:
-              app: keycloak
+              app.kubernetes.io/name: keycloak
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 8080
@@ -52,6 +57,8 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: kafka
+              app.kubernetes.io/instance: {{ .Release.Name }}
+            component: broker
       ports:
         - protocol: TCP
           port: 9092
@@ -59,7 +66,8 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: zipkin
+              app.kubernetes.io/name: zipkin
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 9411
@@ -67,7 +75,8 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: logstash
+              app.kubernetes.io/name: logstash
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 5000

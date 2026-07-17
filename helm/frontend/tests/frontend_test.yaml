@@ -8,10 +8,13 @@ tests:
           of: Deployment
       - equal:
           path: metadata.name
+          value: RELEASE-NAME-frontend
+      - equal:
+          path: spec.selector.matchLabels["app.kubernetes.io/name"]
           value: frontend
       - equal:
-          path: spec.selector.matchLabels.app
-          value: frontend
+          path: spec.selector.matchLabels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
 
   - it: should use correct image
     asserts:
@@ -44,10 +47,13 @@ tests:
           of: Service
       - equal:
           path: metadata.name
+          value: RELEASE-NAME-frontend
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
           value: frontend
       - equal:
-          path: spec.selector.app
-          value: frontend
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
 
   - it: should use NodePort by default
     asserts:
@@ -83,9 +89,9 @@ tests:
           of: NetworkPolicy
       - equal:
           path: metadata.name
-          value: frontend
+          value: RELEASE-NAME-frontend
 
-  - it: should allow egress to gateway and Keycloak
+  - it: should allow egress to gateway
     asserts:
       - contains:
           path: spec.egress
@@ -93,17 +99,22 @@ tests:
             to:
               - podSelector:
                   matchLabels:
-                    app: gateway
+                    app.kubernetes.io/name: gateway
+                    app.kubernetes.io/instance: RELEASE-NAME
             ports:
               - port: 8080
                 protocol: TCP
+
+  - it: should allow egress to Keycloak
+    asserts:
       - contains:
           path: spec.egress
           content:
             to:
               - podSelector:
                   matchLabels:
-                    app: keycloak
+                    app.kubernetes.io/name: keycloak
+                    app.kubernetes.io/instance: RELEASE-NAME
             ports:
               - port: 8080
                 protocol: TCP
