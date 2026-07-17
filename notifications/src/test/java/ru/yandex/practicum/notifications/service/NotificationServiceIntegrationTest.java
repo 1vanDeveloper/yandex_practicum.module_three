@@ -1,11 +1,11 @@
 package ru.yandex.practicum.notifications.service;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.notifications.entity.Notification;
 import ru.yandex.practicum.notifications.event.NotificationEvent;
@@ -21,11 +21,14 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for NotificationService using H2 in-memory database.
  * Tests verify database interactions with H2 instance.
- * Пропущены до настройки H2 схемы
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Disabled("Требует настройки H2 схемы для notifications")
+@EmbeddedKafka(
+    partitions = 1,
+    controlledShutdown = false,
+    topics = { "notifications.events" }
+)
 class NotificationServiceIntegrationTest {
 
     @Autowired

@@ -63,14 +63,15 @@ class KafkaNotificationSenderTest {
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 JsonDeserializer.class);
-        consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
+        consumerProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        consumerProps.put(JsonDeserializer.REMOVE_TYPE_INFO_HEADERS, true);
         consumerProps.put("spring.json.type.mapping",
                 "ru.yandex.practicum.transfer.event.TransferNotificationEvent:ru.yandex.practicum.transfer.event.TransferNotificationEvent");
 
         Consumer<String, TransferNotificationEvent> consumer = new DefaultKafkaConsumerFactory<>(
                 consumerProps,
                 new StringDeserializer(),
-                new JsonDeserializer<>(TransferNotificationEvent.class)
+                new JsonDeserializer<>(TransferNotificationEvent.class, false)
         ).createConsumer();
 
         embeddedKafka.consumeFromAnEmbeddedTopic(consumer, "notifications.events");

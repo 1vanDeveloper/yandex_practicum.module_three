@@ -1,7 +1,6 @@
 package ru.yandex.practicum.cash.controller;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -94,9 +93,8 @@ class CashControllerTest {
     }
 
     @Test
-    @Disabled("Требует доработки обработки исключений для невалидного action")
     void processCash_whenInvalidAction_throwsException() throws Exception {
-        // When & Then - invalid action throws IllegalArgumentException
+        // When & Then - invalid action returns 400 Bad Request
         mockMvc.perform(post("/cash")
                         .param("value", "100")
                         .param("action", "INVALID")

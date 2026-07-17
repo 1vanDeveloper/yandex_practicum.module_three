@@ -1,14 +1,15 @@
 package ru.yandex.practicum.transfer.service;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import ru.yandex.practicum.transfer.config.IntegrationTestConfig;
+import ru.yandex.practicum.transfer.config.TestSecurityConfig;
 import ru.yandex.practicum.transfer.entity.Transfer;
 import ru.yandex.practicum.transfer.entity.TransferStatus;
 import ru.yandex.practicum.transfer.repository.TransferRepository;
@@ -23,11 +24,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for TransferService using H2 in-memory database.
  *
  * Tests verify database interactions with H2 instance.
- * Пропущены до настройки H2 схемы
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Disabled("Требует настройки H2 схемы для transfer")
+@ContextConfiguration(classes = {TestSecurityConfig.class, IntegrationTestConfig.class})
 class TransferServiceIntegrationTest {
 
     @Autowired

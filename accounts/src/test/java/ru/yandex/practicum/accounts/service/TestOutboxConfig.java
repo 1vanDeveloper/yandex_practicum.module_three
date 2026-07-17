@@ -7,10 +7,14 @@ import org.springframework.web.client.RestClient;
 import ru.yandex.practicum.accounts.client.NotificationsClient;
 import ru.yandex.practicum.accounts.dto.NotificationRequest;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+
 @TestConfiguration
 public class TestOutboxConfig {
 
     @Bean
+    @Primary
     public RestClient.Builder restClientBuilder() {
         return RestClient.builder();
     }
@@ -18,11 +22,8 @@ public class TestOutboxConfig {
     @Bean
     @Primary
     public NotificationsClient testNotificationsClient(RestClient.Builder restClientBuilder) {
-        return new NotificationsClient(restClientBuilder, null) {
-            @Override
-            public void sendNotification(String notificationsUrl, NotificationRequest request) {
-                // Mock successful notification send
-            }
-        };
+        NotificationsClient mock = mock(NotificationsClient.class);
+        doNothing().when(mock).sendNotification(null, null);
+        return mock;
     }
 }
