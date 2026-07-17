@@ -58,7 +58,7 @@ class CashControllerTest {
         // When & Then
         mockMvc.perform(post("/cash")
                         .param("value", "100")
-                        .param("action", "PUT")
+                        .param("action", "DEPOSIT")
                         .param("login", "test_user"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
@@ -83,7 +83,7 @@ class CashControllerTest {
         // When & Then
         mockMvc.perform(post("/cash")
                         .param("value", "50")
-                        .param("action", "GET")
+                        .param("action", "WITHDRAW")
                         .param("login", "test_user"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(2))

@@ -135,7 +135,7 @@ public class MainController {
      *
      * Параметры:
      * 1. value - сумма списания
-     * 2. action - GET (снять), PUT (пополнить)
+     * 2. action - WITHDRAW (снять), DEPOSIT (пополнить)
      */
     @PostMapping("/cash")
     public CompletableFuture<String> editCash(
@@ -153,7 +153,7 @@ public class MainController {
                 .thenCompose(account ->
                     gatewayService.getAccountBriefs(jwtToken)
                         .thenApply(accounts -> {
-                            String info = action == CashAction.PUT
+                            String info = action == CashAction.DEPOSIT
                                     ? "Счёт успешно пополнен на " + value
                                     : "Со счёта успешно снято " + value;
                             fillModel(model, account, accounts, null, info);

@@ -77,15 +77,15 @@ class GatewayServiceTest {
     @Test
     void processCash_shouldCallGatewayClient() {
         // Arrange
-        when(gatewayClient.processCash(eq(BigDecimal.valueOf(100)), eq("PUT"), anyString()))
+        when(gatewayClient.processCash(eq(BigDecimal.valueOf(100)), eq("DEPOSIT"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
-        CompletableFuture<Void> result = gatewayService.processCash(BigDecimal.valueOf(100), "PUT", "test-token");
+        CompletableFuture<Void> result = gatewayService.processCash(BigDecimal.valueOf(100), "DEPOSIT", "test-token");
 
         // Assert
         assertNotNull(result);
-        verify(gatewayClient).processCash(eq(BigDecimal.valueOf(100)), eq("PUT"), anyString());
+        verify(gatewayClient).processCash(eq(BigDecimal.valueOf(100)), eq("DEPOSIT"), anyString());
     }
 
     @Test

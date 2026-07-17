@@ -24,7 +24,7 @@ public class CashController {
     /**
      * Универсальный endpoint для операций с наличными.
      * Принимает query параметры: value, action, login
-     * action: PUT (пополнение), GET (снятие)
+     * action: DEPOSIT (пополнение), WITHDRAW (снятие)
      */
     @PostMapping
     public ResponseEntity<TransactionResponse> processCash(
@@ -36,16 +36,16 @@ public class CashController {
         String userLogin = login != null ? login : jwt.getSubject();
         log.info("POST /cash received for login: {}, action: {}, value: {}", userLogin, action, value);
 
-        if ("PUT".equalsIgnoreCase(action)) {
+        if ("DEPOSIT".equalsIgnoreCase(action)) {
             DepositRequest request = new DepositRequest(userLogin, value);
             TransactionResponse response = cashService.deposit(request);
             return ResponseEntity.ok(response);
-        } else if ("GET".equalsIgnoreCase(action)) {
+        } else if ("WITHDRAW".equalsIgnoreCase(action)) {
             WithdrawRequest request = new WithdrawRequest(userLogin, value);
             TransactionResponse response = cashService.withdraw(request);
             return ResponseEntity.ok(response);
         } else {
-            throw new IllegalArgumentException("Invalid action: " + action + ". Must be PUT or GET");
+            throw new IllegalArgumentException("Invalid action: " + action + ". Must be DEPOSIT or WITHDRAW");
         }
     }
 }
