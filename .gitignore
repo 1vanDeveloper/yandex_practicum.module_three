@@ -74,7 +74,7 @@ replay_pid*
 .env
 
 # Helm secrets (DO NOT COMMIT)
-helm/values-secret.yaml
-**/values-secret.yaml
+#helm/values-secret.yaml
+#**/values-secret.yaml
 
 *.tgz
