@@ -9,7 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.accounts.config.TestExceptionHandlerConfig;
 import ru.yandex.practicum.accounts.config.TestKafkaConfig;
 import ru.yandex.practicum.accounts.config.TestSecurityConfig;
-import ru.yandex.practicum.accounts.service.TestOutboxConfig;
 import ru.yandex.practicum.accounts.entity.OutboxMessage;
 import ru.yandex.practicum.accounts.repository.OutboxNotificationRepository;
 
@@ -29,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     }
 )
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class, TestKafkaConfig.class})
+@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestKafkaConfig.class})
 class OutboxSchedulerIntegrationTest {
 
     @Autowired
