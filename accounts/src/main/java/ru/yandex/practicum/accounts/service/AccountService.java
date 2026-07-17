@@ -10,6 +10,9 @@ import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
 import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.entity.Account;
+import ru.yandex.practicum.accounts.exception.AccountAlreadyExistsException;
+import ru.yandex.practicum.accounts.exception.AccountNotFoundException;
+import ru.yandex.practicum.accounts.exception.InsufficientFundsException;
 import ru.yandex.practicum.accounts.mapper.AccountMapper;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
 
@@ -123,23 +126,5 @@ public class AccountService {
         account.setAmount(account.getAmount().add(amount));
         accountRepository.save(account);
         return null;
-    }
-
-    public static class AccountNotFoundException extends RuntimeException {
-        public AccountNotFoundException(String message) {
-            super(message);
-        }
-    }
-
-    public static class AccountAlreadyExistsException extends RuntimeException {
-        public AccountAlreadyExistsException(String message) {
-            super(message);
-        }
-    }
-
-    public static class InsufficientFundsException extends RuntimeException {
-        public InsufficientFundsException(String message) {
-            super(message);
-        }
     }
 }

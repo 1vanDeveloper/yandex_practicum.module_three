@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
+import ru.yandex.practicum.accounts.exception.AccountAlreadyExistsException;
+import ru.yandex.practicum.accounts.exception.AccountNotFoundException;
 import ru.yandex.practicum.accounts.service.AccountService;
 
 import java.math.BigDecimal;
@@ -43,13 +45,13 @@ public abstract class ContractVerifierBase {
 
     @RestControllerAdvice
     static class TestExceptionHandler {
-        @ExceptionHandler(AccountService.AccountNotFoundException.class)
+        @ExceptionHandler(AccountNotFoundException.class)
         @ResponseStatus(HttpStatus.NOT_FOUND)
-        void handleNotFound(AccountService.AccountNotFoundException ex) {}
+        void handleNotFound(AccountNotFoundException ex) {}
 
-        @ExceptionHandler(AccountService.AccountAlreadyExistsException.class)
+        @ExceptionHandler(AccountAlreadyExistsException.class)
         @ResponseStatus(HttpStatus.CONFLICT)
-        void handleAlreadyExists(AccountService.AccountAlreadyExistsException ex) {}
+        void handleAlreadyExists(AccountAlreadyExistsException ex) {}
     }
 
     @org.springframework.boot.test.context.TestConfiguration

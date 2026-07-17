@@ -11,6 +11,8 @@ import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
 import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.entity.Account;
+import ru.yandex.practicum.accounts.exception.AccountAlreadyExistsException;
+import ru.yandex.practicum.accounts.exception.AccountNotFoundException;
 import ru.yandex.practicum.accounts.mapper.AccountMapper;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
 
@@ -118,7 +120,7 @@ class AccountServiceTest {
         when(accountRepository.existsByLogin("test_user")).thenReturn(true);
 
         assertThatThrownBy(() -> accountService.createAccount(createRequest))
-                .isInstanceOf(AccountService.AccountAlreadyExistsException.class);
+                .isInstanceOf(AccountAlreadyExistsException.class);
 
         verify(accountRepository).existsByLogin("test_user");
     }
@@ -149,7 +151,7 @@ class AccountServiceTest {
         when(accountRepository.findByLogin("nonexistent")).thenReturn(java.util.Optional.empty());
 
         assertThatThrownBy(() -> accountService.getAccountByLogin("nonexistent"))
-                .isInstanceOf(AccountService.AccountNotFoundException.class);
+                .isInstanceOf(AccountNotFoundException.class);
     }
 
     @Test
@@ -198,6 +200,6 @@ class AccountServiceTest {
         when(accountRepository.findByLogin("nonexistent")).thenReturn(java.util.Optional.empty());
 
         assertThatThrownBy(() -> accountService.updateAccount("nonexistent", updateRequest))
-                .isInstanceOf(AccountService.AccountNotFoundException.class);
+                .isInstanceOf(AccountNotFoundException.class);
     }
 }
