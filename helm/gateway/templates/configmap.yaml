@@ -7,29 +7,29 @@ metadata:
 data:
   SPRING_PROFILES_ACTIVE: "kubernetes"
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
-  # Explicit routes for services
+  # Explicit routes for services (using direct Kubernetes DNS since discovery is disabled)
   SPRING_CLOUD_GATEWAY_ROUTES_0_ID: accounts
-  SPRING_CLOUD_GATEWAY_ROUTES_0_URI: "lb://accounts"
+  SPRING_CLOUD_GATEWAY_ROUTES_0_URI: "http://accounts.default.svc.cluster.local:8080"
   SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0: Path=/accounts/**
   SPRING_CLOUD_GATEWAY_ROUTES_1_ID: auth
-  SPRING_CLOUD_GATEWAY_ROUTES_1_URI: "lb://accounts"
+  SPRING_CLOUD_GATEWAY_ROUTES_1_URI: "http://accounts.default.svc.cluster.local:8080"
   SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0: Path=/gateway/auth/**
   SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0: StripPrefix=1
   SPRING_CLOUD_GATEWAY_ROUTES_2_ID: api-auth
-  SPRING_CLOUD_GATEWAY_ROUTES_2_URI: "lb://accounts"
+  SPRING_CLOUD_GATEWAY_ROUTES_2_URI: "http://accounts.default.svc.cluster.local:8080"
   SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0: Path=/api/auth/**
   SPRING_CLOUD_GATEWAY_ROUTES_2_FILTERS_0: StripPrefix=1
   SPRING_CLOUD_GATEWAY_ROUTES_3_ID: cash
-  SPRING_CLOUD_GATEWAY_ROUTES_3_URI: "lb://cash"
+  SPRING_CLOUD_GATEWAY_ROUTES_3_URI: "http://cash.default.svc.cluster.local:8080"
   SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0: Path=/cash/**
   SPRING_CLOUD_GATEWAY_ROUTES_4_ID: transfer
-  SPRING_CLOUD_GATEWAY_ROUTES_4_URI: "lb://transfer"
+  SPRING_CLOUD_GATEWAY_ROUTES_4_URI: "http://transfer.default.svc.cluster.local:8080"
   SPRING_CLOUD_GATEWAY_ROUTES_4_PREDICATES_0: Path=/transfer/**
   SPRING_CLOUD_GATEWAY_ROUTES_5_ID: notifications
-  SPRING_CLOUD_GATEWAY_ROUTES_5_URI: "lb://notifications"
+  SPRING_CLOUD_GATEWAY_ROUTES_5_URI: "http://notifications.default.svc.cluster.local:8080"
   SPRING_CLOUD_GATEWAY_ROUTES_5_PREDICATES_0: Path=/notifications/**
   SPRING_CLOUD_GATEWAY_ROUTES_6_ID: frontend
-  SPRING_CLOUD_GATEWAY_ROUTES_6_URI: "lb://frontend"
+  SPRING_CLOUD_GATEWAY_ROUTES_6_URI: "http://frontend.default.svc.cluster.local:8080"
   SPRING_CLOUD_GATEWAY_ROUTES_6_PREDICATES_0: Path=/frontend/**
   # OAuth2 Client Configuration (non-sensitive)
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GATEWAY_SERVICE_CLIENT_ID: "{{ .Chart.Name }}-client"
