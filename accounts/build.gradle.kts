@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "3.4.0"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
+    id("org.flywaydb.flyway") version "10.17.0"
 
     groovy
 }
@@ -65,6 +66,8 @@ dependencies {
     
     // Database
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("org.flywaydb:flyway-core:11.10.4")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql:11.10.4")
     testImplementation("com.h2database:h2")
 
     // Lombok
@@ -94,7 +97,12 @@ tasks.named("generateOpenApiDocs") {
     mustRunAfter("classes")
 }
 
-tasks.named("bootJar") {
+tasks.named<ProcessResources>("processResources") {
+    from("src/main/resources/db/migration")
+    into("build/resources/main/db/migration")
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     mustRunAfter("generateOpenApiDocs")
 }
 
