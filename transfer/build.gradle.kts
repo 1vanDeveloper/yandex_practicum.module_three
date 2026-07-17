@@ -55,6 +55,7 @@ dependencies {
 
     // Database
     runtimeOnly("org.postgresql:postgresql")
+    testImplementation("com.h2database:h2")
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.46")

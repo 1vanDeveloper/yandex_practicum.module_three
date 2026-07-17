@@ -20,15 +20,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for CashService using PostgreSQL from Kubernetes.
+ * Unit tests for CashService using H2 in-memory database.
  *
- * Перед запуском убедитесь, что настроен port-forward:
- *   kubectl port-forward svc/postgresql 5432:5432 &
- *
- * Tests verify database interactions with real PostgreSQL instance from Kubernetes cluster.
+ * Tests verify database interactions with H2 instance.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("integration")
+@ActiveProfiles("test")
 @Import(IntegrationTestConfig.class)
 class CashServiceIntegrationTest {
 

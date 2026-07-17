@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
@@ -61,15 +62,15 @@ class KafkaNotificationSenderTest {
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                org.springframework.kafka.support.serializer.JacksonJsonDeserializer.class);
-        consumerProps.put("spring.json.trusted.packages", "*");
+                JsonDeserializer.class);
+        consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         consumerProps.put("spring.json.type.mapping",
                 "ru.yandex.practicum.transfer.event.TransferNotificationEvent:ru.yandex.practicum.transfer.event.TransferNotificationEvent");
 
         Consumer<String, TransferNotificationEvent> consumer = new DefaultKafkaConsumerFactory<>(
                 consumerProps,
                 new StringDeserializer(),
-                new org.springframework.kafka.support.serializer.JacksonJsonDeserializer<>(TransferNotificationEvent.class)
+                new JsonDeserializer<>(TransferNotificationEvent.class)
         ).createConsumer();
 
         embeddedKafka.consumeFromAnEmbeddedTopic(consumer, "notifications.events");

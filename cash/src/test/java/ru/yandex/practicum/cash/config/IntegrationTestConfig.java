@@ -20,7 +20,6 @@ import java.time.Instant;
 import static org.mockito.Mockito.*;
 
 @TestConfiguration
-@Profile("integration")
 public class IntegrationTestConfig {
 
     @Bean
