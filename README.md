@@ -427,14 +427,6 @@ transfer.transfers          -- Переводы между аккаунтами
 notifications.notifications -- Уведомления
 ```
 
-### Инициализация
-
-```bash
-# Схема и данные создаются автоматически при старте PostgreSQL
-scripts/schema.sql   -- Схема БД
-scripts/data.sql     -- Тестовые данные
-```
-
 ---
 
 ## OAuth2 Аутентификация
