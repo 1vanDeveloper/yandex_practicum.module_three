@@ -140,12 +140,18 @@ class CashServiceTest {
     void testWithdraw_whenInsufficientFunds_throwsException() {
         // Given
         WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("1000.00"));
-        
+        CashTransaction pendingTransaction = createTransaction(1L, "test_user", TransactionType.WITHDRAW,
+                new BigDecimal("1000.00"), TransactionStatus.PENDING);
+
         when(accountsClient.withdraw(eq(request), eq("test-token")))
                 .thenReturn(CompletableFuture.failedFuture(new InsufficientFundsException("Insufficient funds")));
+        when(transactionRepository.save(any(CashTransaction.class))).thenReturn(pendingTransaction);
 
         // When & Then
         assertThrows(Exception.class, () -> cashService.withdraw(request));
+        
+        // Проверяем, что PENDING запись была обновлена до FAILED
+        verify(transactionRepository, times(2)).save(any(CashTransaction.class));
     }
 
     private CashTransaction createTransaction(Long id, String login, TransactionType type,

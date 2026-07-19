@@ -50,7 +50,7 @@ public class TransferService {
         return authorizedClient.getAccessToken().getTokenValue();
     }
 
-    @CircuitBreaker(name = "accountsService", fallbackMethod = "createTransferFallback")
+    @CircuitBreaker(name = "accountsService")
     @Transactional
     public TransferResponse createTransfer(TransferRequest request) {
         log.info("Processing transfer from {} to {} for amount {}",
@@ -61,27 +61,49 @@ public class TransferService {
             throw new SelfTransferException("Cannot transfer to the same account");
         }
 
-        String token = getAccessToken();
-
-        // Debit from sender
-        accountsClient.debitAccount(request.fromLogin(), request.amount(), token).join();
-
-        // Credit to receiver
-        accountsClient.creditAccount(request.toLogin(), request.amount(), token).join();
-
-        // Save transfer
-        Transfer transfer = Transfer.builder()
+        // 1. Создаём PENDING запись ДО внешних вызовов
+        Transfer pendingTransfer = Transfer.builder()
                 .fromAccountLogin(request.fromLogin())
                 .toAccountLogin(request.toLogin())
                 .amount(request.amount())
-                .status(TransferStatus.COMPLETED)
+                .status(TransferStatus.PENDING)
                 .build();
-        Transfer savedTransfer = transferRepository.save(transfer);
+        pendingTransfer = transferRepository.save(pendingTransfer);
+        log.info("Transfer created with PENDING status: {}", pendingTransfer.getId());
 
-        // Send notifications (non-blocking, fire-and-forget via Kafka)
-        sendNotificationsSafely(request.fromLogin(), request.toLogin(), request.amount());
+        String token = getAccessToken();
 
-        return mapper.toResponse(savedTransfer);
+        try {
+            // 2. Debit from sender
+            accountsClient.debitAccount(request.fromLogin(), request.amount(), token).join();
+
+            // 3. Credit to receiver
+            accountsClient.creditAccount(request.toLogin(), request.amount(), token).join();
+
+            // 4. Обновляем статус на COMPLETED
+            pendingTransfer.setStatus(TransferStatus.COMPLETED);
+            Transfer completedTransfer = transferRepository.save(pendingTransfer);
+            log.info("Transfer completed: {}", completedTransfer.getId());
+
+            // Send notifications (non-blocking, fire-and-forget via Kafka)
+            sendNotificationsSafely(request.fromLogin(), request.toLogin(), request.amount());
+
+            return mapper.toResponse(completedTransfer);
+
+        } catch (InsufficientFundsException | AccountNotFoundException e) {
+            // Обновляем PENDING → FAILED
+            pendingTransfer.setStatus(TransferStatus.FAILED);
+            pendingTransfer.setErrorMessage(e.getMessage());
+            transferRepository.save(pendingTransfer);
+            throw e;
+        } catch (Exception e) {
+            log.error("Transfer failed from {} to {}: {}", request.fromLogin(), request.toLogin(), e.getMessage(), e);
+            // Обновляем PENDING → FAILED
+            pendingTransfer.setStatus(TransferStatus.FAILED);
+            pendingTransfer.setErrorMessage(e.getMessage());
+            transferRepository.save(pendingTransfer);
+            throw new TransferFailedException("Transfer failed: " + e.getMessage(), e);
+        }
     }
 
     private void sendNotificationsSafely(String fromLogin, String toLogin, java.math.BigDecimal amount) {
@@ -108,21 +130,5 @@ public class TransferService {
                     fromLogin, toLogin, e.getMessage());
             // Не пробрасываем исключение, чтобы не прерывать основной поток обработки
         }
-    }
-
-    private TransferResponse createTransferFallback(TransferRequest request, Throwable t) {
-        log.error("Circuit breaker triggered for transfer from {} to {}: {}",
-                request.fromLogin(), request.toLogin(), t.getMessage());
-
-        Transfer failedTransfer = Transfer.builder()
-                .fromAccountLogin(request.fromLogin())
-                .toAccountLogin(request.toLogin())
-                .amount(request.amount())
-                .status(TransferStatus.FAILED)
-                .errorMessage("Circuit breaker: " + t.getMessage())
-                .build();
-        transferRepository.save(failedTransfer);
-
-        throw new TransferFailedException("Transfer failed due to circuit breaker: " + t.getMessage(), t);
     }
 }

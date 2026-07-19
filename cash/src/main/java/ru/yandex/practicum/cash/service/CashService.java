@@ -48,11 +48,12 @@ public class CashService {
         return authorizedClient.getAccessToken().getTokenValue();
     }
 
-    @CircuitBreaker(name = "accountsService", fallbackMethod = "depositFallback")
+    @CircuitBreaker(name = "accountsService")
     @Transactional
     public TransactionResponse deposit(DepositRequest request) {
         log.info("Processing deposit for login: {}, amount: {}", request.login(), request.amount());
 
+        CashTransaction pendingTransaction = null;
         try {
             // 1. Сначала создаём запись PENDING
             CashTransaction transaction = CashTransaction.builder()
@@ -61,7 +62,7 @@ public class CashService {
                     .amount(request.amount())
                     .status(TransactionStatus.PENDING)
                     .build();
-            CashTransaction pendingTransaction = transactionRepository.save(transaction);
+            pendingTransaction = transactionRepository.save(transaction);
             log.info("Deposit transaction created with PENDING status: {}", pendingTransaction.getId());
 
             // 2. Выполняем внешний вызов
@@ -78,44 +79,31 @@ public class CashService {
             return mapper.toResponse(completedTransaction);
 
         } catch (InsufficientFundsException | AccountNotFoundException e) {
+            // Обновляем PENDING → FAILED
+            if (pendingTransaction != null) {
+                pendingTransaction.setStatus(TransactionStatus.FAILED);
+                pendingTransaction.setErrorMessage(e.getMessage());
+                transactionRepository.save(pendingTransaction);
+            }
             throw e;
         } catch (Exception e) {
             log.error("Deposit failed for login: {}", request.login(), e);
-            // Обновляем статус на FAILED
-            CashTransaction failedTransaction = CashTransaction.builder()
-                    .accountLogin(request.login())
-                    .transactionType(TransactionType.DEPOSIT)
-                    .amount(request.amount())
-                    .status(TransactionStatus.FAILED)
-                    .errorMessage(e.getMessage())
-                    .build();
-            transactionRepository.save(failedTransaction);
+            // Обновляем PENDING → FAILED
+            if (pendingTransaction != null) {
+                pendingTransaction.setStatus(TransactionStatus.FAILED);
+                pendingTransaction.setErrorMessage(e.getMessage());
+                transactionRepository.save(pendingTransaction);
+            }
             throw new TransactionFailedException("Deposit failed: " + e.getMessage(), e);
         }
     }
 
-    private TransactionResponse depositFallback(DepositRequest request, Throwable t) {
-        log.error("Circuit breaker opened for accounts service (deposit): {}", t.getMessage());
-        
-        // Сохраняем транзакцию со статусом PENDING для последующей обработки
-        CashTransaction pendingTransaction = CashTransaction.builder()
-                .accountLogin(request.login())
-                .transactionType(TransactionType.DEPOSIT)
-                .amount(request.amount())
-                .status(TransactionStatus.PENDING)
-                .errorMessage("Accounts service temporarily unavailable. Transaction queued for retry.")
-                .build();
-        transactionRepository.save(pendingTransaction);
-        
-        // Возвращаем ответ с информацией о статусе
-        return mapper.toResponse(pendingTransaction);
-    }
-
-    @CircuitBreaker(name = "accountsService", fallbackMethod = "withdrawFallback")
+    @CircuitBreaker(name = "accountsService")
     @Transactional
     public TransactionResponse withdraw(WithdrawRequest request) {
         log.info("Processing withdrawal for login: {}, amount: {}", request.login(), request.amount());
 
+        CashTransaction pendingTransaction = null;
         try {
             // 1. Сначала создаём запись PENDING
             CashTransaction transaction = CashTransaction.builder()
@@ -124,7 +112,7 @@ public class CashService {
                     .amount(request.amount())
                     .status(TransactionStatus.PENDING)
                     .build();
-            CashTransaction pendingTransaction = transactionRepository.save(transaction);
+            pendingTransaction = transactionRepository.save(transaction);
             log.info("Withdrawal transaction created with PENDING status: {}", pendingTransaction.getId());
 
             // 2. Выполняем внешний вызов
@@ -141,37 +129,23 @@ public class CashService {
             return mapper.toResponse(completedTransaction);
 
         } catch (InsufficientFundsException | AccountNotFoundException e) {
+            // Обновляем PENDING → FAILED
+            if (pendingTransaction != null) {
+                pendingTransaction.setStatus(TransactionStatus.FAILED);
+                pendingTransaction.setErrorMessage(e.getMessage());
+                transactionRepository.save(pendingTransaction);
+            }
             throw e;
         } catch (Exception e) {
             log.error("Withdrawal failed for login: {}", request.login(), e);
-            // Обновляем статус на FAILED
-            CashTransaction failedTransaction = CashTransaction.builder()
-                    .accountLogin(request.login())
-                    .transactionType(TransactionType.WITHDRAW)
-                    .amount(request.amount())
-                    .status(TransactionStatus.FAILED)
-                    .errorMessage(e.getMessage())
-                    .build();
-            transactionRepository.save(failedTransaction);
+            // Обновляем PENDING → FAILED
+            if (pendingTransaction != null) {
+                pendingTransaction.setStatus(TransactionStatus.FAILED);
+                pendingTransaction.setErrorMessage(e.getMessage());
+                transactionRepository.save(pendingTransaction);
+            }
             throw new TransactionFailedException("Withdrawal failed: " + e.getMessage(), e);
         }
-    }
-
-    private TransactionResponse withdrawFallback(WithdrawRequest request, Throwable t) {
-        log.error("Circuit breaker opened for accounts service (withdraw): {}", t.getMessage());
-        
-        // Сохраняем транзакцию со статусом PENDING для последующей обработки
-        CashTransaction pendingTransaction = CashTransaction.builder()
-                .accountLogin(request.login())
-                .transactionType(TransactionType.WITHDRAW)
-                .amount(request.amount())
-                .status(TransactionStatus.PENDING)
-                .errorMessage("Accounts service temporarily unavailable. Transaction queued for retry.")
-                .build();
-        transactionRepository.save(pendingTransaction);
-        
-        // Возвращаем ответ с информацией о статусе
-        return mapper.toResponse(pendingTransaction);
     }
 
     private void sendNotificationSafely(String login, String message, String transactionType) {

@@ -20,13 +20,13 @@ import ru.yandex.practicum.transfer.entity.TransferStatus;
 import ru.yandex.practicum.transfer.event.TransferNotificationEvent;
 import ru.yandex.practicum.transfer.exception.InsufficientFundsException;
 import ru.yandex.practicum.transfer.exception.SelfTransferException;
+import ru.yandex.practicum.transfer.exception.TransferFailedException;
 import ru.yandex.practicum.transfer.mapper.TransferMapper;
 import ru.yandex.practicum.transfer.repository.TransferRepository;
 import ru.yandex.practicum.transfer.service.KafkaNotificationSender;
 
 import java.math.BigDecimal;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -83,7 +83,8 @@ class TransferServiceTest {
     void testCreateTransfer_whenSuccessful_returnsTransferResponse() {
         // Given
         TransferRequest request = new TransferRequest("sender", "receiver", new BigDecimal("100.00"), null);
-        Transfer savedTransfer = createTransfer(1L, "sender", "receiver", new BigDecimal("100.00"), TransferStatus.COMPLETED);
+        Transfer pendingTransfer = createTransfer(1L, "sender", "receiver", new BigDecimal("100.00"), TransferStatus.PENDING);
+        Transfer completedTransfer = createTransfer(1L, "sender", "receiver", new BigDecimal("100.00"), TransferStatus.COMPLETED);
         TransferResponse expectedResponse = new TransferResponse(
                 1L, "sender", "receiver", new BigDecimal("100.00"),
                 TransferStatus.COMPLETED, null, null, null
@@ -93,8 +94,10 @@ class TransferServiceTest {
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(accountsClient.creditAccount(eq("receiver"), eq(new BigDecimal("100.00")), eq("test-token")))
                 .thenReturn(CompletableFuture.completedFuture(null));
-        when(transferRepository.save(any(Transfer.class))).thenReturn(savedTransfer);
-        when(mapper.toResponse(savedTransfer)).thenReturn(expectedResponse);
+        when(transferRepository.save(any(Transfer.class)))
+                .thenReturn(pendingTransfer)
+                .thenReturn(completedTransfer);
+        when(mapper.toResponse(completedTransfer)).thenReturn(expectedResponse);
         doNothing().when(kafkaNotificationSender).sendNotificationSync(any(TransferNotificationEvent.class));
 
         // When
@@ -105,7 +108,8 @@ class TransferServiceTest {
         assertEquals(1L, response.id());
         assertEquals(TransferStatus.COMPLETED, response.status());
         verify(accountsClient).debitAccount(eq("sender"), eq(new BigDecimal("100.00")), eq("test-token"));
-        verify(transferRepository).save(any(Transfer.class));
+        verify(accountsClient).creditAccount(eq("receiver"), eq(new BigDecimal("100.00")), eq("test-token"));
+        verify(transferRepository, times(2)).save(any(Transfer.class));
         verify(kafkaNotificationSender, times(2)).sendNotificationSync(any(TransferNotificationEvent.class));
     }
 
@@ -113,13 +117,17 @@ class TransferServiceTest {
     void testCreateTransfer_whenInsufficientFunds_throwsException() {
         // Given
         TransferRequest request = new TransferRequest("sender", "receiver", new BigDecimal("1000.00"), null);
+        Transfer pendingTransfer = createTransfer(1L, "sender", "receiver", new BigDecimal("1000.00"), TransferStatus.PENDING);
 
         when(accountsClient.debitAccount(eq("sender"), eq(new BigDecimal("1000.00")), eq("test-token")))
                 .thenReturn(CompletableFuture.failedFuture(new InsufficientFundsException("Insufficient funds")));
+        when(transferRepository.save(any(Transfer.class))).thenReturn(pendingTransfer);
 
-        // When & Then
-        CompletionException exception = assertThrows(CompletionException.class, () -> transferService.createTransfer(request));
-        assertTrue(exception.getCause() instanceof InsufficientFundsException);
+        // When & Then - сервис выбрасывает TransferFailedException, который обёрнут в CompletionException
+        assertThrows(TransferFailedException.class, () -> transferService.createTransfer(request));
+        
+        // Проверяем, что PENDING запись была обновлена до FAILED
+        verify(transferRepository, times(2)).save(any(Transfer.class));
     }
 
     private Transfer createTransfer(Long id, String from, String to, BigDecimal amount, TransferStatus status) {
