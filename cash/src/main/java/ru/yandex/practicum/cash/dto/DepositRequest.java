@@ -12,6 +12,9 @@ public record DepositRequest(
 
         @NotNull(message = "Amount is required")
         @Positive(message = "Amount must be positive")
-        BigDecimal amount
+        BigDecimal amount,
+
+        @NotBlank(message = "Operation ID is required for idempotency")
+        String operationId
 ) {
 }

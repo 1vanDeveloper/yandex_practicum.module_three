@@ -5,6 +5,7 @@ import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -17,6 +18,7 @@ import ru.yandex.practicum.frontend.dto.RegisterRequest;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -171,6 +173,9 @@ public class GatewayClient {
             return failedFuture;
         }
 
+        // Генерируем детерминированный operationId для идемпотентности
+        String operationId = generateOperationId("frontend-cash", action, jwtToken.substring(0, Math.min(8, jwtToken.length())), value);
+
         String url = UriComponentsBuilder.fromHttpUrl(gatewayUrl)
                 .path("/gateway/cash")
                 .queryParam("value", value)
@@ -184,6 +189,7 @@ public class GatewayClient {
                 restClient.post()
                     .uri(url)
                     .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Idempotency-Key", operationId)
                     .retrieve()
                     .toBodilessEntity();
             }
@@ -208,6 +214,9 @@ public class GatewayClient {
             return failedFuture;
         }
 
+        // Генерируем детерминированный operationId для идемпотентности
+        String operationId = generateOperationId("frontend-transfer", toLogin, jwtToken.substring(0, Math.min(8, jwtToken.length())), value);
+
         String url = UriComponentsBuilder.fromHttpUrl(gatewayUrl)
                 .path("/gateway/transfer")
                 .queryParam("value", value)
@@ -221,6 +230,7 @@ public class GatewayClient {
                 restClient.post()
                     .uri(url)
                     .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Idempotency-Key", operationId)
                     .retrieve()
                     .toBodilessEntity();
             }
@@ -262,6 +272,21 @@ public class GatewayClient {
         CompletableFuture<List<AccountBrief>> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new RuntimeException("Accounts list service unavailable, please try again later", t));
         return failedFuture;
+    }
+
+    /**
+     * Генерирует детерминированный operationId для идемпотентности.
+     * При retry того же запроса будет сгенерирован тот же operationId.
+     */
+    private String generateOperationId(String type, String action, String tokenPrefix, BigDecimal amount) {
+        String baseKey = String.format("%s:%s:%s:%s:%d",
+                type,
+                action,
+                tokenPrefix,
+                amount.toPlainString(),
+                System.currentTimeMillis() / 60000); // timestamp с точностью до минуты
+
+        return type + "-" + Math.abs(baseKey.hashCode()) + "-" + UUID.randomUUID().toString().substring(0, 8);
     }
 
     private record UpdateAccountRequest(String firstName, String lastName, String birthDate) {}

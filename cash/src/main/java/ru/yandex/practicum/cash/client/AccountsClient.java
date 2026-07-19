@@ -38,22 +38,9 @@ public class AccountsClient {
         return factory;
     }
 
-    /**
-     * Генерирует уникальный operationId для операции.
-     * Формат: cash-{type}-{login}-{timestamp}-{uuid}
-     */
-    private String generateOperationId(String type, String login) {
-        return String.format("cash-%s-%s-%d-%s",
-                type.toLowerCase(),
-                login,
-                System.currentTimeMillis(),
-                UUID.randomUUID().toString().substring(0, 8));
-    }
-
     public CompletableFuture<Void> deposit(DepositRequest request, String bearerToken) {
         return CompletableFuture.runAsync(() -> {
             String url = accountsServiceUrl + "/accounts/internal/deposit";
-            String operationId = generateOperationId("deposit", request.login());
 
             restClient.post()
                 .uri(url)
@@ -61,7 +48,7 @@ public class AccountsClient {
                 .body(Map.of(
                         "login", request.login(),
                         "amount", request.amount(),
-                        "operationId", operationId,
+                        "operationId", request.operationId(),
                         "sourceService", "cash"))
                 .retrieve()
                 .toBodilessEntity();
@@ -71,7 +58,6 @@ public class AccountsClient {
     public CompletableFuture<Void> withdraw(WithdrawRequest request, String bearerToken) {
         return CompletableFuture.runAsync(() -> {
             String url = accountsServiceUrl + "/accounts/internal/withdraw";
-            String operationId = generateOperationId("withdraw", request.login());
 
             restClient.post()
                 .uri(url)
@@ -79,7 +65,7 @@ public class AccountsClient {
                 .body(Map.of(
                         "login", request.login(),
                         "amount", request.amount(),
-                        "operationId", operationId,
+                        "operationId", request.operationId(),
                         "sourceService", "cash"))
                 .retrieve()
                 .toBodilessEntity();

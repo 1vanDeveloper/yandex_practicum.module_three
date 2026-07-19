@@ -75,10 +75,10 @@ public class TransferService {
 
         try {
             // 2. Debit from sender
-            accountsClient.debitAccount(request.fromLogin(), request.amount(), token).join();
+            accountsClient.debitAccount(request.fromLogin(), request.amount(), request.operationId(), token).join();
 
             // 3. Credit to receiver
-            accountsClient.creditAccount(request.toLogin(), request.amount(), token).join();
+            accountsClient.creditAccount(request.toLogin(), request.amount(), request.operationId(), token).join();
 
             // 4. Обновляем статус на COMPLETED
             pendingTransfer.setStatus(TransferStatus.COMPLETED);

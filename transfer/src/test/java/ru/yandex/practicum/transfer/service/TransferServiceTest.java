@@ -73,7 +73,7 @@ class TransferServiceTest {
     @Test
     void testCreateTransfer_whenSelfTransfer_throwsException() {
         // Given
-        TransferRequest request = new TransferRequest("same_user", "same_user", new BigDecimal("100.00"), null);
+        TransferRequest request = new TransferRequest("same_user", "same_user", new BigDecimal("100.00"), null, "test-op-id");
 
         // When & Then
         assertThrows(SelfTransferException.class, () -> transferService.createTransfer(request));
@@ -82,7 +82,8 @@ class TransferServiceTest {
     @Test
     void testCreateTransfer_whenSuccessful_returnsTransferResponse() {
         // Given
-        TransferRequest request = new TransferRequest("sender", "receiver", new BigDecimal("100.00"), null);
+        String operationId = "transfer-sender-receiver-123456";
+        TransferRequest request = new TransferRequest("sender", "receiver", new BigDecimal("100.00"), null, operationId);
         Transfer pendingTransfer = createTransfer(1L, "sender", "receiver", new BigDecimal("100.00"), TransferStatus.PENDING);
         Transfer completedTransfer = createTransfer(1L, "sender", "receiver", new BigDecimal("100.00"), TransferStatus.COMPLETED);
         TransferResponse expectedResponse = new TransferResponse(
@@ -90,9 +91,9 @@ class TransferServiceTest {
                 TransferStatus.COMPLETED, null, null, null
         );
 
-        when(accountsClient.debitAccount(eq("sender"), eq(new BigDecimal("100.00")), eq("test-token")))
+        when(accountsClient.debitAccount(eq("sender"), eq(new BigDecimal("100.00")), eq(operationId), eq("test-token")))
                 .thenReturn(CompletableFuture.completedFuture(null));
-        when(accountsClient.creditAccount(eq("receiver"), eq(new BigDecimal("100.00")), eq("test-token")))
+        when(accountsClient.creditAccount(eq("receiver"), eq(new BigDecimal("100.00")), eq(operationId), eq("test-token")))
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(transferRepository.save(any(Transfer.class)))
                 .thenReturn(pendingTransfer)
@@ -107,8 +108,8 @@ class TransferServiceTest {
         assertNotNull(response);
         assertEquals(1L, response.id());
         assertEquals(TransferStatus.COMPLETED, response.status());
-        verify(accountsClient).debitAccount(eq("sender"), eq(new BigDecimal("100.00")), eq("test-token"));
-        verify(accountsClient).creditAccount(eq("receiver"), eq(new BigDecimal("100.00")), eq("test-token"));
+        verify(accountsClient).debitAccount(eq("sender"), eq(new BigDecimal("100.00")), eq(operationId), eq("test-token"));
+        verify(accountsClient).creditAccount(eq("receiver"), eq(new BigDecimal("100.00")), eq(operationId), eq("test-token"));
         verify(transferRepository, times(2)).save(any(Transfer.class));
         verify(kafkaNotificationSender, times(2)).sendNotificationSync(any(TransferNotificationEvent.class));
     }
@@ -116,14 +117,15 @@ class TransferServiceTest {
     @Test
     void testCreateTransfer_whenInsufficientFunds_throwsException() {
         // Given
-        TransferRequest request = new TransferRequest("sender", "receiver", new BigDecimal("1000.00"), null);
+        String operationId = "transfer-sender-receiver-123456";
+        TransferRequest request = new TransferRequest("sender", "receiver", new BigDecimal("1000.00"), null, operationId);
         Transfer pendingTransfer = createTransfer(1L, "sender", "receiver", new BigDecimal("1000.00"), TransferStatus.PENDING);
 
-        when(accountsClient.debitAccount(eq("sender"), eq(new BigDecimal("1000.00")), eq("test-token")))
+        when(accountsClient.debitAccount(eq("sender"), eq(new BigDecimal("1000.00")), eq(operationId), eq("test-token")))
                 .thenReturn(CompletableFuture.failedFuture(new InsufficientFundsException("Insufficient funds")));
         when(transferRepository.save(any(Transfer.class))).thenReturn(pendingTransfer);
 
-        // When & Then - сервис выбрасывает TransferFailedException, который обёрнут в CompletionException
+        // When & Then - сервис выбрасывает TransferFailedException
         assertThrows(TransferFailedException.class, () -> transferService.createTransfer(request));
         
         // Проверяем, что PENDING запись была обновлена до FAILED

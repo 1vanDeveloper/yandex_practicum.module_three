@@ -36,22 +36,9 @@ public class AccountsClient {
         return factory;
     }
 
-    /**
-     * Генерирует уникальный operationId для операции.
-     * Формат: transfer-{type}-{login}-{timestamp}-{uuid}
-     */
-    private String generateOperationId(String type, String login) {
-        return String.format("transfer-%s-%s-%d-%s",
-                type.toLowerCase(),
-                login,
-                System.currentTimeMillis(),
-                UUID.randomUUID().toString().substring(0, 8));
-    }
-
-    public CompletableFuture<Void> debitAccount(String login, java.math.BigDecimal amount, String bearerToken) {
+    public CompletableFuture<Void> debitAccount(String login, java.math.BigDecimal amount, String operationId, String bearerToken) {
         return CompletableFuture.runAsync(() -> {
             String url = accountsServiceUrl + "/accounts/internal/debit";
-            String operationId = generateOperationId("debit", login);
 
             restClient.post()
                 .uri(url)
@@ -66,10 +53,9 @@ public class AccountsClient {
         }, executor);
     }
 
-    public CompletableFuture<Void> creditAccount(String login, java.math.BigDecimal amount, String bearerToken) {
+    public CompletableFuture<Void> creditAccount(String login, java.math.BigDecimal amount, String operationId, String bearerToken) {
         return CompletableFuture.runAsync(() -> {
             String url = accountsServiceUrl + "/accounts/internal/credit";
-            String operationId = generateOperationId("credit", login);
 
             restClient.post()
                 .uri(url)

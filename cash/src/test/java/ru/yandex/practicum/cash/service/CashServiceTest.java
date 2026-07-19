@@ -73,7 +73,8 @@ class CashServiceTest {
     @Test
     void testDeposit_whenSuccessful_returnsTransactionResponse() {
         // Given
-        DepositRequest request = new DepositRequest("test_user", new BigDecimal("100.00"));
+        String operationId = "cash-deposit-test_user-123456";
+        DepositRequest request = new DepositRequest("test_user", new BigDecimal("100.00"), operationId);
         CashTransaction pendingTransaction = createTransaction(1L, "test_user", TransactionType.DEPOSIT,
                 new BigDecimal("100.00"), TransactionStatus.PENDING);
         CashTransaction completedTransaction = createTransaction(1L, "test_user", TransactionType.DEPOSIT,
@@ -106,7 +107,8 @@ class CashServiceTest {
     @Test
     void testWithdraw_whenSuccessful_returnsTransactionResponse() {
         // Given
-        WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("50.00"));
+        String operationId = "cash-withdraw-test_user-123456";
+        WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("50.00"), operationId);
         CashTransaction pendingTransaction = createTransaction(2L, "test_user", TransactionType.WITHDRAW,
                 new BigDecimal("50.00"), TransactionStatus.PENDING);
         CashTransaction completedTransaction = createTransaction(2L, "test_user", TransactionType.WITHDRAW,
@@ -139,7 +141,8 @@ class CashServiceTest {
     @Test
     void testWithdraw_whenInsufficientFunds_throwsException() {
         // Given
-        WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("1000.00"));
+        String operationId = "cash-withdraw-test_user-123456";
+        WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("1000.00"), operationId);
         CashTransaction pendingTransaction = createTransaction(1L, "test_user", TransactionType.WITHDRAW,
                 new BigDecimal("1000.00"), TransactionStatus.PENDING);
 
