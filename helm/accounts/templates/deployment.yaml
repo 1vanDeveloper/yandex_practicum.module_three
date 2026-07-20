@@ -1,19 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "accounts.fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{- include "accounts.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      {{- include "accounts.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
+        {{- include "accounts.selectorLabels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       {{- if and .Values.global .Values.global.imagePullSecrets }}
       imagePullSecrets:
@@ -106,6 +109,27 @@ spec:
                 secretKeyRef:
                   name: {{ .Chart.Name }}-secrets
                   key: JWT_EXPIRATION
+            # Micrometer Tracing (Zipkin)
+            - name: MANAGEMENT_TRACING_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_ENABLED
+            - name: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+            - name: MANAGEMENT_TRACING_PROPAGATION_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_PROPAGATION_TYPE
+            - name: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
             # Kafka Configuration
             - name: KAFKA_ENABLED
               valueFrom:
@@ -142,6 +166,53 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_ACCOUNTS
+            # Debug logging for tracing
+            - name: LOGGING_LEVEL_IO_MICROMETER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_IO_MICROMETER
+            - name: LOGGING_LEVEL_IO_MICROMETER_TRACING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_IO_MICROMETER_TRACING
+            - name: LOGGING_LEVEL_BRAVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_BRAVE
+            - name: LOGGING_LEVEL_ZIPKIN2
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ZIPKIN2
+            - name: LOGGING_LEVEL_IO_ZIPKIN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_IO_ZIPKIN
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE_TRACING
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE_TRACING
+            # ELK Stack - Logstash configuration
+            - name: ELK_LOGSTASH_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: ELK_LOGSTASH_HOST
+            - name: ELK_LOGSTASH_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: ELK_LOGSTASH_PORT
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

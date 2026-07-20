@@ -7,6 +7,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import ru.yandex.practicum.accounts.event.NotificationEvent;
 
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -22,10 +23,16 @@ class KafkaNotificationProducerTest {
     private KafkaTemplate<String, NotificationEvent> kafkaTemplate;
     private KafkaNotificationProducer kafkaProducer;
 
+    private static final String TEST_TOPIC = "notifications.events";
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         kafkaTemplate = mock(KafkaTemplate.class);
         kafkaProducer = new KafkaNotificationProducer(kafkaTemplate);
+        // Inject test topic via reflection since @Value doesn't work in plain unit tests
+        Field topicField = KafkaNotificationProducer.class.getDeclaredField("topic");
+        topicField.setAccessible(true);
+        topicField.set(kafkaProducer, TEST_TOPIC);
     }
 
     @Test
@@ -40,13 +47,13 @@ class KafkaNotificationProducerTest {
         when(sendResult.getRecordMetadata()).thenReturn(recordMetadata);
 
         CompletableFuture<SendResult<String, NotificationEvent>> future = CompletableFuture.completedFuture(sendResult);
-        when(kafkaTemplate.send(eq("notifications.events"), anyString(), any())).thenReturn(future);
+        when(kafkaTemplate.send(eq(TEST_TOPIC), anyString(), any())).thenReturn(future);
 
         // Act
         kafkaProducer.sendNotificationSync(event);
 
         // Assert
-        verify(kafkaTemplate).send(eq("notifications.events"), eq(event.login()), eq(event));
+        verify(kafkaTemplate).send(eq(TEST_TOPIC), eq(event.login()), eq(event));
     }
 
     @Test
@@ -61,13 +68,13 @@ class KafkaNotificationProducerTest {
         when(sendResult.getRecordMetadata()).thenReturn(recordMetadata);
 
         CompletableFuture<SendResult<String, NotificationEvent>> future = CompletableFuture.completedFuture(sendResult);
-        when(kafkaTemplate.send(eq("notifications.events"), anyString(), any())).thenReturn(future);
+        when(kafkaTemplate.send(eq(TEST_TOPIC), anyString(), any())).thenReturn(future);
 
         // Act
         kafkaProducer.sendNotificationSync(event);
 
         // Assert
-        verify(kafkaTemplate).send(eq("notifications.events"), eq("test@example.com"), any());
+        verify(kafkaTemplate).send(eq(TEST_TOPIC), eq("test@example.com"), any());
     }
 
     private NotificationEvent createTestEvent() {

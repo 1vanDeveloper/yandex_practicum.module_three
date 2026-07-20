@@ -13,9 +13,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import ru.yandex.practicum.cash.config.KafkaConfig;
 import ru.yandex.practicum.cash.event.CashNotificationEvent;
 
@@ -62,15 +62,16 @@ class KafkaNotificationSenderTest {
         consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, "test-consumer-group");
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
-        consumerProps.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "*");
+        consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        consumerProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+        consumerProps.put(JsonDeserializer.REMOVE_TYPE_INFO_HEADERS, true);
         consumerProps.put("spring.json.type.mapping",
                 "ru.yandex.practicum.cash.event.CashNotificationEvent:ru.yandex.practicum.cash.event.CashNotificationEvent");
 
         Consumer<String, CashNotificationEvent> consumer = new DefaultKafkaConsumerFactory<>(
                 consumerProps,
                 new StringDeserializer(),
-                new JacksonJsonDeserializer<>(CashNotificationEvent.class)
+                new JsonDeserializer<>(CashNotificationEvent.class, false)
         ).createConsumer();
 
         embeddedKafka.consumeFromAnEmbeddedTopic(consumer, "notifications.events");

@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.accounts.config.TestExceptionHandlerConfig;
 import ru.yandex.practicum.accounts.config.TestKafkaConfig;
 import ru.yandex.practicum.accounts.config.TestSecurityConfig;
-import ru.yandex.practicum.accounts.service.TestOutboxConfig;
 import ru.yandex.practicum.accounts.entity.OutboxMessage;
 import ru.yandex.practicum.accounts.repository.OutboxNotificationRepository;
 
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     }
 )
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class, TestKafkaConfig.class})
+@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestKafkaConfig.class})
 class OutboxSchedulerIntegrationTest {
 
     @Autowired
@@ -49,7 +49,7 @@ class OutboxSchedulerIntegrationTest {
     @Test
     void processOutboxMessages_shouldProcessPendingMessages() throws Exception {
         // Save message
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message", "test-event", "test_user");
         assertThat(saved.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());
 
         // Run scheduler
@@ -59,14 +59,14 @@ class OutboxSchedulerIntegrationTest {
         Thread.sleep(500);
 
         // Verify no pending messages remain
-        var messages = outboxRepository.findPendingMessages(10);
+        var messages = outboxRepository.findPendingMessages(PageRequest.of(0, 10));
         assertThat(messages).isEmpty();
     }
 
     @Test
     void processOutboxMessages_shouldUpdateMessageStatus() throws Exception {
         // Save message
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message", "test-event", "test_user");
 
         // Verify initial status is PENDING
         assertThat(saved.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());

@@ -32,10 +32,16 @@ logging:
   gatewayLevel: "DEBUG"
   securityLevel: "DEBUG"
 
+# Трассировка (Micrometer + Zipkin)
+tracing:
+  enabled: true
+  samplingProbability: 1.0
+  propagationType: "B3"
+
 image:
   repository: "bank-gateway"
   tag: "latest"
-  pullPolicy: "IfNotPresent"
+  pullPolicy: "Never"
 
 service:
   type: "LoadBalancer"

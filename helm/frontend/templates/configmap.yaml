@@ -9,13 +9,29 @@ data:
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
   GATEWAY_SERVICE_NAME: "{{ .Values.gateway.serviceName }}"
   SPRING_CLOUD_LOADBALANCER_ENABLED: "true"
-
   # OAuth2 Client Configuration (non-sensitive)
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_CLIENT_ID: "{{ .Chart.Name }}-client"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_REDIRECT_URI: "http://localhost:8081/login/oauth2/code/{{ .Chart.Name }}-client"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_SCOPE: "openid,profile,email"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_FRONTEND_CLIENT_PROVIDER: "keycloak"
-
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_MYBANKFRONT: "{{ .Values.logging.level }}"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_CLOUD: "{{ .Values.logging.cloudLevel }}"
+  # Micrometer Tracing (Zipkin) - B3 Multi Header for end-to-end tracing
+  MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
+  MANAGEMENT_TRACING_PROPAGATION_TYPE: "{{ .Values.tracing.propagationType | default "B3,B3_MULTI" }}"
+  MANAGEMENT_OBSERVATIONS_ENABLED: "true"
+  {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"
+  {{- else }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+  {{- end }}
+  # ELK Stack - Logstash configuration
+  {{- if and .Values.global .Values.global.elk .Values.global.elk.logstash }}
+  ELK_LOGSTASH_HOST: "{{ .Values.global.elk.logstash.host }}"
+  ELK_LOGSTASH_PORT: "{{ .Values.global.elk.logstash.port }}"
+  {{- else }}
+  ELK_LOGSTASH_HOST: "logstash"
+  ELK_LOGSTASH_PORT: "5000"
+  {{- end }}

@@ -42,12 +42,25 @@ jpa:
 # Логирование
 logging:
   level: "INFO"
+  loggingLevelMicrometer: "DEBUG"
+  loggingLevelMicrometerTracing: "DEBUG"
+  loggingLevelBrave: "DEBUG"
+  loggingLevelZipkin2: "DEBUG"
+  loggingLevelIoZipkin: "DEBUG"
+  loggingLevelOrgSpringframeworkBootAutoconfigure: "DEBUG"
+  loggingLevelOrgSpringframeworkBootAutoconfigureTracing: "DEBUG"
 
 # Kafka настройки (Producer)
 kafka:
   producer:
     acks: "all"
     retries: 3
+
+# Трассировка (Micrometer + Zipkin)
+tracing:
+  enabled: true
+  samplingProbability: 1.0
+  propagationType: "B3,B3_MULTI"
 
 image:
   repository: "bank-accounts"

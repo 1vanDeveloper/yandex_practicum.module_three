@@ -77,28 +77,28 @@ class GatewayServiceTest {
     @Test
     void processCash_shouldCallGatewayClient() {
         // Arrange
-        when(gatewayClient.processCash(eq(100), eq("PUT"), anyString()))
+        when(gatewayClient.processCash(eq(BigDecimal.valueOf(100)), eq("DEPOSIT"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
-        CompletableFuture<Void> result = gatewayService.processCash(100, "PUT", "test-token");
+        CompletableFuture<Void> result = gatewayService.processCash(BigDecimal.valueOf(100), "DEPOSIT", "test-token");
 
         // Assert
         assertNotNull(result);
-        verify(gatewayClient).processCash(eq(100), eq("PUT"), anyString());
+        verify(gatewayClient).processCash(eq(BigDecimal.valueOf(100)), eq("DEPOSIT"), anyString());
     }
 
     @Test
     void processTransfer_shouldCallGatewayClient() {
         // Arrange
-        when(gatewayClient.processTransfer(eq(500), eq("recipient"), anyString()))
+        when(gatewayClient.processTransfer(eq(BigDecimal.valueOf(500)), eq("recipient"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
-        CompletableFuture<Void> result = gatewayService.processTransfer(500, "recipient", "test-token");
+        CompletableFuture<Void> result = gatewayService.processTransfer(BigDecimal.valueOf(500), "recipient", "test-token");
 
         // Assert
         assertNotNull(result);
-        verify(gatewayClient).processTransfer(eq(500), eq("recipient"), anyString());
+        verify(gatewayClient).processTransfer(eq(BigDecimal.valueOf(500)), eq("recipient"), anyString());
     }
 }

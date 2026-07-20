@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -18,9 +19,10 @@ public class AccountsClient {
     private final Executor executor;
     private final String accountsServiceUrl;
 
-    public AccountsClient(Executor asyncExecutor,
+    public AccountsClient(RestClient.Builder restClientBuilder,
+                          Executor asyncExecutor,
                           @Value("${accounts.service.url:http://accounts:8080}") String accountsServiceUrl) {
-        this.restClient = RestClient.builder()
+        this.restClient = restClientBuilder
             .requestFactory(createRequestFactory())
             .build();
         this.executor = asyncExecutor;
@@ -34,27 +36,35 @@ public class AccountsClient {
         return factory;
     }
 
-    public CompletableFuture<Void> debitAccount(String login, java.math.BigDecimal amount, String bearerToken) {
+    public CompletableFuture<Void> debitAccount(String login, java.math.BigDecimal amount, String operationId, String bearerToken) {
         return CompletableFuture.runAsync(() -> {
             String url = accountsServiceUrl + "/accounts/internal/debit";
 
             restClient.post()
                 .uri(url)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken)
-                .body(Map.of("login", login, "amount", amount))
+                .body(Map.of(
+                        "login", login,
+                        "amount", amount,
+                        "operationId", operationId,
+                        "sourceService", "transfer"))
                 .retrieve()
                 .toBodilessEntity();
         }, executor);
     }
 
-    public CompletableFuture<Void> creditAccount(String login, java.math.BigDecimal amount, String bearerToken) {
+    public CompletableFuture<Void> creditAccount(String login, java.math.BigDecimal amount, String operationId, String bearerToken) {
         return CompletableFuture.runAsync(() -> {
             String url = accountsServiceUrl + "/accounts/internal/credit";
 
             restClient.post()
                 .uri(url)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken)
-                .body(Map.of("login", login, "amount", amount))
+                .body(Map.of(
+                        "login", login,
+                        "amount", amount,
+                        "operationId", operationId,
+                        "sourceService", "transfer"))
                 .retrieve()
                 .toBodilessEntity();
         }, executor);

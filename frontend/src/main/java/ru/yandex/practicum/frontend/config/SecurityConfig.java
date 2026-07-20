@@ -61,4 +61,21 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+    /**
+     * Security config для отключенного режима (spring.security.enabled=false).
+     * Разрешает все запросы без аутентификации.
+     */
+    @Configuration
+    @ConditionalOnProperty(name = "spring.security.enabled", havingValue = "false")
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    static class DisabledSecurityConfig {
+        @Bean
+        public SecurityFilterChain disabledSecurityFilterChain(HttpSecurity http) throws Exception {
+            http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            return http.build();
+        }
+    }
 }

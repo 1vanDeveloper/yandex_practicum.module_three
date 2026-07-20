@@ -30,6 +30,7 @@
 |-----------|------|----------|
 | **Keycloak** | 8080 | OAuth2/OIDC провайдер |
 | **PostgreSQL** | 5432 | Основная БД (schema per service) |
+| **Zipkin** | 9411 | Распределённая трассировка (Micrometer Tracing) |
 
 ### Схема взаимодействия
 
@@ -66,6 +67,11 @@
                                  │  + PostgreSQL   │
                                  │  (Kafka Only)   │
                                  └─────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              Zipkin (Tracing)                               │
+│  ← Frontend, Gateway, Accounts, Cash, Transfer, Notifications, Kafka, DB   │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Паттерн Transactional Outbox:**
@@ -92,6 +98,7 @@
 - **Resilience4j** (Circuit Breaker)
 - **Spring Cloud Contract** (Contract Testing)
 - **OpenAPI 3.0** (Swagger)
+- **Micrometer Tracing** (Zipkin — распределённая трассировка)
 - **Lombok**
 - **Docker, Colima & Helm**
 
@@ -186,6 +193,10 @@ kubectl port-forward svc/keycloak 8180:8080 &
 
 # Frontend
 kubectl port-forward svc/frontend 8080:8080
+
+# Zipkin UI для просмотра трейсов
+kubectl port-forward svc/zipkin 9411:9411 &
+open http://localhost:9411
 ```
 
 ---
@@ -317,6 +328,10 @@ open http://localhost:32190
 # Или через port-forward
 kubectl port-forward svc/frontend 8080:8080
 open http://localhost:8080
+
+# Zipkin UI (трассировка)
+kubectl port-forward svc/zipkin 9411:9411
+open http://localhost:9411
 ```
 
 ### 5. Управление релизом
@@ -410,14 +425,6 @@ transfer.transfers          -- Переводы между аккаунтами
 
 -- Schema: notifications
 notifications.notifications -- Уведомления
-```
-
-### Инициализация
-
-```bash
-# Схема и данные создаются автоматически при старте PostgreSQL
-scripts/schema.sql   -- Схема БД
-scripts/data.sql     -- Тестовые данные
 ```
 
 ---

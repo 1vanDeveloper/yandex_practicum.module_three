@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.springframework.boot") version "3.4.4"
+    id("org.springframework.boot") version "3.5.0"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -17,11 +17,14 @@ val springCloudVersion = "2025.0.0"
 
 dependencies {
     // Spring Boot BOM
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
-    // Spring Cloud BOM
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.5.0"))
+    // Spring Cloud BOM - 2025.0.0 с улучшенной поддержкой tracing
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
     // Spring Cloud Gateway (WebFlux-based)
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
+
+    // Spring Cloud LoadBalancer
+    implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
 
     // Resilience4j Circuit Breaker
     implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j")
@@ -33,6 +36,18 @@ dependencies {
 
     // Actuator
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
+    // Micrometer Tracing (Zipkin) - для WebFlux
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+    implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
+    implementation("io.micrometer:micrometer-observation")
+    implementation("io.micrometer:context-propagation")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
+    // Logstash TCP appender for centralized logging
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 
     // Lombok
     compileOnly("org.projectlombok:lombok:1.18.46")

@@ -1,0 +1,32 @@
+# Logstash Helm Chart Values
+
+image:
+  repository: docker.elastic.co/logstash/logstash
+  tag: "8.11.0"
+  pullPolicy: IfNotPresent
+
+# Resource limits
+resources:
+  requests:
+    cpu: "100m"
+    memory: "512Mi"
+  limits:
+    cpu: "500m"
+    memory: "1024Mi"
+
+# Service configuration
+service:
+  type: ClusterIP
+  beatsPort: 5044
+  tcpPort: 5000
+
+# Pipeline settings
+pipeline:
+  workers: 2
+  batch_size: 125
+  batch_delay: 50
+
+# Elasticsearch output
+elasticsearch:
+  hosts:
+    - "http://elasticsearch:9200"

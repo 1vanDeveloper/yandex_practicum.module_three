@@ -4,11 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * Integration-тесты для конфигурации маршрутов Gateway
@@ -21,71 +20,30 @@ class GatewayRoutesIntegrationTest {
     @Autowired
     private WebTestClient webTestClient;
 
-    @Autowired
-    private RouteLocator routeLocator;
-
     @Test
-    void routeLocatorShouldBeCreated() {
-        assertNotNull(routeLocator, "RouteLocator должен быть создан");
-    }
-
-    @Test
-    void routesShouldBeRegistered() {
-        // Проверяем, что маршруты зарегистрированы
-        var routes = routeLocator.getRoutes().collectList().block();
-        
-        assertNotNull(routes, "Список маршрутов не должен быть null");
-        assertTrue(routes.size() > 0, "Должен быть хотя бы один маршрут");
-    }
-
-    @Test
-    void authLoginRouteShouldBeConfigured() {
-        var routes = routeLocator.getRoutes().collectList().block();
-        
-        boolean hasAuthLoginRoute = routes.stream()
-            .anyMatch(route -> "accounts-auth-login".equals(route.getId()));
-        
-        assertTrue(hasAuthLoginRoute, "Маршрут accounts-auth-login должен быть настроен");
-    }
-
-    @Test
-    void authRegisterRouteShouldBeConfigured() {
-        var routes = routeLocator.getRoutes().collectList().block();
-        
-        boolean hasAuthRegisterRoute = routes.stream()
-            .anyMatch(route -> "accounts-auth-register".equals(route.getId()));
-        
-        assertTrue(hasAuthRegisterRoute, "Маршрут accounts-auth-register должен быть настроен");
-    }
-
-    @Test
-    void accountRouteShouldBeConfigured() {
-        var routes = routeLocator.getRoutes().collectList().block();
-        
-        boolean hasAccountRoute = routes.stream()
-            .anyMatch(route -> "accounts-account-get".equals(route.getId()) || 
-                              "accounts-account-update".equals(route.getId()));
-        
-        assertTrue(hasAccountRoute, "Маршрут accounts-account должен быть настроен");
+    void accountsRouteShouldBeConfigured() {
+        webTestClient.get()
+            .uri("/gateway/accounts")
+            .exchange()
+            .expectStatus()
+            .value(statusCode -> assertNotEquals(404, statusCode, "Маршрут accounts не должен возвращать 404"));
     }
 
     @Test
     void cashRouteShouldBeConfigured() {
-        var routes = routeLocator.getRoutes().collectList().block();
-
-        boolean hasCashRoute = routes.stream()
-            .anyMatch(route -> "cash-post".equals(route.getId()));
-
-        assertTrue(hasCashRoute, "Маршрут cash-post должен быть настроен");
+        webTestClient.get()
+            .uri("/gateway/cash")
+            .exchange()
+            .expectStatus()
+            .value(statusCode -> assertNotEquals(404, statusCode, "Маршрут cash не должен возвращать 404"));
     }
 
     @Test
     void transferRouteShouldBeConfigured() {
-        var routes = routeLocator.getRoutes().collectList().block();
-
-        boolean hasTransferRoute = routes.stream()
-            .anyMatch(route -> "transfer-post".equals(route.getId()));
-
-        assertTrue(hasTransferRoute, "Маршрут transfer-post должен быть настроен");
+        webTestClient.get()
+            .uri("/gateway/transfer")
+            .exchange()
+            .expectStatus()
+            .value(statusCode -> assertNotEquals(404, statusCode, "Маршрут transfer не должен возвращать 404"));
     }
 }

@@ -1,19 +1,25 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "transfer.fullname" . }}
 spec:
   podSelector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      {{- include "transfer.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
     - Egress
   ingress:
+    # Allow traffic from gateway and prometheus (for metrics scraping)
     - from:
         - podSelector:
             matchLabels:
-              app: gateway
+              app.kubernetes.io/name: gateway
+              app.kubernetes.io/instance: {{ .Release.Name }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 8080
@@ -27,28 +33,32 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: postgresql
+              app.kubernetes.io/name: postgresql
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 5432
     - to:
         - podSelector:
             matchLabels:
-              app: keycloak
+              app.kubernetes.io/name: keycloak
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 8080
     - to:
         - podSelector:
             matchLabels:
-              app: accounts
+              app.kubernetes.io/name: accounts
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 8080
     - to:
         - podSelector:
             matchLabels:
-              app: cash
+              app.kubernetes.io/name: cash
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 8080
@@ -57,6 +67,28 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: kafka
+              app.kubernetes.io/instance: {{ .Release.Name }}
+            component: broker
       ports:
         - protocol: TCP
           port: 9092
+    # Allow traffic to Zipkin (for tracing)
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: zipkin
+              app.kubernetes.io/instance: {{ .Release.Name }}
+      ports:
+        - protocol: TCP
+          port: 9411
+    # Allow traffic to Logstash (for centralized logging)
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: logstash
+              app.kubernetes.io/instance: {{ .Release.Name }}
+      ports:
+        - protocol: TCP
+          port: 5000
+        - protocol: TCP
+          port: 5044

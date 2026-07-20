@@ -8,13 +8,16 @@ tests:
           of: NetworkPolicy
       - equal:
           path: metadata.name
-          value: accounts
+          value: RELEASE-NAME-accounts
 
   - it: should select correct pods
     asserts:
       - equal:
-          path: spec.podSelector.matchLabels.app
+          path: spec.podSelector.matchLabels["app.kubernetes.io/name"]
           value: accounts
+      - equal:
+          path: spec.podSelector.matchLabels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
 
   - it: should allow ingress from gateway
     asserts:
@@ -23,16 +26,28 @@ tests:
           content:
             podSelector:
               matchLabels:
-                app: gateway
+                app.kubernetes.io/name: gateway
+                app.kubernetes.io/instance: RELEASE-NAME
 
-  - it: should allow ingress from frontend
+  - it: should allow ingress from cash
     asserts:
       - contains:
           path: spec.ingress[0].from
           content:
             podSelector:
               matchLabels:
-                app: frontend
+                app.kubernetes.io/name: cash
+                app.kubernetes.io/instance: RELEASE-NAME
+
+  - it: should allow ingress from transfer
+    asserts:
+      - contains:
+          path: spec.ingress[0].from
+          content:
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: transfer
+                app.kubernetes.io/instance: RELEASE-NAME
 
   - it: should allow ingress on port 8080
     asserts:
@@ -51,7 +66,8 @@ tests:
             to:
               - podSelector:
                   matchLabels:
-                    app: postgresql
+                    app.kubernetes.io/name: postgresql
+                    app.kubernetes.io/instance: RELEASE-NAME
             ports:
               - port: 5432
                 protocol: TCP
@@ -64,9 +80,25 @@ tests:
             to:
               - podSelector:
                   matchLabels:
-                    app: keycloak
+                    app.kubernetes.io/name: keycloak
+                    app.kubernetes.io/instance: RELEASE-NAME
             ports:
               - port: 8080
+                protocol: TCP
+
+  - it: should allow egress to Kafka
+    asserts:
+      - contains:
+          path: spec.egress
+          content:
+            to:
+              - podSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: kafka
+                    app.kubernetes.io/instance: RELEASE-NAME
+                  component: broker
+            ports:
+              - port: 9092
                 protocol: TCP
 
   - it: should allow DNS egress

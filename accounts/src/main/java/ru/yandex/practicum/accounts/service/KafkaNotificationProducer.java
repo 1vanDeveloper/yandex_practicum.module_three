@@ -2,6 +2,7 @@ package ru.yandex.practicum.accounts.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,8 @@ public class KafkaNotificationProducer {
 
     private final KafkaTemplate<String, NotificationEvent> kafkaTemplate;
 
-    private static final String TOPIC = "notifications.events";
+    @Value("${kafka.topic.notifications:notifications.events}")
+    private String topic;
 
     /**
      * Отправляет событие нотификации в Kafka топик (синхронно).
@@ -27,12 +29,12 @@ public class KafkaNotificationProducer {
      * @throws RuntimeException если отправка не удалась
      */
     public void sendNotificationSync(NotificationEvent event) {
-        log.info("Синхронная отправка события в Kafka: topic={}, event={}", TOPIC, event);
+        log.info("Синхронная отправка события в Kafka: topic={}, event={}", topic, event);
         try {
             SendResult<String, NotificationEvent> result =
-                    kafkaTemplate.send(TOPIC, event.login(), event).get();
+                    kafkaTemplate.send(topic, event.login(), event).get();
             log.info("Событие успешно отправлено в Kafka: topic={}, partition={}, offset={}",
-                    TOPIC,
+                    topic,
                     result.getRecordMetadata().partition(),
                     result.getRecordMetadata().offset());
         } catch (InterruptedException e) {

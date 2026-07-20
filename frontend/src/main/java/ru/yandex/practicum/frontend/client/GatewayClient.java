@@ -1,10 +1,14 @@
 package ru.yandex.practicum.frontend.client;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import ru.yandex.practicum.frontend.dto.AccountBrief;
 import ru.yandex.practicum.frontend.dto.AccountResponse;
@@ -12,23 +16,31 @@ import ru.yandex.practicum.frontend.dto.JwtTokenResponse;
 import ru.yandex.practicum.frontend.dto.LoginRequest;
 import ru.yandex.practicum.frontend.dto.RegisterRequest;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Component
 @Slf4j
 public class GatewayClient {
 
     private final RestClient restClient;
-    private final Executor executor;
     private final String gatewayServiceUrl;
+    private final Executor executor;
+    private final ObservationRegistry observationRegistry;
 
-    public GatewayClient(Executor asyncExecutor,
-                         @Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl) {
-        this.restClient = RestClient.create();
-        this.executor = asyncExecutor;
+    public GatewayClient(
+            RestClient.Builder restClientBuilder,
+            @Value("${gateway.service.url:http://gateway:8080}") String gatewayServiceUrl,
+            ObservationRegistry observationRegistry) {
         this.gatewayServiceUrl = gatewayServiceUrl;
+        this.executor = Executors.newFixedThreadPool(10);
+        this.observationRegistry = observationRegistry;
+        // Используем Builder для поддержки трейсинга через Observation
+        this.restClient = restClientBuilder.build();
     }
 
     private String getGatewayUrl() {
@@ -41,14 +53,16 @@ public class GatewayClient {
         String gatewayUrl = getGatewayUrl();
         log.debug("GatewayClient: logging in user: {}", request.getLogin());
 
-        return CompletableFuture.supplyAsync(() ->
-            restClient.post()
-                .uri(gatewayUrl + "/gateway/auth/login")
-                .body(request)
-                .retrieve()
-                .body(JwtTokenResponse.class),
-            executor
-        );
+        return CompletableFuture.supplyAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.login", observationRegistry)
+                    .start().openScope()) {
+                return restClient.post()
+                    .uri(gatewayUrl + "/gateway/auth/login")
+                    .body(request)
+                    .retrieve()
+                    .body(JwtTokenResponse.class);
+            }
+        }, executor);
     }
 
     public CompletableFuture<JwtTokenResponse> loginFallback(LoginRequest request, Throwable t) {
@@ -63,14 +77,16 @@ public class GatewayClient {
         String gatewayUrl = getGatewayUrl();
         log.debug("GatewayClient: registering user: {}", request.getLogin());
 
-        return CompletableFuture.runAsync(() ->
-            restClient.post()
-                .uri(gatewayUrl + "/gateway/auth/register")
-                .body(request)
-                .retrieve()
-                .toBodilessEntity(),
-            executor
-        );
+        return CompletableFuture.runAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.register", observationRegistry)
+                    .start().openScope()) {
+                restClient.post()
+                    .uri(gatewayUrl + "/gateway/auth/register")
+                    .body(request)
+                    .retrieve()
+                    .toBodilessEntity();
+            }
+        }, executor);
     }
 
     public CompletableFuture<Void> registerFallback(RegisterRequest request, Throwable t) {
@@ -91,14 +107,16 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() ->
-            restClient.get()
-                .uri(gatewayUrl + "/gateway/account")
-                .header("Authorization", "Bearer " + jwtToken)
-                .retrieve()
-                .body(AccountResponse.class),
-            executor
-        );
+        return CompletableFuture.supplyAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.getAccount", observationRegistry)
+                    .start().openScope()) {
+                return restClient.get()
+                    .uri(gatewayUrl + "/gateway/account")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .retrieve()
+                    .body(AccountResponse.class);
+            }
+        }, executor);
     }
 
     public CompletableFuture<AccountResponse> getAccountFallback(String jwtToken, Throwable t) {
@@ -123,15 +141,17 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() ->
-            restClient.put()
-                .uri(gatewayUrl + "/gateway/account")
-                .header("Authorization", "Bearer " + jwtToken)
-                .body(new UpdateAccountRequest(firstName, lastName, birthDate))
-                .retrieve()
-                .body(AccountResponse.class),
-            executor
-        );
+        return CompletableFuture.supplyAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.updateAccount", observationRegistry)
+                    .start().openScope()) {
+                return restClient.put()
+                    .uri(gatewayUrl + "/gateway/account")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .body(new UpdateAccountRequest(firstName, lastName, birthDate))
+                    .retrieve()
+                    .body(AccountResponse.class);
+            }
+        }, executor);
     }
 
     public CompletableFuture<AccountResponse> updateAccountFallback(String firstName, String lastName,
@@ -143,9 +163,8 @@ public class GatewayClient {
     }
 
     @CircuitBreaker(name = "gatewayService", fallbackMethod = "processCashFallback")
-    public CompletableFuture<Void> processCash(Integer value, String action, String jwtToken) {
+    public CompletableFuture<Void> processCash(BigDecimal value, String action, String jwtToken) {
         String gatewayUrl = getGatewayUrl();
-        String url = gatewayUrl + "/gateway/cash?value=" + value + "&action=" + action;
         log.debug("GatewayClient: processing cash action: {} with provided token", action);
 
         if (jwtToken == null) {
@@ -154,17 +173,30 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.runAsync(() ->
-            restClient.post()
-                .uri(url)
-                .header("Authorization", "Bearer " + jwtToken)
-                .retrieve()
-                .toBodilessEntity(),
-            executor
-        );
+        // Генерируем детерминированный operationId для идемпотентности
+        String operationId = generateOperationId("frontend-cash", action, jwtToken.substring(0, Math.min(8, jwtToken.length())), value);
+
+        String url = UriComponentsBuilder.fromHttpUrl(gatewayUrl)
+                .path("/gateway/cash")
+                .queryParam("value", value)
+                .queryParam("action", action)
+                .build()
+                .toUriString();
+
+        return CompletableFuture.runAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.processCash", observationRegistry)
+                    .start().openScope()) {
+                restClient.post()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Idempotency-Key", operationId)
+                    .retrieve()
+                    .toBodilessEntity();
+            }
+        }, executor);
     }
 
-    public CompletableFuture<Void> processCashFallback(Integer value, String action, String jwtToken, Throwable t) {
+    public CompletableFuture<Void> processCashFallback(BigDecimal value, String action, String jwtToken, Throwable t) {
         log.error("Circuit breaker opened for gateway service (cash): {}", t.getMessage());
         CompletableFuture<Void> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new RuntimeException("Cash service unavailable, please try again later", t));
@@ -172,9 +204,8 @@ public class GatewayClient {
     }
 
     @CircuitBreaker(name = "gatewayService", fallbackMethod = "processTransferFallback")
-    public CompletableFuture<Void> processTransfer(Integer value, String toLogin, String jwtToken) {
+    public CompletableFuture<Void> processTransfer(BigDecimal value, String toLogin, String jwtToken) {
         String gatewayUrl = getGatewayUrl();
-        String url = gatewayUrl + "/gateway/transfer?value=" + value + "&login=" + toLogin;
         log.debug("GatewayClient: processing transfer to: {} with provided token", toLogin);
 
         if (jwtToken == null) {
@@ -183,17 +214,30 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.runAsync(() ->
-            restClient.post()
-                .uri(url)
-                .header("Authorization", "Bearer " + jwtToken)
-                .retrieve()
-                .toBodilessEntity(),
-            executor
-        );
+        // Генерируем детерминированный operationId для идемпотентности
+        String operationId = generateOperationId("frontend-transfer", toLogin, jwtToken.substring(0, Math.min(8, jwtToken.length())), value);
+
+        String url = UriComponentsBuilder.fromHttpUrl(gatewayUrl)
+                .path("/gateway/transfer")
+                .queryParam("value", value)
+                .queryParam("login", toLogin)
+                .build()
+                .toUriString();
+
+        return CompletableFuture.runAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.processTransfer", observationRegistry)
+                    .start().openScope()) {
+                restClient.post()
+                    .uri(url)
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .header("X-Idempotency-Key", operationId)
+                    .retrieve()
+                    .toBodilessEntity();
+            }
+        }, executor);
     }
 
-    public CompletableFuture<Void> processTransferFallback(Integer value, String toLogin, String jwtToken, Throwable t) {
+    public CompletableFuture<Void> processTransferFallback(BigDecimal value, String toLogin, String jwtToken, Throwable t) {
         log.error("Circuit breaker opened for gateway service (transfer): {}", t.getMessage());
         CompletableFuture<Void> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new RuntimeException("Transfer service unavailable, please try again later", t));
@@ -211,15 +255,16 @@ public class GatewayClient {
             return failedFuture;
         }
 
-        return CompletableFuture.supplyAsync(() ->
-            restClient.get()
-                .uri(gatewayUrl + "/gateway/accounts")
-                .header("Authorization", "Bearer " + jwtToken)
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {
-                }),
-            executor
-        );
+        return CompletableFuture.supplyAsync(() -> {
+            try (Observation.Scope scope = Observation.createNotStarted("gateway.getAccountBriefs", observationRegistry)
+                    .start().openScope()) {
+                return restClient.get()
+                    .uri(gatewayUrl + "/gateway/accounts")
+                    .header("Authorization", "Bearer " + jwtToken)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<List<AccountBrief>>() {});
+            }
+        }, executor);
     }
 
     public CompletableFuture<List<AccountBrief>> getAccountBriefsFallback(String jwtToken, Throwable t) {
@@ -227,6 +272,21 @@ public class GatewayClient {
         CompletableFuture<List<AccountBrief>> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new RuntimeException("Accounts list service unavailable, please try again later", t));
         return failedFuture;
+    }
+
+    /**
+     * Генерирует детерминированный operationId для идемпотентности.
+     * При retry того же запроса будет сгенерирован тот же operationId.
+     */
+    private String generateOperationId(String type, String action, String tokenPrefix, BigDecimal amount) {
+        String baseKey = String.format("%s:%s:%s:%s:%d",
+                type,
+                action,
+                tokenPrefix,
+                amount.toPlainString(),
+                System.currentTimeMillis() / 60000); // timestamp с точностью до минуты
+
+        return type + "-" + Math.abs(baseKey.hashCode()) + "-" + UUID.randomUUID().toString().substring(0, 8);
     }
 
     private record UpdateAccountRequest(String firstName, String lastName, String birthDate) {}

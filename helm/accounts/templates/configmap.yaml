@@ -8,19 +8,22 @@ data:
   # Application configuration
   SPRING_PROFILES_ACTIVE: "kubernetes"
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
-
   # Database configuration (non-sensitive)
   DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=accounts"
   SPRING_JPA_HIBERNATE_DDL_MODE: "{{ .Values.jpa.ddlMode }}"
-
   # OAuth2 Client Configuration (non-sensitive)
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTS_SERVICE_CLIENT_ID: "{{ .Chart.Name }}-client"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTS_SERVICE_AUTHORIZATION_GRANT_TYPE: "client_credentials"
   SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_ACCOUNTS_SERVICE_PROVIDER: "keycloak"
-
   # Logging
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_ACCOUNTS: "{{ .Values.logging.level }}"
-
+  LOGGING_LEVEL_IO_MICROMETER: "{{ .Values.logging.loggingLevelMicrometer | default "INFO" }}"
+  LOGGING_LEVEL_IO_MICROMETER_TRACING: "{{ .Values.logging.loggingLevelMicrometerTracing | default "INFO" }}"
+  LOGGING_LEVEL_BRAVE: "{{ .Values.logging.loggingLevelBrave | default "INFO" }}"
+  LOGGING_LEVEL_ZIPKIN2: "{{ .Values.logging.loggingLevelZipkin2 | default "INFO" }}"
+  LOGGING_LEVEL_IO_ZIPKIN: "{{ .Values.logging.loggingLevelIoZipkin | default "INFO" }}"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE: "{{ .Values.logging.loggingLevelOrgSpringframeworkBootAutoconfigure | default "INFO" }}"
+  LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE_TRACING: "{{ .Values.logging.loggingLevelOrgSpringframeworkBootAutoconfigureTracing | default "INFO" }}"
   # Kafka Configuration
   {{- if and .Values.global .Values.global.kafka }}
   KAFKA_ENABLED: "{{ .Values.global.kafka.enabled | default "true" }}"
@@ -36,3 +39,23 @@ data:
   SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: "org.springframework.kafka.support.serializer.JsonSerializer"
   SPRING_KAFKA_PRODUCER_ACKS: "{{ .Values.kafka.producer.acks | default "all" }}"
   SPRING_KAFKA_PRODUCER_RETRIES: "{{ .Values.kafka.producer.retries | default 3 }}"
+  # Kafka Tracing (Brave B3 Propagation)
+  SPRING_KAFKA_PRODUCER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveProducerInterceptor"
+  # Micrometer Tracing (Zipkin) - B3 Multi Header for end-to-end tracing
+  MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
+  MANAGEMENT_TRACING_PROPAGATION_TYPE: "{{ .Values.tracing.propagationType | default "B3,B3_MULTI" }}"
+  MANAGEMENT_OBSERVATIONS_ENABLED: "true"
+  {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"
+  {{- else }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+  {{- end }}
+  # ELK Stack - Logstash configuration
+  {{- if and .Values.global .Values.global.elk .Values.global.elk.logstash }}
+  ELK_LOGSTASH_HOST: "{{ .Values.global.elk.logstash.host }}"
+  ELK_LOGSTASH_PORT: "{{ .Values.global.elk.logstash.port }}"
+  {{- else }}
+  ELK_LOGSTASH_HOST: "logstash"
+  ELK_LOGSTASH_PORT: "5000"
+  {{- end }}

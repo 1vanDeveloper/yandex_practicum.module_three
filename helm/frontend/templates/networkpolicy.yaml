@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "frontend.fullname" . }}
 spec:
   podSelector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      {{- include "frontend.selectorLabels" . | nindent 6 }}
   policyTypes:
     - Ingress
     - Egress
@@ -27,6 +27,15 @@ spec:
         - protocol: TCP
           port: 8080
     {{- end }}
+    # Allow traffic from prometheus (for metrics scraping) - explicit rule
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+              app.kubernetes.io/instance: {{ .Release.Name }}
+      ports:
+        - protocol: TCP
+          port: 8080
   egress:
     # Allow DNS resolution
     - ports:
@@ -38,7 +47,8 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: gateway
+              app.kubernetes.io/name: gateway
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 8080
@@ -46,7 +56,28 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app: keycloak
+              app.kubernetes.io/name: keycloak
+              app.kubernetes.io/instance: {{ .Release.Name }}
       ports:
         - protocol: TCP
           port: 8080
+    # Allow traffic to Zipkin (for tracing)
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: zipkin
+              app.kubernetes.io/instance: {{ .Release.Name }}
+      ports:
+        - protocol: TCP
+          port: 9411
+    # Allow traffic to Logstash (for centralized logging)
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: logstash
+              app.kubernetes.io/instance: {{ .Release.Name }}
+      ports:
+        - protocol: TCP
+          port: 5000
+        - protocol: TCP
+          port: 5044

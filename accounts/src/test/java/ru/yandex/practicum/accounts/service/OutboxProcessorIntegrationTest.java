@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.accounts.config.TestExceptionHandlerConfig;
 import ru.yandex.practicum.accounts.config.TestKafkaConfig;
 import ru.yandex.practicum.accounts.config.TestSecurityConfig;
-import ru.yandex.practicum.accounts.service.TestOutboxConfig;
 import ru.yandex.practicum.accounts.entity.OutboxMessage;
 import ru.yandex.practicum.accounts.repository.OutboxNotificationRepository;
 
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     }
 )
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class, TestKafkaConfig.class})
+@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestKafkaConfig.class})
 class OutboxProcessorIntegrationTest {
 
     @Autowired
@@ -48,15 +48,15 @@ class OutboxProcessorIntegrationTest {
 
     @Test
     void processPendingMessages_shouldProcessPendingMessages() {
-        outboxService.saveMessage("test_user", "Test message");
+        outboxService.saveMessage("test_user", "Test message", "test-event", "test_user");
         outboxProcessor.processPendingMessages();
-        var messages = outboxRepository.findPendingMessages(10);
+        var messages = outboxRepository.findPendingMessages(PageRequest.of(0, 10));
         assertThat(messages).isEmpty();
     }
 
     @Test
     void processPendingMessages_shouldUpdateMessageStatusToSent() {
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message", "test-event", "test_user");
         assertThat(saved.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());
         outboxProcessor.processPendingMessages();
         OutboxMessage updated = outboxRepository.findById(saved.getId()).orElseThrow();
@@ -65,7 +65,7 @@ class OutboxProcessorIntegrationTest {
 
     @Test
     void processPendingMessages_shouldNotProcessAlreadySentMessages() {
-        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message");
+        OutboxMessage saved = outboxService.saveMessage("test_user", "Test message", "test-event", "test_user");
         outboxProcessor.processPendingMessages();
         OutboxMessage first = outboxRepository.findById(saved.getId()).orElseThrow();
         assertThat(first.getStatus()).isEqualTo(OutboxMessage.Status.SENT.getValue());

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.accounts.dto.JwtTokenResponse;
 import ru.yandex.practicum.accounts.dto.LoginRequest;
 import ru.yandex.practicum.accounts.dto.RegisterRequest;
-import ru.yandex.practicum.accounts.entity.Account;
+import ru.yandex.practicum.accounts.dto.RegisterResponse;
 import ru.yandex.practicum.accounts.service.AuthService;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,10 +22,10 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public CompletableFuture<ResponseEntity<Account>> register(@Valid @RequestBody RegisterRequest request) {
+    public CompletableFuture<ResponseEntity<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
         return CompletableFuture.supplyAsync(() -> {
-            Account account = authService.register(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(account);
+            RegisterResponse response = authService.register(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         });
     }
 

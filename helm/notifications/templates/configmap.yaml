@@ -7,13 +7,12 @@ metadata:
 data:
   SPRING_PROFILES_ACTIVE: "kubernetes"
   SPRING_APPLICATION_NAME: "{{ .Chart.Name }}"
-  DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema=notifications"
+  DATABASE_URL: "jdbc:postgresql://{{ .Values.global.postgresql.host | default "postgresql" }}:{{ .Values.global.postgresql.port | default 5432 }}/{{ .Values.global.postgresql.database | default "bank" }}?currentSchema={{ .Values.databaseSchema | default "public" }}"
   SPRING_JPA_HIBERNATE_DDL_MODE: "{{ .Values.jpa.ddlMode }}"
   LOGGING_LEVEL_RU_YANDEX_PRACTICUM_NOTIFICATIONS: "{{ .Values.logging.level | default "INFO" }}"
   LOGGING_LEVEL_ROOT: "DEBUG"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_KAFKA: "DEBUG"
   LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_BOOT_AUTOCONFIGURE: "DEBUG"
-
   # Kafka Configuration
   {{- if and .Values.global .Values.global.kafka }}
   KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.global.kafka.bootstrapServers }}"
@@ -24,3 +23,29 @@ data:
   SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: "org.apache.kafka.common.serialization.StringDeserializer"
   SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: "org.springframework.kafka.support.serializer.JsonDeserializer"
   SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: "{{ .Values.kafka.consumer.autoOffsetReset | default "earliest" }}"
+  
+  # Kafka topic configuration
+  KAFKA_TOPIC_NOTIFICATIONS: "{{ .Values.kafka.topic.name | default "notifications.events" }}"
+  KAFKA_TOPIC_PARTITIONS: "{{ .Values.kafka.topic.partitions | default "3" }}"
+  KAFKA_TOPIC_REPLICAS: "{{ .Values.kafka.topic.replicas | default "1" }}"
+  
+  # Kafka Tracing (Brave B3 Propagation)
+  SPRING_KAFKA_CONSUMER_PROPERTIES_INTERCEPTOR_CLASSES: "io.micrometer.tracing.brave.kafka.BraveConsumerInterceptor"
+  # Micrometer Tracing (Zipkin) - B3 Multi Header for end-to-end tracing
+  MANAGEMENT_TRACING_ENABLED: "{{ .Values.tracing.enabled | default "true" }}"
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "{{ .Values.tracing.samplingProbability | default "1.0" }}"
+  MANAGEMENT_TRACING_PROPAGATION_TYPE: "{{ .Values.tracing.propagationType | default "B3,B3_MULTI" }}"
+  MANAGEMENT_OBSERVATIONS_ENABLED: "true"
+  {{- if and .Values.global .Values.global.zipkin .Values.global.zipkin.url }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "{{ .Values.global.zipkin.url }}/api/v2/spans"
+  {{- else }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+  {{- end }}
+  # ELK Stack - Logstash configuration
+  {{- if and .Values.global .Values.global.elk .Values.global.elk.logstash }}
+  ELK_LOGSTASH_HOST: "{{ .Values.global.elk.logstash.host }}"
+  ELK_LOGSTASH_PORT: "{{ .Values.global.elk.logstash.port }}"
+  {{- else }}
+  ELK_LOGSTASH_HOST: "logstash"
+  ELK_LOGSTASH_PORT: "5000"
+  {{- end }}

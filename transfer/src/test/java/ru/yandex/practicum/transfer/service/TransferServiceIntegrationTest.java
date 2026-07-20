@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import ru.yandex.practicum.transfer.config.IntegrationTestConfig;
+import ru.yandex.practicum.transfer.config.TestSecurityConfig;
 import ru.yandex.practicum.transfer.entity.Transfer;
 import ru.yandex.practicum.transfer.entity.TransferStatus;
 import ru.yandex.practicum.transfer.repository.TransferRepository;
@@ -19,16 +21,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for TransferService using PostgreSQL from Kubernetes.
+ * Unit tests for TransferService using H2 in-memory database.
  *
- * Перед запуском убедитесь, что настроен port-forward:
- *   kubectl port-forward svc/postgresql 5432:5432 &
- *
- * Tests verify database interactions with real PostgreSQL instance from Kubernetes cluster.
+ * Tests verify database interactions with H2 instance.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("integration")
-@Import(IntegrationTestConfig.class)
+@ActiveProfiles("test")
+@ContextConfiguration(classes = {TestSecurityConfig.class, IntegrationTestConfig.class})
 class TransferServiceIntegrationTest {
 
     @Autowired

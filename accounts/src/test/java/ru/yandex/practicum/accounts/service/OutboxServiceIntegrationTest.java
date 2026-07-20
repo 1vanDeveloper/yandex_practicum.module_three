@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import ru.yandex.practicum.accounts.config.TestExceptionHandlerConfig;
 import ru.yandex.practicum.accounts.config.TestKafkaConfig;
 import ru.yandex.practicum.accounts.config.TestSecurityConfig;
-import ru.yandex.practicum.accounts.service.TestOutboxConfig;
 import ru.yandex.practicum.accounts.entity.OutboxMessage;
 import ru.yandex.practicum.accounts.repository.OutboxNotificationRepository;
 
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     }
 )
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class, TestKafkaConfig.class})
+@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestKafkaConfig.class})
 class OutboxServiceIntegrationTest {
 
     @Autowired
@@ -49,11 +49,12 @@ class OutboxServiceIntegrationTest {
         String message = "Test notification message";
 
         // Save message and verify it returns correct data
-        OutboxMessage savedMessage = outboxService.saveMessage(login, message);
+        OutboxMessage savedMessage = outboxService.saveMessage(login, message, "test-event", login);
 
         assertThat(savedMessage.getId()).isNotNull();
         assertThat(savedMessage.getLogin()).isEqualTo(login);
         assertThat(savedMessage.getMessage()).isEqualTo(message);
+        assertThat(savedMessage.getIdempotencyKey()).isEqualTo("test-event:" + login);
         assertThat(savedMessage.getStatus()).isEqualTo(OutboxMessage.Status.PENDING.getValue());
         assertThat(savedMessage.getRetryCount()).isEqualTo(0);
         assertThat(savedMessage.getCreatedAt()).isNotNull();
@@ -62,7 +63,7 @@ class OutboxServiceIntegrationTest {
 
     @Test
     void saveMessage_shouldSetCorrectTimestamps() {
-        OutboxMessage savedMessage = outboxService.saveMessage("user", "message");
+        OutboxMessage savedMessage = outboxService.saveMessage("user", "message", "test-event", "user");
 
         assertThat(savedMessage.getCreatedAt()).isNotNull();
         assertThat(savedMessage.getUpdatedAt()).isNotNull();
@@ -71,10 +72,10 @@ class OutboxServiceIntegrationTest {
     @Test
     void findPendingMessages_shouldReturnOnlyPendingMessages() {
         // Save two messages and verify findPendingMessages returns them correctly
-        outboxService.saveMessage("user1", "message1");
-        outboxService.saveMessage("user2", "message2");
+        outboxService.saveMessage("user1", "message1", "account-created", "user1");
+        outboxService.saveMessage("user2", "message2", "account-updated", "user2");
 
-        var messages = outboxRepository.findPendingMessages(10);
+        var messages = outboxRepository.findPendingMessages(PageRequest.of(0, 10));
 
         assertThat(messages).hasSize(2);
         assertThat(messages).extracting("login")

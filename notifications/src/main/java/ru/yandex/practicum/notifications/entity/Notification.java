@@ -3,12 +3,14 @@ package ru.yandex.practicum.notifications.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,4 +31,13 @@ public class Notification {
     @Column(name = "created_at", nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Override
+    public String toString() {
+        return "Notification{" +
+                "id=" + id +
+                ", login='" + login + '\'' +
+                ", message='" + message + '\'' +
+                '}';
+    }
 }

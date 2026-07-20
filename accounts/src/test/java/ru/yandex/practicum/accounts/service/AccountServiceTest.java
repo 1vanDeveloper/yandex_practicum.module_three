@@ -11,6 +11,8 @@ import ru.yandex.practicum.accounts.dto.AccountResponse;
 import ru.yandex.practicum.accounts.dto.CreateAccountRequest;
 import ru.yandex.practicum.accounts.dto.UpdateAccountRequest;
 import ru.yandex.practicum.accounts.entity.Account;
+import ru.yandex.practicum.accounts.exception.AccountAlreadyExistsException;
+import ru.yandex.practicum.accounts.exception.AccountNotFoundException;
 import ru.yandex.practicum.accounts.mapper.AccountMapper;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
 
@@ -95,7 +97,7 @@ class AccountServiceTest {
         when(accountMapper.toEntity(createRequest)).thenReturn(mappedAccount);
         when(passwordEncoder.encode("plain_password")).thenReturn("hashed_password");
         when(accountRepository.save(any(Account.class))).thenReturn(testAccount);
-        when(outboxService.saveMessage(anyString(), anyString()))
+        when(outboxService.saveMessage(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(
                         ru.yandex.practicum.accounts.entity.OutboxMessage.builder()
                                 .id(java.util.UUID.randomUUID())
@@ -110,7 +112,7 @@ class AccountServiceTest {
 
         verify(accountRepository).existsByLogin("test_user");
         verify(accountRepository).save(any(Account.class));
-        verify(outboxService).saveMessage("test_user", "Account created: test_user");
+        verify(outboxService).saveMessage("test_user", "Account created: test_user", "account-created", "test_user");
     }
 
     @Test
@@ -118,7 +120,7 @@ class AccountServiceTest {
         when(accountRepository.existsByLogin("test_user")).thenReturn(true);
 
         assertThatThrownBy(() -> accountService.createAccount(createRequest))
-                .isInstanceOf(AccountService.AccountAlreadyExistsException.class);
+                .isInstanceOf(AccountAlreadyExistsException.class);
 
         verify(accountRepository).existsByLogin("test_user");
     }
@@ -149,7 +151,7 @@ class AccountServiceTest {
         when(accountRepository.findByLogin("nonexistent")).thenReturn(java.util.Optional.empty());
 
         assertThatThrownBy(() -> accountService.getAccountByLogin("nonexistent"))
-                .isInstanceOf(AccountService.AccountNotFoundException.class);
+                .isInstanceOf(AccountNotFoundException.class);
     }
 
     @Test
@@ -177,7 +179,7 @@ class AccountServiceTest {
         when(accountRepository.findByLogin("test_user")).thenReturn(java.util.Optional.of(testAccount));
         when(accountRepository.save(any(Account.class))).thenReturn(updatedAccount);
         when(accountMapper.toResponse(updatedAccount)).thenReturn(response);
-        when(outboxService.saveMessage(anyString(), anyString()))
+        when(outboxService.saveMessage(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(
                         ru.yandex.practicum.accounts.entity.OutboxMessage.builder()
                                 .id(java.util.UUID.randomUUID())
@@ -198,6 +200,6 @@ class AccountServiceTest {
         when(accountRepository.findByLogin("nonexistent")).thenReturn(java.util.Optional.empty());
 
         assertThatThrownBy(() -> accountService.updateAccount("nonexistent", updateRequest))
-                .isInstanceOf(AccountService.AccountNotFoundException.class);
+                .isInstanceOf(AccountNotFoundException.class);
     }
 }

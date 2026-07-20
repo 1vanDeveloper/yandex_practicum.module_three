@@ -1,6 +1,7 @@
 package ru.yandex.practicum.cash.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -20,7 +21,6 @@ import java.time.Instant;
 import static org.mockito.Mockito.*;
 
 @TestConfiguration
-@Profile("integration")
 public class IntegrationTestConfig {
 
     @Bean
@@ -75,6 +75,8 @@ public class IntegrationTestConfig {
     @Bean
     @Primary
     public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        return mapper;
     }
 }

@@ -8,9 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.accounts.dto.JwtTokenResponse;
 import ru.yandex.practicum.accounts.dto.LoginRequest;
 import ru.yandex.practicum.accounts.dto.RegisterRequest;
+import ru.yandex.practicum.accounts.dto.RegisterResponse;
 import ru.yandex.practicum.accounts.entity.Account;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
-import ru.yandex.practicum.accounts.service.OutboxService;
 import ru.yandex.practicum.accounts.util.JwtUtil;
 
 import java.math.BigDecimal;
@@ -30,7 +30,7 @@ public class AuthService {
     private final OutboxService outboxService;
 
     @Transactional
-    public Account register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
         log.info("Registering new user with login: {}", request.getLogin());
 
         if (accountRepository.findByLogin(request.getLogin()).isPresent()) {
@@ -62,9 +62,16 @@ public class AuthService {
         log.info("User registered successfully: {}", saved.getLogin());
 
         // Отправляем нотификацию через outbox
-        outboxService.saveMessage(saved.getLogin(), "Account created: " + saved.getLogin());
+        outboxService.saveMessage(saved.getLogin(), "Account created: " + saved.getLogin(), "account-created", saved.getLogin());
 
-        return saved;
+        return RegisterResponse.builder()
+                .id(saved.getId())
+                .login(saved.getLogin())
+                .email(saved.getEmail())
+                .firstName(saved.getFirstName())
+                .lastName(saved.getLastName())
+                .birthDate(saved.getBirthDate())
+                .build();
     }
 
     @Transactional(readOnly = true)

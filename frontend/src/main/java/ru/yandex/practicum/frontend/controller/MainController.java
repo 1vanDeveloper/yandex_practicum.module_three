@@ -16,6 +16,7 @@ import ru.yandex.practicum.frontend.dto.AccountBrief;
 import ru.yandex.practicum.frontend.dto.AccountResponse;
 import ru.yandex.practicum.frontend.service.GatewayService;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -134,12 +135,12 @@ public class MainController {
      *
      * Параметры:
      * 1. value - сумма списания
-     * 2. action - GET (снять), PUT (пополнить)
+     * 2. action - WITHDRAW (снять), DEPOSIT (пополнить)
      */
     @PostMapping("/cash")
     public CompletableFuture<String> editCash(
             Model model,
-            @RequestParam("value") int value,
+            @RequestParam("value") BigDecimal value,
             @RequestParam("action") CashAction action,
             HttpServletRequest request) {
 
@@ -152,7 +153,7 @@ public class MainController {
                 .thenCompose(account ->
                     gatewayService.getAccountBriefs(jwtToken)
                         .thenApply(accounts -> {
-                            String info = action == CashAction.PUT
+                            String info = action == CashAction.DEPOSIT
                                     ? "Счёт успешно пополнен на " + value
                                     : "Со счёта успешно снято " + value;
                             fillModel(model, account, accounts, null, info);
@@ -182,7 +183,7 @@ public class MainController {
     @PostMapping("/transfer")
     public CompletableFuture<String> transfer(
             Model model,
-            @RequestParam("value") int value,
+            @RequestParam("value") BigDecimal value,
             @RequestParam("login") String toLogin,
             HttpServletRequest request) {
 

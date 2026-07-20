@@ -18,7 +18,6 @@ import ru.yandex.practicum.accounts.config.TestKafkaConfig;
 import ru.yandex.practicum.accounts.config.TestSecurityConfig;
 import ru.yandex.practicum.accounts.entity.Account;
 import ru.yandex.practicum.accounts.repository.AccountRepository;
-import ru.yandex.practicum.accounts.service.TestOutboxConfig;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -43,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     }
 )
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestOutboxConfig.class, TestKafkaConfig.class})
+@Import({TestSecurityConfig.class, TestExceptionHandlerConfig.class, TestKafkaConfig.class})
 class AccountControllerTest {
 
     @Autowired

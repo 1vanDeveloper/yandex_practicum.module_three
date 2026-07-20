@@ -10,6 +10,7 @@ import ru.yandex.practicum.cash.dto.DepositRequest;
 import ru.yandex.practicum.cash.dto.WithdrawRequest;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -20,9 +21,10 @@ public class AccountsClient {
     private final Executor executor;
     private final String accountsServiceUrl;
 
-    public AccountsClient(Executor asyncExecutor,
+    public AccountsClient(RestClient.Builder restClientBuilder,
+                          Executor asyncExecutor,
                           @Value("${accounts.service.url:http://accounts:8080}") String accountsServiceUrl) {
-        this.restClient = RestClient.builder()
+        this.restClient = restClientBuilder
                 .requestFactory(createRequestFactory())
                 .build();
         this.executor = asyncExecutor;
@@ -43,7 +45,11 @@ public class AccountsClient {
             restClient.post()
                 .uri(url)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken)
-                .body(Map.of("login", request.login(), "amount", request.amount()))
+                .body(Map.of(
+                        "login", request.login(),
+                        "amount", request.amount(),
+                        "operationId", request.operationId(),
+                        "sourceService", "cash"))
                 .retrieve()
                 .toBodilessEntity();
         }, executor);
@@ -56,7 +62,11 @@ public class AccountsClient {
             restClient.post()
                 .uri(url)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken)
-                .body(Map.of("login", request.login(), "amount", request.amount()))
+                .body(Map.of(
+                        "login", request.login(),
+                        "amount", request.amount(),
+                        "operationId", request.operationId(),
+                        "sourceService", "cash"))
                 .retrieve()
                 .toBodilessEntity();
         }, executor);

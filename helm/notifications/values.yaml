@@ -1,6 +1,9 @@
 # Настройки сервиса Notifications
 replicaCount: 1
 
+# Database schema (use 'public' if schema doesn't exist)
+databaseSchema: "public"
+
 global:
   postgresql:
     host: "postgresql"
@@ -45,6 +48,16 @@ kafka:
   consumer:
     groupId: "notifications-service"
     autoOffsetReset: "earliest"
+  topic:
+    name: "notifications.events"
+    partitions: 1
+    replicas: 1
+
+# Трассировка (Micrometer + Zipkin)
+tracing:
+  enabled: true
+  samplingProbability: 1.0
+  propagationType: "B3,B3_MULTI"
 
 image:
   repository: "bank-notifications"
@@ -69,14 +82,12 @@ livenessProbe:
     port: 8080
   initialDelaySeconds: 120
   periodSeconds: 10
-  timeoutSeconds: 5
   failureThreshold: 5
 
 readinessProbe:
   httpGet:
     path: "/actuator/health/readiness"
     port: 8080
-  initialDelaySeconds: 60
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 5
+  initialDelaySeconds: 90
+  periodSeconds: 10
+  failureThreshold: 6

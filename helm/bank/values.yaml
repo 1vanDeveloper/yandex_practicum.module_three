@@ -17,4 +17,41 @@ global:
     url: "http://keycloak:8080"
     realm: "bank"
 
+  # Zipkin
+  zipkin:
+    url: "http://zipkin:9411"
+
+  # ELK Stack (Logstash для централизованного логирования)
+  elk:
+    logstash:
+      host: "logstash"
+      port: 5000
+
+  # JWT Secret (должен совпадать во всех сервисах)
+  jwtSecret: "mySecretKeyForJWTTokenGenerationMustBeLongEnough"
+
+# Включение/выключение сервисов
+prometheus:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminUser: admin
+  adminPassword: admin
+
+zipkin:
+  enabled: true
+
+kafka:
+  enabled: true
+
+elasticsearch:
+  enabled: true
+
+logstash:
+  enabled: true
+
+kibana:
+  enabled: true
+
 # Настройки для каждого сервиса переопределяются в его values.yaml

@@ -1,0 +1,282 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Chart.Name }}-init
+  labels:
+    app: {{ .Chart.Name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-init
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kibana-init
+          image: curlimages/curl:8.5.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=== Kibana Initialization Started ==="
+              
+              # Ждем пока Kibana станет доступен
+              echo "Waiting for Kibana to be ready..."
+              for i in $(seq 1 60); do
+                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://kibana:5601/api/status)
+                if [ "$HTTP_CODE" = "200" ]; then
+                  echo "Kibana is ready (HTTP $HTTP_CODE)!"
+                  break
+                fi
+                echo "Waiting for Kibana... attempt $i/60 (HTTP $HTTP_CODE)"
+                sleep 5
+              done
+              
+              # Проверяем, что Kibana действительно доступен
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://kibana:5601/api/status)
+              if [ "$HTTP_CODE" != "200" ]; then
+                echo "ERROR: Kibana is not available after 60 attempts (HTTP $HTTP_CODE)"
+                exit 1
+              fi
+              
+              echo ""
+              echo "=== Creating Index Pattern: bank-logs-* ==="
+              # Создаём Index Pattern для индексов bank-logs-*
+              curl -s -X POST "http://kibana:5601/api/saved_objects/index-pattern/bank-logs" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "bank-logs-*",
+                    "timeFieldName": "@timestamp"
+                  }
+                }'
+              echo ""
+              
+              echo ""
+              echo "=== Creating Saved Searches ==="
+              
+              # All Logs - все логи
+              echo "Creating: All Logs..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/all-logs" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "All Logs",
+                    "description": "Все логи сервисов",
+                    "columns": ["service", "level", "traceId", "spanId", "logger_name", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              # Errors Only - только ошибки
+              echo "Creating: Errors Only..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/errors-only" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "Errors Only",
+                    "description": "Только ошибки и предупреждения",
+                    "columns": ["service", "level", "traceId", "spanId", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"level: ERROR or level: WARN\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              # Logs with Trace ID - логи с traceId
+              echo "Creating: Logs with Trace ID..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/logs-with-trace-id" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "Logs with Trace ID",
+                    "description": "Логи с traceId для распределённой трассировки",
+                    "columns": ["service", "level", "traceId", "spanId", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"traceId: *\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              # Logs: accounts
+              echo "Creating: Logs: accounts..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/logs-accounts" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "Logs: accounts",
+                    "description": "Логи сервиса accounts",
+                    "columns": ["level", "traceId", "spanId", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"service: accounts\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              # Logs: cash
+              echo "Creating: Logs: cash..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/logs-cash" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "Logs: cash",
+                    "description": "Логи сервиса cash",
+                    "columns": ["level", "traceId", "spanId", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"service: cash\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              # Logs: transfer
+              echo "Creating: Logs: transfer..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/logs-transfer" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "Logs: transfer",
+                    "description": "Логи сервиса transfer",
+                    "columns": ["level", "traceId", "spanId", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"service: transfer\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              # Logs: notifications
+              echo "Creating: Logs: notifications..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/logs-notifications" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "Logs: notifications",
+                    "description": "Логи сервиса notifications",
+                    "columns": ["level", "traceId", "spanId", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"service: notifications\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              # Logs: gateway
+              echo "Creating: Logs: gateway..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/logs-gateway" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "Logs: gateway",
+                    "description": "Логи сервиса gateway",
+                    "columns": ["level", "traceId", "spanId", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"service: gateway\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              # Logs: frontend
+              echo "Creating: Logs: frontend..."
+              curl -s -X POST "http://kibana:5601/api/saved_objects/search/logs-frontend" \
+                -H "kbn-xsrf: true" \
+                -H "Content-Type: application/json" \
+                -d '{
+                  "attributes": {
+                    "title": "Logs: frontend",
+                    "description": "Логи сервиса frontend",
+                    "columns": ["level", "traceId", "spanId", "message"],
+                    "sort": [["@timestamp", "desc"]],
+                    "kibanaSavedObjectMeta": {
+                      "searchSourceJSON": "{\"index\":\"data-view:bank-logs\",\"query\":{\"query\":\"service: frontend\",\"language\":\"kuery\"}}"
+                    }
+                  },
+                  "references": [{
+                    "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+                    "type": "index-pattern",
+                    "id": "bank-logs"
+                  }]
+                }'
+              echo ""
+              
+              echo ""
+              echo "=== Kibana Initialization Complete ==="
+              echo "Data View: bank-logs-*"
+              echo "Saved Searches:"
+              echo "  - All Logs"
+              echo "  - Errors Only"
+              echo "  - Logs with Trace ID"
+              echo "  - Logs: accounts"
+              echo "  - Logs: cash"
+              echo "  - Logs: transfer"
+              echo "  - Logs: notifications"
+              echo "  - Logs: gateway"
+              echo "  - Logs: frontend"

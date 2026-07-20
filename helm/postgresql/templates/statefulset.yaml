@@ -1,20 +1,19 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "postgresql.fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{- include "postgresql.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ .Chart.Name }}
+  serviceName: {{ include "postgresql.fullname" . }}
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      {{- include "postgresql.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
+        {{- include "postgresql.selectorLabels" . | nindent 8 }}
     spec:
       {{- if and .Values.global .Values.global.imagePullSecrets }}
       imagePullSecrets:

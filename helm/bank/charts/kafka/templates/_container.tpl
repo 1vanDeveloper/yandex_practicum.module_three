@@ -27,9 +27,12 @@
             See https://github.com/sir5kong/kafka-docker"
           exit "500"
         fi
+      else
+        echo "meta.properties not found, formatting storage..."
+        /opt/kafka/bin/kafka-storage.sh format -t $KAFKA_CLUSTER_ID --ignore-formatted -c /opt/kafka/config/kraft/server.properties
+        echo "Storage formatted successfully"
       fi
   volumeMounts:
   - mountPath: /opt/kafka/data
     name: data
-    readOnly: true
 {{- end }}

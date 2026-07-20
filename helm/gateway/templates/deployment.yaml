@@ -1,19 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ include "gateway.fullname" . }}
   labels:
-    app: {{ .Chart.Name }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{- include "gateway.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Chart.Name }}
+      {{- include "gateway.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Chart.Name }}
+        {{- include "gateway.selectorLabels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       {{- if and .Values.global .Values.global.imagePullSecrets }}
       imagePullSecrets:
@@ -111,6 +114,26 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS
+            - name: MANAGEMENT_TRACING_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_ENABLED
+            - name: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_SAMPLING_PROBABILITY
+            - name: MANAGEMENT_TRACING_PROPAGATION_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_TRACING_PROPAGATION_TYPE
+            - name: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: MANAGEMENT_ZIPKIN_TRACING_ENDPOINT
             - name: LOGGING_LEVEL_RU_YANDEX_PRACTICUM_GATEWAY
               valueFrom:
                 configMapKeyRef:
@@ -126,6 +149,17 @@ spec:
                 configMapKeyRef:
                   name: {{ .Chart.Name }}-config
                   key: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY
+            # ELK Stack - Logstash configuration
+            - name: ELK_LOGSTASH_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: ELK_LOGSTASH_HOST
+            - name: ELK_LOGSTASH_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}-config
+                  key: ELK_LOGSTASH_PORT
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:

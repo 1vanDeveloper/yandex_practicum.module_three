@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.springframework.boot") version "4.0.6"
+    id("org.springframework.boot") version "3.4.0"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -13,11 +13,11 @@ java {
     }
 }
 
-val springCloudVersion = "2025.1.0"
+val springCloudVersion = "2024.0.0"
 
 dependencies {
     // Spring Boot BOM
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.0"))
     // Spring Cloud BOM
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"))
 
@@ -27,8 +27,20 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.cloud:spring-cloud-starter-loadbalancer")
-    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j")
+    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
+
+    // Micrometer Tracing (Zipkin)
+    implementation("io.micrometer:micrometer-tracing-bridge-brave")
+    implementation("io.zipkin.reporter2:zipkin-reporter-brave")
+    implementation("io.zipkin.reporter2:zipkin-sender-okhttp3")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
+    // Logstash TCP appender for centralized logging
+    implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+
+    // Micrometer Observation для HTTP и Security
+    implementation("io.micrometer:micrometer-observation")
     
     // JWT для извлечения привилегий из токена
     implementation("io.jsonwebtoken:jjwt-api:0.11.5")

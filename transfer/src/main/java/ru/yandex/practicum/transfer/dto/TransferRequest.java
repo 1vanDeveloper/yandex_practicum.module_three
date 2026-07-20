@@ -17,6 +17,9 @@ public record TransferRequest(
         @Positive(message = "Amount must be positive")
         BigDecimal amount,
 
-        String comment
+        String comment,
+
+        @NotBlank(message = "Operation ID is required for idempotency")
+        String operationId
 ) {
 }

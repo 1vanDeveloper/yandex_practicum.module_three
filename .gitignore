@@ -76,3 +76,5 @@ replay_pid*
 # Helm secrets (DO NOT COMMIT)
 helm/values-secret.yaml
 **/values-secret.yaml
+
+*.tgz

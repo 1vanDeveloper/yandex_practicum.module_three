@@ -1,0 +1,50 @@
+# Elasticsearch Helm Chart Values
+
+image:
+  repository: docker.elastic.co/elasticsearch/elasticsearch
+  tag: "8.11.0"
+  pullPolicy: IfNotPresent
+
+# Cluster settings
+clusterName: elasticsearch-cluster
+nodeGroup: master
+
+# JVM settings
+esJavaOpts: "-Xmx1g -Xms1g"
+
+# Resource limits
+resources:
+  requests:
+    cpu: "200m"
+    memory: "1280Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1536Mi"
+
+# Volume size
+volumeClaimTemplate:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+  enabled: false
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 9200
+  transportPort: 9300
+
+# Security (disabled for development)
+security:
+  enabled: false
+
+# Environment variables
+env:
+  - name: discovery.type
+    value: single-node
+  - name: xpack.security.enabled
+    value: "false"
+  - name: xpack.security.enrollment.enabled
+    value: "false"

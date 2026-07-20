@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "prometheus.fullname" . }}
+  labels:
+    {{- include "prometheus.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- if .Values.service.nodePort }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      nodePort: {{ .Values.service.nodePort }}
+  {{- else }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  {{- end }}
+  selector:
+    {{- include "prometheus.selectorLabels" . | nindent 4 }}
+---
+{{- if .Values.externalService.enabled }}
+# Сервис для доступа извне кластера (NodePort)
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "prometheus.fullname" . }}-external
+  labels:
+    {{- include "prometheus.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.externalService.type }}
+  ports:
+    - port: 9090
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if .Values.externalService.nodePort }}
+      nodePort: {{ .Values.externalService.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "prometheus.selectorLabels" . | nindent 4 }}
+{{- end }}

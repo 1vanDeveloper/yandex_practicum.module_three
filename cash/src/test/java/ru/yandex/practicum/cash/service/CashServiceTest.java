@@ -73,8 +73,11 @@ class CashServiceTest {
     @Test
     void testDeposit_whenSuccessful_returnsTransactionResponse() {
         // Given
-        DepositRequest request = new DepositRequest("test_user", new BigDecimal("100.00"));
-        CashTransaction savedTransaction = createTransaction(1L, "test_user", TransactionType.DEPOSIT, 
+        String operationId = "cash-deposit-test_user-123456";
+        DepositRequest request = new DepositRequest("test_user", new BigDecimal("100.00"), operationId);
+        CashTransaction pendingTransaction = createTransaction(1L, "test_user", TransactionType.DEPOSIT,
+                new BigDecimal("100.00"), TransactionStatus.PENDING);
+        CashTransaction completedTransaction = createTransaction(1L, "test_user", TransactionType.DEPOSIT,
                 new BigDecimal("100.00"), TransactionStatus.COMPLETED);
         TransactionResponse expectedResponse = new TransactionResponse(
                 1L, "test_user", TransactionType.DEPOSIT, new BigDecimal("100.00"),
@@ -83,8 +86,10 @@ class CashServiceTest {
 
         when(accountsClient.deposit(eq(request), eq("test-token")))
                 .thenReturn(CompletableFuture.completedFuture(null));
-        when(transactionRepository.save(any(CashTransaction.class))).thenReturn(savedTransaction);
-        when(mapper.toResponse(savedTransaction)).thenReturn(expectedResponse);
+        when(transactionRepository.save(any(CashTransaction.class)))
+                .thenReturn(pendingTransaction)
+                .thenReturn(completedTransaction);
+        when(mapper.toResponse(completedTransaction)).thenReturn(expectedResponse);
         doNothing().when(kafkaNotificationSender).sendNotificationSync(any(CashNotificationEvent.class));
 
         // When
@@ -95,15 +100,18 @@ class CashServiceTest {
         assertEquals(1L, response.id());
         assertEquals(TransactionStatus.COMPLETED, response.status());
         verify(accountsClient).deposit(eq(request), eq("test-token"));
-        verify(transactionRepository).save(any(CashTransaction.class));
+        verify(transactionRepository, times(2)).save(any(CashTransaction.class));
         verify(kafkaNotificationSender).sendNotificationSync(any(CashNotificationEvent.class));
     }
 
     @Test
     void testWithdraw_whenSuccessful_returnsTransactionResponse() {
         // Given
-        WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("50.00"));
-        CashTransaction savedTransaction = createTransaction(2L, "test_user", TransactionType.WITHDRAW,
+        String operationId = "cash-withdraw-test_user-123456";
+        WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("50.00"), operationId);
+        CashTransaction pendingTransaction = createTransaction(2L, "test_user", TransactionType.WITHDRAW,
+                new BigDecimal("50.00"), TransactionStatus.PENDING);
+        CashTransaction completedTransaction = createTransaction(2L, "test_user", TransactionType.WITHDRAW,
                 new BigDecimal("50.00"), TransactionStatus.COMPLETED);
         TransactionResponse expectedResponse = new TransactionResponse(
                 2L, "test_user", TransactionType.WITHDRAW, new BigDecimal("50.00"),
@@ -112,8 +120,10 @@ class CashServiceTest {
 
         when(accountsClient.withdraw(eq(request), eq("test-token")))
                 .thenReturn(CompletableFuture.completedFuture(null));
-        when(transactionRepository.save(any(CashTransaction.class))).thenReturn(savedTransaction);
-        when(mapper.toResponse(savedTransaction)).thenReturn(expectedResponse);
+        when(transactionRepository.save(any(CashTransaction.class)))
+                .thenReturn(pendingTransaction)
+                .thenReturn(completedTransaction);
+        when(mapper.toResponse(completedTransaction)).thenReturn(expectedResponse);
         doNothing().when(kafkaNotificationSender).sendNotificationSync(any(CashNotificationEvent.class));
 
         // When
@@ -124,20 +134,27 @@ class CashServiceTest {
         assertEquals(2L, response.id());
         assertEquals(TransactionStatus.COMPLETED, response.status());
         verify(accountsClient).withdraw(eq(request), eq("test-token"));
-        verify(transactionRepository).save(any(CashTransaction.class));
+        verify(transactionRepository, times(2)).save(any(CashTransaction.class));
         verify(kafkaNotificationSender).sendNotificationSync(any(CashNotificationEvent.class));
     }
 
     @Test
     void testWithdraw_whenInsufficientFunds_throwsException() {
         // Given
-        WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("1000.00"));
-        
+        String operationId = "cash-withdraw-test_user-123456";
+        WithdrawRequest request = new WithdrawRequest("test_user", new BigDecimal("1000.00"), operationId);
+        CashTransaction pendingTransaction = createTransaction(1L, "test_user", TransactionType.WITHDRAW,
+                new BigDecimal("1000.00"), TransactionStatus.PENDING);
+
         when(accountsClient.withdraw(eq(request), eq("test-token")))
                 .thenReturn(CompletableFuture.failedFuture(new InsufficientFundsException("Insufficient funds")));
+        when(transactionRepository.save(any(CashTransaction.class))).thenReturn(pendingTransaction);
 
         // When & Then
         assertThrows(Exception.class, () -> cashService.withdraw(request));
+        
+        // Проверяем, что PENDING запись была обновлена до FAILED
+        verify(transactionRepository, times(2)).save(any(CashTransaction.class));
     }
 
     private CashTransaction createTransaction(Long id, String login, TransactionType type,

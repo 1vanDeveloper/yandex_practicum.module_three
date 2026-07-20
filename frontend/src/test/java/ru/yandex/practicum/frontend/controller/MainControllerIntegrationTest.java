@@ -138,7 +138,7 @@ class MainControllerIntegrationTest {
 
         List<AccountBrief> accounts = new ArrayList<>();
 
-        when(gatewayService.processCash(eq(100), eq("PUT"), anyString()))
+        when(gatewayService.processCash(eq(BigDecimal.valueOf(100)), eq("DEPOSIT"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(gatewayService.getAccount(anyString())).thenReturn(CompletableFuture.completedFuture(testAccount));
         when(gatewayService.getAccountBriefs(anyString())).thenReturn(CompletableFuture.completedFuture(accounts));
@@ -146,14 +146,14 @@ class MainControllerIntegrationTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.getSession().setAttribute("JWT_TOKEN", "test-token");
 
-        String view = mainController.editCash(new ConcurrentModel(), 100, CashAction.PUT, request).join();
+        String view = mainController.editCash(new ConcurrentModel(), BigDecimal.valueOf(100), CashAction.DEPOSIT, request).join();
 
         assertEquals("main", view);
-        verify(gatewayService).processCash(eq(100), eq("PUT"), anyString());
+        verify(gatewayService).processCash(eq(BigDecimal.valueOf(100)), eq("DEPOSIT"), anyString());
     }
 
     @Test
-    @DisplayName("Снятие средств через frontend - POST /cash GET")
+    @DisplayName("Снятие средств через frontend - POST /cash WITHDRAW")
     void withdrawCash_throughController() throws Exception {
         AccountResponse testAccount = AccountResponse.builder()
                 .id(1L)
@@ -166,7 +166,7 @@ class MainControllerIntegrationTest {
 
         List<AccountBrief> accounts = new ArrayList<>();
 
-        when(gatewayService.processCash(eq(100), eq("GET"), anyString()))
+        when(gatewayService.processCash(eq(BigDecimal.valueOf(100)), eq("WITHDRAW"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(gatewayService.getAccount(anyString())).thenReturn(CompletableFuture.completedFuture(testAccount));
         when(gatewayService.getAccountBriefs(anyString())).thenReturn(CompletableFuture.completedFuture(accounts));
@@ -174,10 +174,10 @@ class MainControllerIntegrationTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.getSession().setAttribute("JWT_TOKEN", "test-token");
 
-        String view = mainController.editCash(new ConcurrentModel(), 100, CashAction.GET, request).join();
+        String view = mainController.editCash(new ConcurrentModel(), BigDecimal.valueOf(100), CashAction.WITHDRAW, request).join();
 
         assertEquals("main", view);
-        verify(gatewayService).processCash(eq(100), eq("GET"), anyString());
+        verify(gatewayService).processCash(eq(BigDecimal.valueOf(100)), eq("WITHDRAW"), anyString());
     }
 
     @Test
@@ -194,7 +194,7 @@ class MainControllerIntegrationTest {
 
         List<AccountBrief> accounts = new ArrayList<>();
 
-        when(gatewayService.processTransfer(eq(500), eq("recipient"), anyString()))
+        when(gatewayService.processTransfer(eq(BigDecimal.valueOf(500)), eq("recipient"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
         when(gatewayService.getAccount(anyString())).thenReturn(CompletableFuture.completedFuture(testAccount));
         when(gatewayService.getAccountBriefs(anyString())).thenReturn(CompletableFuture.completedFuture(accounts));
@@ -202,10 +202,10 @@ class MainControllerIntegrationTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.getSession().setAttribute("JWT_TOKEN", "test-token");
 
-        String view = mainController.transfer(new ConcurrentModel(), 500, "recipient", request).join();
+        String view = mainController.transfer(new ConcurrentModel(), BigDecimal.valueOf(500), "recipient", request).join();
 
         assertEquals("main", view);
-        verify(gatewayService).processTransfer(eq(500), eq("recipient"), anyString());
+        verify(gatewayService).processTransfer(eq(BigDecimal.valueOf(500)), eq("recipient"), anyString());
     }
 
     @Test

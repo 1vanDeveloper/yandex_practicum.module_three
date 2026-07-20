@@ -4,16 +4,17 @@ build:
 
 # Build Docker images (automatically available in Colima)
 docker-build:
-	docker build -t bank-accounts:latest -f Dockerfile . --build-arg SERVICE_NAME=accounts
-	docker build -t bank-cash:latest -f Dockerfile . --build-arg SERVICE_NAME=cash
-	docker build -t bank-transfer:latest -f Dockerfile . --build-arg SERVICE_NAME=transfer
-	docker build -t bank-notifications:latest -f Dockerfile . --build-arg SERVICE_NAME=notifications
-	docker build -t bank-gateway:latest -f Dockerfile . --build-arg SERVICE_NAME=gateway
-	docker build -t bank-frontend:latest -f Dockerfile . --build-arg SERVICE_NAME=frontend
+	docker build --no-cache -t bank-accounts:latest -f Dockerfile . --build-arg SERVICE_NAME=accounts
+	docker build --no-cache -t bank-cash:latest -f Dockerfile . --build-arg SERVICE_NAME=cash
+	docker build --no-cache -t bank-transfer:latest -f Dockerfile . --build-arg SERVICE_NAME=transfer
+	docker build --no-cache -t bank-notifications:latest -f Dockerfile . --build-arg SERVICE_NAME=notifications
+	docker build --no-cache -t bank-gateway:latest -f Dockerfile . --build-arg SERVICE_NAME=gateway
+	docker build --no-cache -t bank-frontend:latest -f Dockerfile . --build-arg SERVICE_NAME=frontend
 
 # Kubernetes deployment
 k8s-deploy:
-	helm upgrade --install bank helm/bank -f helm/values-dev.yaml -f helm/values-secret.yaml --timeout 5m --wait
+	#kubectl create secret generic bank-kafka-cluster-id --from-literal=clusterId="QxkqDKf5Tf6vXJZ3pLqLbw"
+	helm upgrade --install bank helm/bank -f helm/values-dev.yaml -f helm/values-secret.yaml --timeout 5m --wait --force-replace
 
 k8s-rollback:
 	helm rollback bank
@@ -33,11 +34,13 @@ k8s-port-forward:
 	@echo "Starting port-forwarding..."
 	kubectl port-forward svc/frontend 32190:8080 &
 	kubectl port-forward svc/postgresql 5432:5432 &
-	kubectl port-forward svc/keycloak 8180:8080
+	kubectl port-forward svc/keycloak 8180:8080 &
+	kubectl port-forward svc/zipkin 9411:9411 &
 	@echo "Port-forwarding started:"
 	@echo "  Frontend: http://localhost:32190"
 	@echo "  PostgreSQL: localhost:5432"
 	@echo "  Keycloak: http://localhost:8180"
+	@echo "  Zipkin: http://localhost:9411"
 
 # Helm tests
 helm-lint:
